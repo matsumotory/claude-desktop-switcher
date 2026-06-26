@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.3.0...v0.3.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* build issues (RGBA icon and type annotations) ([db83113](https://github.com/matsumotory/claude-desktop-switcher/commit/db831131ba6b930dcf8bd0f65685507112a0ed35))
+* exclude desktop crate from cargo test, fix CLI Arc type annotation ([266ae2b](https://github.com/matsumotory/claude-desktop-switcher/commit/266ae2b2ce0d42aa217690e0e404fda0f3891f15))
+* expose mock module via test-utils feature for integration tests ([369e2ed](https://github.com/matsumotory/claude-desktop-switcher/commit/369e2ed55f806d815886fe7b570f935def985811))
+
 ## [0.3.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.2.2...v0.3.0) (2026-06-26)
 
 
