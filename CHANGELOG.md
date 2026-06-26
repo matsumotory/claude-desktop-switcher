@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.3...v0.4.4) (2026-06-26)
+
+
+### Bug Fixes
+
+* **ci:** remove incorrect npm install step in root directory ([c65dd06](https://github.com/matsumotory/claude-desktop-switcher/commit/c65dd06e42b11189f189f26c2b0a928974e880b1))
+* retry release build again ([5a06a43](https://github.com/matsumotory/claude-desktop-switcher/commit/5a06a437b2bc4c81450658a99c9776fd925e9f0c))
+
 ## [0.4.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.2...v0.4.3) (2026-06-26)
 
 
