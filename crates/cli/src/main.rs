@@ -73,7 +73,7 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     
     // Create platform provider
-    let provider = Arc::from(create_provider()?);
+    let provider: Arc<dyn csw_core::platform::PlatformProvider> = Arc::from(create_provider()?);
 
     match cli.command {
         Commands::Init => {

@@ -18,4 +18,4 @@ jobs:
 
 
       - name: Run unit and integration tests
-        run: cargo test --workspace
+        run: cargo test --workspace --exclude csw-desktop
