@@ -1,13 +1,16 @@
 /* docs/style.css - TasteSkill Dark Tech Aesthetic */
 :root {
-    --bg-base: #09090b; /* zinc-950 */
-    --bg-surface: #18181b; /* zinc-900 */
-    --bg-surface-hover: #27272a; /* zinc-800 */
-    --border-color: #27272a;
-    --text-primary: #f4f4f5; /* zinc-100 */
-    --text-secondary: #a1a1aa; /* zinc-400 */
-    --accent: #2563eb; /* blue-600 */
-    --accent-hover: #1d4ed8; /* blue-700 */
+    --bg-base: #050505; /* Deep OLED black */
+    --bg-surface: #0a0a0a;
+    --bg-surface-hover: rgba(255, 255, 255, 0.03);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #ffffff;
+    --text-secondary: #888888;
+    --accent: #ffffff;
+    --accent-hover: #e5e5e5;
+    
+    --spring-easing: cubic-bezier(0.32, 0.72, 0, 1);
+    --spring-duration: 0.8s;
 }
 
 * {
@@ -18,10 +21,18 @@
 }
 
 body {
-    font-family: 'Outfit', -apple-system, sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background-color: var(--bg-base);
     color: var(--text-primary);
     line-height: 1.5;
+    overflow-x: hidden;
+}
+
+html[lang="ja"] body {
+    font-family: 'Outfit', 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
+    line-height: 1.7;
+    word-break: normal;
+    overflow-wrap: break-word;
 }
 
 .container {
@@ -100,13 +111,14 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 20px;
+    padding: 12px 28px;
     font-size: 0.95rem;
     font-weight: 500;
-    border-radius: 6px;
+    border-radius: 9999px; /* Pill */
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all var(--spring-duration) var(--spring-easing);
     cursor: pointer;
+    gap: 8px;
 }
 
 .btn-primary {
@@ -149,20 +161,27 @@ body {
 }
 
 .headline {
-    font-size: 3.5rem;
-    line-height: 1.1;
+    font-size: 4rem;
+    line-height: 1.05;
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em;
     margin-bottom: 24px;
+}
+
+html[lang="ja"] .headline {
+    font-size: 3.25rem; /* Prevent massive wrapping in JP */
+    word-break: keep-all;
+    line-height: 1.25;
 }
 
 .text-nowrap {
     display: inline-block;
 }.subtext {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     color: var(--text-secondary);
-    max-width: 480px;
+    max-width: 500px;
     margin-bottom: 40px;
+    line-height: 1.6;
 }
 
 .button-group {
@@ -198,7 +217,9 @@ body {
 .feature-cell {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 2rem;
+    padding: 0.5rem;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.03);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -223,9 +244,10 @@ body {
 }
 
 .feature-img {
-    width: 100%;
-    margin-top: auto;
+    width: calc(100% + 1rem);
+    margin: auto -0.5rem -0.5rem -0.5rem;
     border-top: 1px solid var(--border-color);
+    opacity: 0.8;
 }
 
 .feature-img-small {
@@ -312,9 +334,10 @@ body {
 .guide-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 32px;
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    border-radius: 2rem;
+    padding: 40px;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.03);
+    transition: transform var(--spring-duration) var(--spring-easing), border-color 0.3s ease;
 }
 
 .guide-card:hover {
@@ -373,12 +396,16 @@ body {
 /* Animations */
 .fade-in {
     opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
+    filter: blur(8px);
+    transform: translateY(32px);
+    transition: opacity var(--spring-duration) var(--spring-easing), 
+                transform var(--spring-duration) var(--spring-easing),
+                filter var(--spring-duration) var(--spring-easing);
 }
 
 .fade-in.visible {
     opacity: 1;
+    filter: blur(0px);
     transform: translateY(0);
 }
 

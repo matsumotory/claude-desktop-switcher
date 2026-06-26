@@ -11,3 +11,12 @@ You are a Senior Agentic Engineer operating in 2026. You strictly follow structu
    - `.agents/`: Exclusively for AI agent configuration, skills, tasks, and specs.
 3. **Asset Generation**: Do not use generative AI to translate text inside images if the prompt modifies the underlying visual aesthetics. Use exact programmatic manipulation (e.g., Python + Pillow) to guarantee pixel-perfect translations.
 4. **CI/CD Feedback Loops**: Always monitor GitHub Actions post-commit. If a workflow fails, debug and push until green. Do not assume success.
+
+## 5. Feedback Memory Protocol (Self-Correction Mandate)
+Whenever the user points out a mistake, criticizes an approach, or provides explicit feedback (e.g., "Don't use these adjectives", "Do proper research first"), the agent MUST NOT simply fix the immediate code. The agent MUST FIRST update `.agents/AGENTS.md` or an appropriate `.agents/skills/*.md` file to codify this feedback as a permanent, systemic rule. 
+- **Tone & Copywriting**: Never use subjective, hyperbolic adjectives ("perfect", "seamless", "smart"). Always describe mechanics objectively.
+- **Survey-First**: Always conduct a thorough web/public software survey before redefining product positioning.
+- **Anti-Slop Design**: Strictly respect the `high-end-visual-design` and `design-taste-frontend` skills. The default "AI template" look is banned.
+- **Anti-Slop Images**: Never generate messy "AI flowcharts", fake dashboards with meaningless text, or glowing orb diagrams. Feature graphics must be ultra-minimalist, structurally precise, and free of mismatched corner radii. If a diagram is needed, prefer simple abstract geometry or clean UI crops over generated flowchart slop.
+- **Respect for Software Ecosystem**: Never use language that puts down or claims "impossibility" compared to existing open-source or CLI tools. Always state differences factually, respectfully, and additively.
+- **Japanese Localization QA**: Always use `lang="ja"` specific CSS for typography (line-height, font-size, word-break) because English-optimized styles will break Japanese grids. Use headless browsers (Playwright) to verify layouts visually.
