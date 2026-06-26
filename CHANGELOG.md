@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.4.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.3.2...v0.4.0) (2026-06-26)
+
+
+### Features
+
+* **ci:** Apple Developer ProgramのCode SigningおよびNotarizationをGitHub Actionsに導入し、非推奨なGatekeeper回避手順(xattr)をドキュメントから削除 ([51d2f93](https://github.com/matsumotory/claude-desktop-switcher/commit/51d2f9390b6d25d46b9b81bf52f3d4dd20925b59))
+* **website:** ユーザーのペインポイントを解決する具体的なユースケース（3シナリオ）の追加 ([4df4a49](https://github.com/matsumotory/claude-desktop-switcher/commit/4df4a49032795563763368161d1aec900427364e))
+
+
+### Bug Fixes
+
+* **build:** Tauriのビルドターゲットをdmgに変更し、リリースページに正しくdmgファイルが生成・配置されるように修正 ([3c76c48](https://github.com/matsumotory/claude-desktop-switcher/commit/3c76c487676e1973308b1bbc41668e56fcf947f9))
+* **website,docs:** フッターの階層構造をプレミアムデザインに刷新、米印(※)を全廃、Gatekeeperの対処法をドキュメントに追加 ([d40f803](https://github.com/matsumotory/claude-desktop-switcher/commit/d40f803a4e864f910dec21c33b59999c5608478a))
+* **website:** 「ゼロインパクト」という絶対的な表現を修正し、設定次第での干渉リスクを明記 ([cb06e43](https://github.com/matsumotory/claude-desktop-switcher/commit/cb06e4303e9fe11f7dc4cee827e8d58c38696356))
+* **website:** 「安全性の根拠」を非エンジニアにも伝わる論理的かつ普遍的な表現に修正 ([d5793b4](https://github.com/matsumotory/claude-desktop-switcher/commit/d5793b49514fc2bf6570a9ea376d2e3fc15dc04a))
+* **website:** &lt;code&gt;タグ内のテキストが折り返される問題を修正 ([2ddd657](https://github.com/matsumotory/claude-desktop-switcher/commit/2ddd657d0de1d2cf00547581f25f993463dcf97a))
+* **website:** authorテキストの全大文字化(uppercase)を解除 ([cd7311d](https://github.com/matsumotory/claude-desktop-switcher/commit/cd7311d8071373895374ecef8b1a264d6b373196))
+* **website:** design-taste-frontendのEYEBROW RESTRAINTルール違反を解消 ([adc5843](https://github.com/matsumotory/claude-desktop-switcher/commit/adc58436c20b3d66b95ffad422b0260eaf8b2435))
+* **website:** eval $(csw env) コマンドの誤記載を修正 ([43aa4aa](https://github.com/matsumotory/claude-desktop-switcher/commit/43aa4aab5239c7c30165772a76148817007f4611))
+* **website:** LLM特有の不要なカッコ書き英訳（AIスロップ）を排除 ([2b1b69b](https://github.com/matsumotory/claude-desktop-switcher/commit/2b1b69bffe225e103711578f6ba9e4f33e13818f))
+* **website:** LPのUIレイアウトとコピー、ドキュメントを改善 ([6fcd56c](https://github.com/matsumotory/claude-desktop-switcher/commit/6fcd56c39e160aa987185c2ebb236961d9e3990d))
+* **website:** UIタイルのクリーン化と文字サイズ最適化 ([0fbd5b0](https://github.com/matsumotory/claude-desktop-switcher/commit/0fbd5b026e38c7b3dc34e3b20166a31cf6dffd2e))
+* **website:** UIタイルの情報設計をアプリ本来のモチベーションに適合 ([38dab5b](https://github.com/matsumotory/claude-desktop-switcher/commit/38dab5b9d456e450725906c5014e1d04b50fc45c))
+* **website:** UIとコピーのさらなる洗練（コマンドのハイライト化、タイトルの最適化、非公式バッジの強調） ([4966295](https://github.com/matsumotory/claude-desktop-switcher/commit/4966295e74f6738b81f385d8c6d9ba355b88d6a0))
+* **website:** UIの余白とホバーアニメーションの改善、タイポグラフィの調整 ([d1aabd7](https://github.com/matsumotory/claude-desktop-switcher/commit/d1aabd718b832f5d9ba4d2bc10c9021af65cd9ba))
+* **website:** Use Case 01をエンタープライズのゼロトラスト的な分離から、フリーランスの案件分離にリフレーミング ([e2151f8](https://github.com/matsumotory/claude-desktop-switcher/commit/e2151f8abe3e453207a36aabd4192b2a325b9823))
+* **website:** UseCase 02と03のテキスト長をコンテナ幅に最適化しウィドーを排除 ([f0ab89a](https://github.com/matsumotory/claude-desktop-switcher/commit/f0ab89a6c55ff93b0421f95aa401f31dfdf9f0cc))
+* **website:** usecase-numのタイポグラフィとコピーボリュームの最適化 ([6e8a638](https://github.com/matsumotory/claude-desktop-switcher/commit/6e8a6388c96437de5713caffb910d4231dea02f3))
+* **website:** アーキテクチャの誤認と論理破綻を解消するLP全体の抜本的再構築 ([a3d7b6a](https://github.com/matsumotory/claude-desktop-switcher/commit/a3d7b6acc994af6d36980aa0d574c967bf33754d))
+* **website:** アーキテクチャ記述の再訂正とUse CasesのPremiumタイポグラフィへの変更 ([ca1e48d](https://github.com/matsumotory/claude-desktop-switcher/commit/ca1e48d01caa789b92ac48adb2b52c1d8ed0a76d))
+* **website:** アプリケーションのコア価値（分離度のカスタマイズと統合制御）を正確に反映 ([535f942](https://github.com/matsumotory/claude-desktop-switcher/commit/535f94210075f973eb53f97de0d372f230add1ee))
+* **website:** タイポグラフィとコントラストをハイエンド品質に引き上げ ([fbdaf85](https://github.com/matsumotory/claude-desktop-switcher/commit/fbdaf857a5ca50899c12a8d381785648e308ef14))
+* **website:** ダウンロードボタン直下にGatekeeper回避用ドキュメントへの導線を追加 ([efccdc6](https://github.com/matsumotory/claude-desktop-switcher/commit/efccdc602e413a4e4dde94285d6b71209757da2d))
+* **website:** マーケティングコピーから不自然な括弧書きの専門用語を排除 ([487ad92](https://github.com/matsumotory/claude-desktop-switcher/commit/487ad927bd230e0bc2d84b52deafae17534dd488))
+* **website:** マーケティングコピーから専門用語を排除し、ユーザーメリットベースに修正 ([d2bb567](https://github.com/matsumotory/claude-desktop-switcher/commit/d2bb5678ac2ed0696cd8ce6347c227c2a5364ab0))
+* **website:** マーケティングコピー内の用語の揺れを統一 ([4d48f70](https://github.com/matsumotory/claude-desktop-switcher/commit/4d48f70da0c99b37dbbb486c114318db1e113883))
+* **website:** 日本語LPのすべての見出しの折り返し境界をプロアクティブに修正 ([e742f0b](https://github.com/matsumotory/claude-desktop-switcher/commit/e742f0b11f8d56d490ce28fb94fd76bc676a997e))
+* **website:** 環境変数保護の仕組みを技術的仕様（SPECIFICATION.md）に準拠して正確に記述 ([0c11d88](https://github.com/matsumotory/claude-desktop-switcher/commit/0c11d8819c1b4308ebcfe9b2cdd07fe052ede1c1))
+* **website:** 見出し「GUIワークフロー」の不自然な折り返しを修正 ([9386e96](https://github.com/matsumotory/claude-desktop-switcher/commit/9386e96099a7c93072def13813b51710903458a1))
+* **website:** 非公式ディスクレーマーをフッターに統合し日本語化（ラベル化を撤回） ([98c660c](https://github.com/matsumotory/claude-desktop-switcher/commit/98c660c6a391c7c48a2c5904513f76a5644d107e))
+
 ## [0.3.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.3.1...v0.3.2) (2026-06-26)
 
 
