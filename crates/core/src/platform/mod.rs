@@ -74,5 +74,5 @@ pub fn create_provider() -> Result<Box<dyn PlatformProvider>> {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-utils"))]
 pub mod mock;
