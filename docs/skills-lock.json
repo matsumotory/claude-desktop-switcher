@@ -84,6 +84,18 @@
       "sourceType": "local",
       "skillPath": "tauri-v2-best-practices/SKILL.md",
       "computedHash": "local"
+    },
+    "agentic-coding-methodology": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "agentic-coding-methodology/SKILL.md",
+      "computedHash": "local"
+    },
+    "modern-rust-workflow": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "modern-rust-workflow/SKILL.md",
+      "computedHash": "local"
     }
   }
 }
