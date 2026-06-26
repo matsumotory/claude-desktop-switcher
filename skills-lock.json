@@ -114,6 +114,36 @@
       "sourceType": "local",
       "skillPath": "eu-ai-act-compliance/SKILL.md",
       "computedHash": "local"
+    },
+    "core_spec_first_development": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "core_spec_first_development/SKILL.md",
+      "computedHash": "local"
+    },
+    "core_ai_workflow": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "core_ai_workflow/SKILL.md",
+      "computedHash": "local"
+    },
+    "core_bug_fix_protocol": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "core_bug_fix_protocol/SKILL.md",
+      "computedHash": "local"
+    },
+    "core_commit_standard": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "core_commit_standard/SKILL.md",
+      "computedHash": "local"
+    },
+    "core_pr_review_cycle": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "core_pr_review_cycle/SKILL.md",
+      "computedHash": "local"
     }
   }
 }
