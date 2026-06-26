@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.3.1...v0.3.2) (2026-06-26)
+
+
+### Bug Fixes
+
+* ci build and rust warnings ([22ec03b](https://github.com/matsumotory/claude-desktop-switcher/commit/22ec03bee857c2ab0d4366619c75a8a46cff766d))
+* gh pr merge requires repository arg ([8bdef4b](https://github.com/matsumotory/claude-desktop-switcher/commit/8bdef4b3465e99839f4e92bd254cbda49aa4235a))
+* make mock keychain use static global store for integration tests ([f3164d9](https://github.com/matsumotory/claude-desktop-switcher/commit/f3164d9c276fa5d88601ec1b493e480ef7d8c4bf))
+
 ## [0.3.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.3.0...v0.3.1) (2026-06-26)
 
 
