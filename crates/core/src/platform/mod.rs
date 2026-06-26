@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use crate::error::Result;
 
 /// Platform-specific operations abstracted behind a common trait.
-pub trait PlatformProvider {
+pub trait PlatformProvider: Send + Sync {
     // --- Path resolution ---
 
     /// Default Claude Desktop user-data-dir.
