@@ -30,9 +30,11 @@ body {
 
 html[lang="ja"] body {
     font-family: 'Outfit', 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
-    line-height: 1.7;
+    line-height: 1.8;
     word-break: normal;
     overflow-wrap: break-word;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
 }
 
 .container {
@@ -184,6 +186,10 @@ html[lang="ja"] .headline {
     line-height: 1.6;
 }
 
+html[lang="ja"] .subtext {
+    font-size: 1.35rem;
+}
+
 .button-group {
     display: flex;
     gap: 16px;
@@ -241,6 +247,8 @@ html[lang="ja"] .headline {
 
 .cell-content p {
     color: var(--text-secondary);
+    font-size: 1.125rem;
+    line-height: 1.6;
 }
 
 .feature-img {
@@ -430,6 +438,9 @@ html[lang="ja"] .headline {
     }
     .site-footer {
         flex-direction: column;
+        text-align: center;
         gap: 16px;
     }
 }
+
+
