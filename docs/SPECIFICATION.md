@@ -76,7 +76,7 @@ CSWは、`ContextSwitcher` クラスにより、macOSネイティブキーチェ
 - `csw profile list | show <name> | delete <name>`: プロファイル管理
 - `csw switch <name> [--no-launch]`: プロファイルの切り替え（Tauriと同等の処理を実行）
 - `csw env`: 現在のアクティブプロファイルに対応する環境変数スクリプトを出力。
-  - **使い方**: ターミナルで `eval $(csw env)` または `eval $(csw env <name>)` を実行することで、対象セッションの `CLAUDE_CONFIG_DIR` 等が上書きされ、Claude Codeが隔離環境で実行されます。
+  - **使い方**: ターミナルで `eval $(csw env <name>)` を実行することで、対象セッションの `CLAUDE_CONFIG_DIR` 等が上書きされ、Claude Codeが隔離環境で実行されます。
 - `csw status`: 実行中プロセスのPIDと現在のコンテキスト状態を表示。
 
 ## 6. ゼロインパクト保証 (Non-invasive Guarantee)

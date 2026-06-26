@@ -219,6 +219,11 @@ html[lang="ja"] .subtext {
     display: block;
 }
 
+/* Typography Utilities */
+.text-nowrap {
+    white-space: nowrap;
+}
+
 /* Features Bento */
 .features {
     padding-bottom: 96px;
@@ -361,12 +366,11 @@ html[lang="ja"] .usecases-header h2 {
 
 .usecase-num {
     font-family: monospace;
-    font-size: 1rem;
+    font-size: 1.5rem;
     color: var(--accent);
-    opacity: 0.8;
-    margin-bottom: 12px;
+    margin-bottom: 24px;
     display: block;
-    letter-spacing: 0.05em;
+    font-weight: 600;
 }
 
 .usecase-title {
