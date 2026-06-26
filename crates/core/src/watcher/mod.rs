@@ -50,7 +50,7 @@ impl FileWatcher {
 
         let (tx, rx) = std::sync::mpsc::channel();
 
-        let mut watcher = notify::recommended_watcher(move |res: notify::Result<Event>| {
+        let mut watcher = notify::recommended_watcher(move |res: std::result::Result<Event, notify::Error>| {
             if let Ok(event) = res {
                 if event.kind.is_modify() {
                     for path in event.paths {
@@ -85,8 +85,8 @@ impl FileWatcher {
         };
 
         let profiles = profile_manager.list_profiles()?;
-        for p_name in profiles {
-            if p_name == active_name || p_name == "default" {
+        for p_name in profiles.iter() {
+            if p_name.as_str() == active_name || p_name.as_str() == "default" {
                 continue;
             }
 
