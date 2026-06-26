@@ -594,8 +594,6 @@ html[lang="ja"] .usecases-header h2 {
 .author {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
     margin: 0;
 }
 
