@@ -1,6 +1,6 @@
 {
   "productName": "Claude Desktop Switcher",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.matsumotory.claude-desktop-switcher",
   "build": {
     "frontendDist": "./ui",
@@ -25,7 +25,9 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app"],
+    "targets": [
+      "app"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
