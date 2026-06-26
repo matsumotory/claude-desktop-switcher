@@ -31,6 +31,7 @@ body {
 html[lang="ja"] body {
     font-family: 'Outfit', 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
     line-height: 1.8;
+    word-break: auto-phrase;
     word-break: normal;
     overflow-wrap: break-word;
     font-size: 1.125rem; /* Increased base size for JP */
