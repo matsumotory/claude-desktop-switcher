@@ -19,6 +19,7 @@ Files meant for developers, AI agents, or repository management must reside at t
 - **Agent Skills**: MUST be at `<root>/.agents/skills/`. Never place them in `docs/.agents/`.
 - **Documentation**: Developer docs like `README.md`, `USER_GUIDE.md`, or architecture notes belong at the repository root.
 - **Config & State**: Files like `skills-lock.json`, `package.json`, or environment variables must stay at the root.
+- **Admin & DevOps Docs**: Setup guides for CI/CD, deployment secrets, or developer certificates MUST NEVER be placed in `docs/` or other end-user documentation folders. They must be placed in internal administrative folders (e.g., `.github/`, `.agents/scripts/`) to prevent exposing internal infrastructure details to the public.
 
 ## Enforcement
 Before creating or moving any file, ask yourself: "Will this directory be exposed to the public internet via a static site host?" If yes, and the file is internal, you are committing a critical security and architectural failure.
