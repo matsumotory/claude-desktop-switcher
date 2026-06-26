@@ -45,6 +45,14 @@ jobs:
         with:
           node-version: 24
 
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Configure App Store Connect API Key
+        run: |
+          echo "${{ secrets.APPLE_API_KEY_CONTENT }}" | base64 -d > ${{ runner.temp }}/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -52,12 +60,15 @@ jobs:
 
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PATH: ${{ runner.temp }}/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
         with:
           tagName: ${{ needs.release-please.outputs.tag_name }}
           args: --target universal-apple-darwin
