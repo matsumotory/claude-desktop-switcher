@@ -167,7 +167,7 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
 }
 
 fn main() {
-    let provider = Arc::from(create_provider().expect("Failed to initialize platform provider"));
+    let provider: Arc<dyn csw_core::platform::PlatformProvider> = Arc::from(create_provider().expect("Failed to initialize platform provider"));
     let profile_manager = Arc::new(ProfileManager::new(provider.clone()).expect("Failed to initialize profile manager"));
 
     let app_state = AppState {
