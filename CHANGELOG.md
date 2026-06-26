@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.2...v0.4.3) (2026-06-26)
+
+
+### Bug Fixes
+
+* retry release build ([f9adc81](https://github.com/matsumotory/claude-desktop-switcher/commit/f9adc81d7b1bc6886dd6160fbe15f284026ed5b3))
+* revert tauri-action version to v0 ([da7329b](https://github.com/matsumotory/claude-desktop-switcher/commit/da7329beb84b26ef1045a7e60a8ddc404d2b2edf))
+
 ## [0.4.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.1...v0.4.2) (2026-06-26)
 
 
