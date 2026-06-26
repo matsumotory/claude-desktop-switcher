@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.2.0...v0.2.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* update tauri-action to v0 and implement testing architecture ([462a487](https://github.com/matsumotory/claude-desktop-switcher/commit/462a4871600f6dd6a932dd5916f3daf92c88981c))
+
 ## [0.2.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.1.0...v0.2.0) (2026-06-26)
 
 
