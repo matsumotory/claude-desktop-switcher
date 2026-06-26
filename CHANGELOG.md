@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.1...v0.4.2) (2026-06-26)
+
+
+### Bug Fixes
+
+* trigger notarized release ([34d8b2a](https://github.com/matsumotory/claude-desktop-switcher/commit/34d8b2adc94988b383e3c5f3dc2525fcb43e5cc7))
+
 ## [0.4.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.0...v0.4.1) (2026-06-26)
 
 
