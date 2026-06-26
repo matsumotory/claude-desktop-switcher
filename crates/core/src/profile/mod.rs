@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
+use crate::error::{CswError, Result};
 
 /// Sharing mode for a configuration component.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
