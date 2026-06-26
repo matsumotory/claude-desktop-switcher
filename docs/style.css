@@ -156,6 +156,11 @@ body {
     margin-bottom: 24px;
 }
 
+html[lang="ja"] .headline {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
 .subtext {
     font-size: 1.125rem;
     color: var(--text-secondary);

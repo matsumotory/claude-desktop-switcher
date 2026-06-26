@@ -96,6 +96,24 @@
       "sourceType": "local",
       "skillPath": "modern-rust-workflow/SKILL.md",
       "computedHash": "local"
+    },
+    "google-modern-web-guidance": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "google-modern-web-guidance/SKILL.md",
+      "computedHash": "local"
+    },
+    "anthropic-multi-agent-orchestration": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "anthropic-multi-agent-orchestration/SKILL.md",
+      "computedHash": "local"
+    },
+    "eu-ai-act-compliance": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "eu-ai-act-compliance/SKILL.md",
+      "computedHash": "local"
     }
   }
 }
