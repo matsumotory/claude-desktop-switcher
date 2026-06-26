@@ -1,50 +1,72 @@
-# Claude Desktop Switcher - Technical Specification
+# Claude Desktop Switcher 詳細仕様書
 
-## 1. System Architecture
+本仕様書は、Claude Desktop Switcher (以下 CSW) の2026年最新アーキテクチャに基づく公式リファレンスです。ソースコード（`crates/core`, `crates/cli`, `crates/desktop`）の実際の実装に完全に準拠しています。
 
-Claude Desktop Switcher is a Rust-based, macOS-native utility designed to completely isolate multiple instances (Profiles) of Claude Desktop and Claude Code (CLI). 
+## 1. システムアーキテクチャ
+本アプリはRustのワークスペースで構成され、3つのクレートに分割されています。
 
-The project is structured into three workspaces (crates) using Rust 2024 Edition and Tauri v2:
-- **`csw-core`**: The domain logic. Handles profile management, configuration files (`toml`), and file watching (`notify` v7).
-- **`csw-cli`**: The CLI interface. Provides headless commands to create, switch, and delete profiles.
-- **`csw-desktop`**: The Tauri v2 application. Provides a system tray / menu bar interface on macOS.
+- **`csw-core`**: ビジネスロジックを担うライブラリ。OSパス抽象化、キーチェーン操作、プロファイルとシンボリックリンクの管理。
+- **`csw-cli` (`csw`)**: ターミナルから操作するためのコマンドラインインターフェース（Clap使用）。
+- **`csw-desktop`**: Tauri v2 ベースの GUI アプリケーション。システムトレイに常駐し、直感的な切り替え機能を提供。
 
-## 2. Isolation Strategy (Zero-Impact Guarantee)
+## 2. ディレクトリ構造とプロファイル構成
+CSW自身の全てのデータは `~/.context-switcher-claude/` に保存されます。
 
-To prevent existing environments from being polluted, the application **never modifies global environment variables** or global system paths permanently.
+### アプリケーションデータ
+```text
+~/.context-switcher-claude/
+├── config.toml               # 現在のアクティブプロファイルを記録 (AppConfig)
+└── profiles/
+    └── <Profile_Name>/       # 各プロファイルの専用ディレクトリ
+        ├── profile.toml      # メタデータ (名前, アイコン, SharingConfig等)
+        ├── desktop-data/     # デスクトップ用: ~/Library/Application Support/Claude の代わり
+        └── cli-data/         # CLI用: ~/.claude の代わり
+            └── keychain_backup.json # (後述) 退避されたキーチェーン情報
+```
 
-### Core Mechanisms:
-- **Default Environment Preservation**: If the user launches Claude Desktop or Claude Code without using this switcher, they run under the unmodified system default (e.g., `~/Library/Application Support/Claude`).
-- **Profile Data Segregation**: Every newly created profile is assigned two isolated sandbox directories:
-  - `desktop_user_data_dir`: `~/.gemini/antigravity/profiles/<ProfileName>/desktop-data`
-  - `cli_config_dir`: `~/.gemini/antigravity/profiles/<ProfileName>/cli-data`
+### 隔離モード (SharingMode)
+`SharingConfig` によってファイル単位で以下のモードを選択可能（デフォルトは `Isolate`）。
+- **Isolate**: 完全に新規ファイルとして運用。
+- **Share**: 元の環境（デフォルトは `default` プロファイル）のファイルを**シンボリックリンク**として参照。
 
-### Execution Context:
-When a profile is activated, the app launches the Claude binaries by injecting custom runtime arguments (e.g., `--user-data-dir`) or by temporarily swapping symlinks immediately before launch, and tearing them down immediately after. This guarantees that crash-restarts or external launches are not contaminated.
+共有（Share）可能な対象:
+- `desktop_config`: `claude_desktop_config.json` (MCPサーバー構成)
+- `cli_settings`: `settings.json` (権限・テーマ設定)
+- `cli_claude_md`: `CLAUDE.md` (グローバルルール)
+- `cli_project_memory`: プロジェクト記憶 (`projects/*/memory`)
+- `cli_plugins`: CLIプラグインディレクトリ
+- `desktop_worktrees`: Gitワークツリー構成 (`git-worktrees.json`)
+- `desktop_device_id`: 端末固有ID (`ant-did`) ※これのみデフォルトで Share 設定。
 
-## 3. Configuration & Sharing Modes
+## 3. セキュリティとキーチェーン分離 (Security & Isolation)
+CSWは、`ContextSwitcher` クラスにより、macOSネイティブキーチェーンの安全な分離を実現しています。
 
-Each profile defines a `SharingConfig` that controls whether specific configuration components are isolated or synchronized with a "source" profile (usually `default`).
+**退避対象のクレデンシャル**:
+- デスクトップ用: Service: `Claude Safe Storage`, Account: `Claude Key`
+- CLI用: Service: `Claude Code-credentials`, Account: `CloudFlare`
 
-There are exactly three `SharingMode` types:
-1. **`Isolate` (Default)**: The file/directory is completely blank for the new profile. It shares no history or data.
-2. **`Share`**: A soft symlink (`ln -s`) is created pointing to the source profile's path. Any changes made by the profile are immediately reflected globally.
-3. **`Copy`**: A one-time hard copy is performed. A background `FileWatcher` (via `notify`) monitors the source file for changes and propagates them down to the profile. This is ideal for `CLAUDE.md` where global rules need to flow down, but local project rules do not flow up.
+**スイッチング・フロー (`switcher.switch_to`)**:
+1. 現在のプロファイルのキーチェーン情報を暗号化されたJSON (`cli-data/keychain_backup.json`) として退避。
+2. キーチェーン上の既存エントリを安全に**削除**（次プロファイルへの流出防止）。
+3. 遷移先のプロファイルの `keychain_backup.json` があればキーチェーンに復元（なければ空の状態で認証を要求）。
+4. `config.toml` の `active_profile` を更新。
 
-### Component Mapping:
-| Component | Default Mode | Path | Description |
-|-----------|--------------|------|-------------|
-| **API Tokens / Auth** | **Isolate** (Enforced) | Keychain / Secure Storage | Never synced to prevent accidental consumption. |
-| **History (Memory)** | **Isolate** (Enforced) | `.../cli-data/projects/` | Conversation memory is strictly isolated. |
-| **MCP Config** | `Isolate` | `claude_desktop_config.json` | Can be set to `Copy` or `Share` for unified tooling. |
-| **CLAUDE.md** | `Isolate` | `CLAUDE.md` | Can be set to `Copy` for unified system prompt rules. |
-| **Plugins** | `Isolate` | `plugins/` | Installed Claude Code extensions. |
+## 4. インターフェース仕様
 
-## 4. Verification Checklist
+### A. Tauri GUI (Desktop)
+- システムトレイに常駐。アクティブなプロファイルは `●`、その他は `○` で表示。
+- **Auto-launch**: トレイからプロファイルを切り替えた際、デフォルトプロファイル以外であれば、即座に該当の `user-data-dir` を指定して Claude Desktop を自動起動します。
+- `settings` メニューからプロファイルのCRUD操作（Tauri commands: `create_profile`, `switch_profile`, `delete_profile`, `get_profile_details`）を提供するWebUIを表示可能。
 
-To verify that the implementation adheres to this specification, the following automated or manual tests must pass:
+### B. CLI コマンド (`csw`)
+- `csw init`: ベース設定の初期化
+- `csw profile create <name> [--mode share]`: プロファイル作成
+- `csw profile list | show <name> | delete <name>`: プロファイル管理
+- `csw switch <name> [--no-launch]`: プロファイルの切り替え（Tauriと同等の処理を実行）
+- `csw env`: 現在のアクティブプロファイルに対応する環境変数スクリプトを出力。
+  - **使い方**: ターミナルで `eval $(csw env)` または `eval $(csw env <name>)` を実行することで、対象セッションの `CLAUDE_CONFIG_DIR` 等が上書きされ、Claude Codeが隔離環境で実行されます。
+- `csw status`: 実行中プロセスのPIDと現在のコンテキスト状態を表示。
 
-- [ ] **Test: Independent Data**: Create "Work" and "Research" profiles. Login to different accounts in each. Ensure closing one and opening the other does not log out the other.
-- [ ] **Test: Default Integrity**: Launch `Claude.app` manually via Spotlight. Ensure it opens the original (default) account, proving zero environment pollution.
-- [ ] **Test: Copy Sync**: Set `CLAUDE.md` to `Copy` mode. Edit the default profile's `CLAUDE.md`. The `FileWatcher` must successfully replicate the edit into the target profile within 1 second.
-- [ ] **Test: CI Build**: The `tauri-action@v2` CI pipeline must compile without errors on `universal-apple-darwin` and attach a valid DMG artifact to the GitHub release.
+## 5. ゼロインパクト保証 (Non-invasive Guarantee)
+本アプリは、OS のグローバル環境変数（`.zshrc` 等）を直接書き換えません。
+GUI、あるいはターミナル上で手動の環境変数評価を行わずに `claude` (CLI) や `Claude.app` (Spotlight経由) を起動した場合、完全に標準の（隔離されていない）デフォルト状態として動作します。既存の環境を破壊するリスクはゼロに設計されています。
