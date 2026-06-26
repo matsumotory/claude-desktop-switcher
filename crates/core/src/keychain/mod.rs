@@ -23,6 +23,10 @@ pub trait KeychainProvider {
 
 /// Create the keychain provider for the current OS.
 pub fn create_keychain_provider() -> Box<dyn KeychainProvider> {
+    #[cfg(test)]
+    {
+        return Box::new(mock::MockKeychainProvider::new());
+    }
     #[cfg(target_os = "macos")]
     {
         Box::new(macos::MacOsKeychainProvider::new())
@@ -46,3 +50,6 @@ pub fn create_keychain_provider() -> Box<dyn KeychainProvider> {
         Box::new(StubKeychainProvider)
     }
 }
+
+#[cfg(test)]
+pub mod mock;
