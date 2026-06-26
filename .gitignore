@@ -1,0 +1,27 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Tauri (Phase 2)
+/crates/tauri-app/dist/
+/crates/tauri-app/node_modules/
+
+# Sandbox test artifacts
+/.context-switcher-sandbox/
+sandbox-results.md
+
+# Environment
+.env
+.env.local
