@@ -32,11 +32,15 @@
         <!-- Split-screen Hero Section -->
         <section class="hero container">
             <div class="hero-text fade-in">
-                <h1 class="headline">Manage Claude Desktop & CLI Profiles. <br>Perfectly synced.</h1>
-                <p class="subtext">The native macOS menu bar utility that manages dedicated data directories for both the <strong>Desktop App</strong> and the <strong>Claude Code (CLI)</strong> simultaneously. Switch personal, work, and research contexts effortlessly without burning API tokens.</p>
+                <div class="hero-labels">
+                    <span class="eyebrow">Zero-Impact Isolation</span>
+                    <span class="unofficial-badge">Not affiliated with Anthropic.</span>
+                </div>
+                <h1 class="headline">Isolate Claude Desktop Environments.</h1>
+                <p class="subtext">Customize the separation level of your profiles. This macOS utility unifies the management of both your Claude Desktop App and Claude Code (CLI) environments.</p>
                 <div class="button-group">
-                    <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">Download for macOS</a>
-                    <a href="#guide" class="btn btn-secondary">Read Documentation</a>
+                    <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">Download for macOS <div class="btn-icon-wrap">↗</div></a>
+                    <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md" class="btn btn-secondary">Read Documentation</a>
                 </div>
             </div>
             <div class="hero-visual fade-in delay-1">
@@ -49,27 +53,59 @@
         <!-- Asymmetric Features Bento -->
         <section id="features" class="features container">
             <div class="features-grid">
-                <div class="feature-cell cell-large fade-in">
-                    <div class="cell-content">
-                        <h2>Independent Profile Directories</h2>
-                        <p>Switch effortlessly between personal and work accounts. The app manages dedicated Application Support directories and Keychain credentials for each profile, allowing you to customize what data is independent and what is shared.</p>
-                    </div>
-                    <img src="assets/profile_management.png" alt="Profile Management" class="feature-img">
+                <div class="feature-intro fade-in">
+                    <h2>Unified Control of<br>GUI and CLI</h2>
+                    <p>While Claude Desktop and Claude Code are separate tools, this utility manages their backend profiles as one. Switch GUI environments via the menu bar, and sync your external terminal to the exact same isolated environment with a single command.</p>
                 </div>
                 
-                <div class="feature-cell cell-small fade-in delay-1">
-                    <div class="cell-content">
-                        <h2>Zero Impact</h2>
-                        <p>Does not modify global environment variables or break existing setups. Everything runs in sandboxed paths.</p>
+                <div class="feature-cards-stack">
+                    <div class="feature-cell cell-small fade-in delay-1">
+                        <div class="cell-content">
+                            <h2>Customizable Separation</h2>
+                            <p>Define exactly what to share and what to isolate. For example, you can completely separate your login sessions and past chat histories between 'Work' and 'Personal' profiles, ensuring your data never crosses over.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-cell cell-small dark-accent fade-in delay-2">
+                        <div class="cell-content">
+                            <h2>Localized Profile Application</h2>
+                            <p>Your Mac's global system settings remain untouched. Active profiles are applied strictly locally—only to the Claude Desktop app launched via this tool or your specific terminal tab. This prevents unexpected bleeding into your usual development environment, with the actual isolation level depending on your sharing configuration.</p>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <div class="feature-cell cell-small dark-accent fade-in delay-2">
+        <!-- Use Cases -->
+        <section id="use-cases" class="usecases container fade-in">
+            <div class="usecases-header">
+                <h2>Designed for real workflows.</h2>
+                <p>Adapt the level of isolation to match how you actually work on a single machine.</p>
+            </div>
+            <div class="usecases-bento">
+                <div class="feature-cell bento-wide fade-in delay-1">
                     <div class="cell-content">
-                        <h2>Smart Sync</h2>
-                        <p>Share global CLAUDE.md rules and installed plugins across profiles while keeping conversations strictly isolated.</p>
+                        <span class="usecase-num">01</span>
+                        <h3 class="usecase-title">Strict Project / Client Separation</h3>
+                        <p class="usecase-text">You're managing multiple clients or navigating vastly different technical projects, and you need an absolute guarantee that chat histories and project contexts never intersect.</p>
+                        <p class="usecase-solution">Selecting "Complete Isolation" assigns physically independent data directories and keychain instances to each profile. Source code and conversations from one client will never structurally leak into another.</p>
                     </div>
-                    <img src="assets/sync.png" alt="Sync streams" class="feature-img-small">
+                </div>
+                <div class="feature-cell dark-accent fade-in delay-2">
+                    <div class="cell-content">
+                        <span class="usecase-num">02</span>
+                        <h3 class="usecase-title">Dev / Research Sharing</h3>
+                        <p class="usecase-text">You want separate billing accounts, but wish to share global rules and plugin setups.</p>
+                        <p class="usecase-solution">Use "Flexible Sharing" to seamlessly sync specific configuration files across profiles while preventing redundant management.</p>
+                    </div>
+                </div>
+                <div class="feature-cell fade-in delay-2">
+                    <div class="cell-content">
+                        <span class="usecase-num">03</span>
+                        <h3 class="usecase-title">Multi-Account Scaling</h3>
+                        <p class="usecase-text">You need to seamlessly juggle secondary or alternative accounts as your usage grows.</p>
+                        <p class="usecase-solution">Switch profiles right from the menu bar to instantly access alternative environments.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -77,8 +113,8 @@
         <!-- Vertical Stack: How it Works -->
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
-                <h2>Built for efficiency.</h2>
-                <p>No complex setup required. Operates directly from your menu bar.</p>
+                <h2>Seamless GUI Workflow.</h2>
+                <p>No complex setup for the Desktop app. Operate entirely from your menu bar.</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
@@ -91,7 +127,7 @@
                 <div class="step-item border-top">
                     <div class="step-num">02</div>
                     <div class="step-body">
-                        <h3>Create Contexts</h3>
+                        <h3>Create Profiles</h3>
                         <p>Generate isolated "Work" or "Research" profiles with single clicks.</p>
                     </div>
                 </div>
@@ -99,33 +135,35 @@
                     <div class="step-num">03</div>
                     <div class="step-body">
                         <h3>Switch Seamlessly</h3>
-                        <p>Select your active context. The Desktop app instantly launches in the new context.</p>
+                        <p>Select your active profile. Claude Desktop instantly launches in the new profile.</p>
                     </div>
                 </div>
             </div>
         </section>
-        <!-- User Guide -->
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>Integration & Workflow</h2>
-                <p>Build completely isolated profiles without disrupting your existing setup.</p>
+                <h2>Advanced External Terminal Integration</h2>
+                <p>Leverage your profiles not just in the built-in terminal, but directly within your preferred external terminal apps (like iTerm).</p>
             </div>
             
             <div class="guide-grid">
                 <div class="guide-card">
                     <div class="guide-icon">01</div>
-                    <h3>Initial Setup</h3>
-                    <p>Simply drop it into your Applications folder and launch. Existing environment variables remain untouched, coexisting safely.</p>
+                    <h3>Unified Profile Management</h3>
+                    <p>GUI data and CLI configs are unified and managed under a single, cohesive profile.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
-                    <h3>Profile Creation</h3>
-                    <p>Create independent environments tailored to your needs. Choose between complete isolation (default) or sharing specific configurations.</p>
+                    <h3>Flexible Sharing</h3>
+                    <p>Choose between complete isolation (default) or syncing specific settings seamlessly.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>Terminal Integration</h3>
-                    <p>Run <code>eval $(csw env)</code> in your terminal. Claude Code instantly operates within the same isolated context.</p>
+                    <h3>Terminal<span class="text-nowrap"> Integration</span></h3>
+                    <p>Instantly drop into isolated environments using external terminal emulators.</p>
+                    <div class="code-snippet">
+                        <code>eval $(csw env &lt;profile_name&gt;)</code>
+                    </div>
                 </div>
             </div>
         </section>
@@ -135,9 +173,6 @@
         <div class="footer-left">
             <p>&copy; 2026 Claude Desktop Switcher. Released under MIT License.</p>
             <p>Created by <a href="https://github.com/matsumotory" target="_blank" class="author-link">@matsumotory</a></p>
-        </div>
-        <div class="footer-right">
-            <p>Not affiliated with Anthropic.</p>
         </div>
     </footer>
 

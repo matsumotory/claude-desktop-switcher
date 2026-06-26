@@ -32,14 +32,17 @@
         <!-- Split-screen Hero Section -->
         <section class="hero container">
             <div class="hero-text fade-in">
+                <div class="hero-labels">
+                    <span class="eyebrow">Zero-Impact Isolation</span>
+                    <span class="unofficial-badge">Not affiliated with Anthropic.</span>
+                </div>
                 <h1 class="headline">
-                    <span class="text-nowrap">Claudeデスクトップアプリと</span><span class="text-nowrap">Claude Codeを、</span><br>
-                    <span class="text-nowrap">プロファイル単位で</span><span class="text-nowrap">瞬時に切り替え。</span>
+                    <span class="text-nowrap">Claudeデスクトップアプリの</span><wbr><span class="text-nowrap">環境を分離する。</span>
                 </h1>
-                <p class="subtext">パワーユーザーのためのmacOSメニューバーユーティリティ。単なるターミナル用ツールではありません。<strong>ClaudeデスクトップアプリとClaude Code</strong> の両方において、アカウントごとに独立したデータ領域を割り当て、トークン流出や履歴の混入を防ぎます。</p>
+                <p class="subtext">用途に合わせてアカウントの分離度を細かくカスタマイズ。ClaudeデスクトップアプリとClaude Code（CLI）、両方の環境を統合管理できるMac用ユーティリティです。</p>
                 <div class="button-group">
-                    <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">macOS版をダウンロード</a>
-                    <a href="#guide" class="btn btn-secondary">ドキュメントを読む</a>
+                    <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">macOS版をダウンロード <div class="btn-icon-wrap">↗</div></a>
+                    <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md" class="btn btn-secondary">ドキュメントを読む</a>
                 </div>
             </div>
             <div class="hero-visual fade-in delay-1">
@@ -52,27 +55,59 @@
         <!-- Asymmetric Features Bento -->
         <section id="features" class="features container">
             <div class="features-grid">
-                <div class="feature-cell cell-large fade-in">
-                    <div class="cell-content">
-                        <h2>アカウントごとの独立したデータ領域</h2>
-                        <p>Application Supportディレクトリの参照先とKeychainをプロファイルごとに分離。OSレベルの大がかりな仮想化を行わず、軽量かつ確実にデータを隔離し、アカウントごとの環境を構築します。</p>
-                    </div>
-                    <img src="../assets/profile_management.png?v=2" alt="Profile Management" class="feature-img">
+                <div class="feature-intro fade-in">
+                    <h2>GUIとCLIの<br>統合プロファイル管理</h2>
+                    <p>ClaudeデスクトップアプリとClaude Code（CLI）は独立したツールですが、本アプリが背後のプロファイルを一元管理します。メニューバーからGUIの環境を切り替えるだけでなく、お使いのターミナルからコマンドを1つ叩くだけで、CLIも全く同じ隔離環境へ同期させることができます。</p>
                 </div>
                 
-                <div class="feature-cell cell-small fade-in delay-1">
-                    <div class="cell-content">
-                        <h2>既存の環境変数を一切汚さない</h2>
-                        <p>システムの環境変数をグローバルで変更したり、既存の設定を上書きすることはありません。すべてはサンドボックス化された専用パスで安全に実行されます。</p>
+                <div class="feature-cards-stack">
+                    <div class="feature-cell cell-small fade-in delay-1">
+                        <div class="cell-content">
+                            <h2>分離度のカスタマイズ</h2>
+                            <p>共有したい設定と分けたいデータを用途に合わせて選択可能です。例えば「業務」と「プライベート」でログインアカウントやチャット履歴を完全に分離し、情報が混ざるリスクを防ぐことができます。</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-cell cell-small dark-accent fade-in delay-2">
+                        <div class="cell-content">
+                            <h2>局所的なプロファイル適用</h2>
+                            <p>Mac本体のシステム設定を無差別に上書きすることはありません。設定は本ツールから起動したアプリや特定のターミナルタブに対してのみ局所的に適用されるため、対象外の普段の開発環境へ影響が波及するのを防ぎます（※プロファイル間の干渉度は設定内容に依存します）。</p>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <div class="feature-cell cell-small dark-accent fade-in delay-2">
+        <!-- Use Cases -->
+        <section id="use-cases" class="usecases container fade-in">
+            <div class="usecases-header">
+                <h2>利用シーンと解決する課題</h2>
+                <p>1つのPCの中でコンテキストをどう分けるか。あなたのワークスタイルに合わせて柔軟に分離度を調整できます。</p>
+            </div>
+            <div class="usecases-bento">
+                <div class="feature-cell bento-wide fade-in delay-1">
                     <div class="cell-content">
-                        <h2>必要な設定ファイルだけの部分同期</h2>
-                        <p>会話履歴は隔離しつつも、CLAUDE.mdのグローバルルールやインストール済みのプラグインなど、共通化したい設定だけをプロファイル間で同期することが可能です。</p>
+                        <span class="usecase-num">01</span>
+                        <h3 class="usecase-title">案件や用途ごとの完全分離</h3>
+                        <p class="usecase-text">複数のクライアント案件や、技術スタックが全く異なるプロジェクトを並行して進める際、Claudeのチャット履歴やプロジェクトコンテキストが混ざってしまうリスクを完全に排除したい。</p>
+                        <p class="usecase-solution">「完全隔離」構成を選択することで、プロファイルごとに独立したデータ領域とキーチェーンが割り当てられます。ある案件のソースコードや機密情報が、別の案件のコンテキストに漏れ出す事故を構造的に防ぎます。</p>
                     </div>
-                    <img src="../assets/sync.png?v=2" alt="Sync streams" class="feature-img-small">
+                </div>
+                <div class="feature-cell dark-accent fade-in delay-2">
+                    <div class="cell-content">
+                        <span class="usecase-num">02</span>
+                        <h3 class="usecase-title">開発と研究の部分共有</h3>
+                        <p class="usecase-text">用途ごとに課金アカウントは分けたいが、プラグインや共通設定などは使い回したい。</p>
+                        <p class="usecase-solution">特定の設定ファイル（CLAUDE.md等）を、全プロファイルで同期させる「部分共有」構成に対応。設定の二重管理を防ぎます。</p>
+                    </div>
+                </div>
+                <div class="feature-cell fade-in delay-2">
+                    <div class="cell-content">
+                        <span class="usecase-num">03</span>
+                        <h3 class="usecase-title">マルチアカウント拡張</h3>
+                        <p class="usecase-text">無料枠の制限や用途の広がりに合わせ、複数アカウントを手軽に運用したい。</p>
+                        <p class="usecase-solution">メニューからプロファイルを選ぶだけで、再ログインなしに別環境へ即座にアクセス。</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -80,55 +115,57 @@
         <!-- Vertical Stack: How it Works -->
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
-                <h2>無駄のないワークフロー</h2>
-                <p>複雑な初期設定は不要です。すべてメニューバーから直感的に操作できます。</p>
+                <h2>無駄のない<span class="text-nowrap">GUIワークフロー</span></h2>
+                <p>デスクトップアプリの管理に複雑な設定は不要です。すべてメニューバーから直感的に操作できます。</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
                     <div class="step-num">01</div>
                     <div class="step-body">
-                        <h3>インストール＆起動</h3>
+                        <h3>インストール<span class="text-nowrap">＆起動</span></h3>
                         <p>アプリケーションフォルダに入れて起動するだけ。メニューバーに常駐します。</p>
                     </div>
                 </div>
                 <div class="step-item border-top">
                     <div class="step-num">02</div>
                     <div class="step-body">
-                        <h3>コンテキストの作成</h3>
+                        <h3>プロファイルの<span class="text-nowrap">作成</span></h3>
                         <p>ワンクリックで「業務」「研究」など、完全に独立したプロファイルを作成できます。</p>
                     </div>
                 </div>
                 <div class="step-item border-top">
                     <div class="step-num">03</div>
                     <div class="step-body">
-                        <h3>シームレスな切り替え</h3>
-                        <p>アクティブなプロファイルを選択するだけで、Claudeデスクトップアプリが専用環境で即座に起動します。</p>
+                        <h3>分離環境での<span class="text-nowrap">起動</span></h3>
+                        <p>プロファイルを選択すると、Claudeデスクトップアプリが隔離された専用ディレクトリを参照して起動します。</p>
                     </div>
                 </div>
             </div>
         </section>
-        <!-- User Guide -->
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>導入と活用</h2>
-                <p>既存の環境を破壊することなく、完全に隔離されたプロファイルを構築します。</p>
+                <h2>外部ターミナル環境との<wbr><span class="text-nowrap">高度な連携</span></h2>
+                <p>デスクトップアプリ内蔵のターミナルだけでなく、普段お使いの外部ターミナル（iTerm等）でも同じプロファイルを活用できます。</p>
             </div>
             
             <div class="guide-grid">
                 <div class="guide-card">
                     <div class="guide-icon">01</div>
-                    <h3>初期セットアップ</h3>
-                    <p>アプリケーションフォルダに配置して起動するだけ。既存の環境変数は一切書き換わらず、安全に共存します。</p>
+                    <h3>プロファイルの<span class="text-nowrap">一元管理</span></h3>
+                    <p>GUIデータ領域とCLI設定ファイルが、1つのプロファイル下で統合的に管理されます。</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
-                    <h3>プロファイル作成</h3>
-                    <p>用途に合わせた独立環境を作成。完全隔離（デフォルト）か、設定のみを共有する構成を選択できます。</p>
+                    <h3>柔軟な<span class="text-nowrap">共有設定</span></h3>
+                    <p>完全な隔離（デフォルト）か、一部設定ファイルのみを同期する構成かを柔軟に選択可能です。</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>ターミナル連携</h3>
-                    <p>ターミナルで <code>eval $(csw env)</code> を実行するだけで、Claude Codeも同じ隔離コンテキストで即座に動作を開始します。</p>
+                    <h3>ターミナル<span class="text-nowrap">連動</span></h3>
+                    <p>外部ターミナル（iTerm2等）でも指定環境へ即座にアクセス。</p>
+                    <div class="code-snippet">
+                        <code>eval $(csw env &lt;プロファイル名&gt;)</code>
+                    </div>
                 </div>
             </div>
         </section>
@@ -138,9 +175,6 @@
         <div class="footer-left">
             <p>&copy; 2026 Claude Desktop Switcher. Released under MIT License.</p>
             <p>Created by <a href="https://github.com/matsumotory" target="_blank" class="author-link">@matsumotory</a></p>
-        </div>
-        <div class="footer-right">
-            <p>Not affiliated with Anthropic.</p>
         </div>
     </footer>
 
