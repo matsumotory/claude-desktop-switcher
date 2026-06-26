@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.2.1...v0.2.2) (2026-06-26)
+
+
+### Bug Fixes
+
+* remove npm install from workflows since there is no package.json ([9871cbe](https://github.com/matsumotory/claude-desktop-switcher/commit/9871cbeea8189d2ff789881217c2aa5e56bccde7))
+* resolve notify API and compilation errors, correct CI tauri-action version, and add rigorous SPECIFICATION ([a355377](https://github.com/matsumotory/claude-desktop-switcher/commit/a355377ce6b543075fd8260560eecc82af312f3d))
+
 ## [0.2.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.2.0...v0.2.1) (2026-06-26)
 
 
