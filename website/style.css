@@ -312,6 +312,52 @@ html[lang="ja"] .feature-intro h2 {
     border-color: var(--border-color);
 }
 
+/* Use Cases Bento */
+.usecases {
+    padding-bottom: 120px;
+}
+
+.usecases-header {
+    margin-bottom: 48px;
+}
+
+.usecases-header h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    margin-bottom: 16px;
+}
+
+html[lang="ja"] .usecases-header h2 {
+    font-size: 2.25rem;
+}
+
+.usecases-header p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 650px;
+    line-height: 1.6;
+}
+
+.usecases-bento {
+    display: grid;
+    grid-template-columns: 6fr 4fr;
+    gap: 24px;
+}
+
+.usecases-bento .bento-wide {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+    .usecases-bento {
+        grid-template-columns: 1fr;
+    }
+    .usecases-bento .bento-wide {
+        grid-column: 1 / -1;
+    }
+}
+
 /* Workflow Stack */
 .workflow {
     padding-bottom: 120px;
