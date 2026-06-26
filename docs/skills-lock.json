@@ -78,6 +78,12 @@
       "sourceType": "github",
       "skillPath": "skills/stitch-skill/SKILL.md",
       "computedHash": "13322f38406cd3abf16ba45e35bdc9b18002d0153a79b4612b97aefc65d5a335"
+    },
+    "tauri-v2-best-practices": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": "tauri-v2-best-practices/SKILL.md",
+      "computedHash": "local"
     }
   }
 }

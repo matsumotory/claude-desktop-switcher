@@ -1,12 +1,30 @@
-name: Release DMG
+name: Release Please
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  build:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  build-mac-dmg:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,9 +46,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Claude Desktop Switcher ${{ github.ref_name }}'
-          releaseBody: 'Release for Claude Desktop Switcher.'
-          releaseDraft: false
-          prerelease: false
+          tagName: ${{ needs.release-please.outputs.tag_name }}
           args: --target universal-apple-darwin
