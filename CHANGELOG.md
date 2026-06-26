@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.2.2...v0.3.0) (2026-06-26)
+
+
+### Features
+
+* auto-merge release-please PRs ([af1f9fc](https://github.com/matsumotory/claude-desktop-switcher/commit/af1f9fceeac09eaef7bafdfeacc1bc0b4c08ce5f))
+
+
+### Bug Fixes
+
+* add missing crate::error::Result import to profile/mod.rs ([c27494b](https://github.com/matsumotory/claude-desktop-switcher/commit/c27494bd692212229d6ed212a69cb80a46453252))
+* add notify::Error to CswError ([82d5457](https://github.com/matsumotory/claude-desktop-switcher/commit/82d54575774cebe4d171662a4fb1a5aa1b6f94b1))
+* make PlatformProvider Send + Sync ([226ec4b](https://github.com/matsumotory/claude-desktop-switcher/commit/226ec4b3d8be567e1cbcd52362fc8f36865b3987))
+* remove invalid devUrl from tauri.conf.json ([cd9b7ba](https://github.com/matsumotory/claude-desktop-switcher/commit/cd9b7baef000202d93a25076d54304725f8c3026))
+* revert tauri-action version to v0 to fix CI ([d61dad3](https://github.com/matsumotory/claude-desktop-switcher/commit/d61dad3017d0aa885498e610971b1c384feba83e))
+
 ## [0.2.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.2.1...v0.2.2) (2026-06-26)
 
 
