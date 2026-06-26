@@ -45,10 +45,6 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install dependencies
-        run: |
-          npm install
-
       - name: Configure App Store Connect API Key
         run: |
           echo "${{ secrets.APPLE_API_KEY_CONTENT }}" | base64 -d > ${{ runner.temp }}/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
