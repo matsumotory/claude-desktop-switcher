@@ -1,12 +1,17 @@
 {
   "packages": {
     ".": {
-      "release-type": "rust",
+      "release-type": "simple",
       "extra-files": [
         {
           "type": "json",
           "path": "crates/desktop/tauri.conf.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.workspace.package.version"
         }
       ]
     }

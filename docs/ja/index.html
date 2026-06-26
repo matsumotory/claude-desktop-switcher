@@ -32,8 +32,11 @@
         <!-- Split-screen Hero Section -->
         <section class="hero container">
             <div class="hero-text fade-in">
-                <h1 class="headline">複数のClaude環境を、安全かつ完全に分離。</h1>
-                <p class="subtext">パワーユーザーのためのmacOSメニューバーユーティリティ。個人、業務、研究のコンテキストを完全に切り離し、APIトークンの流出や履歴の混入を根本から防ぎます。</p>
+                <h1 class="headline">
+                    <span class="text-nowrap">Claudeデスクトップアプリと</span><span class="text-nowrap">Claude Codeを、</span><br>
+                    <span class="text-nowrap">プロファイル単位で</span><span class="text-nowrap">瞬時に切り替え。</span>
+                </h1>
+                <p class="subtext">パワーユーザーのためのmacOSメニューバーユーティリティ。単なるターミナル用ツールではありません。<strong>ClaudeデスクトップアプリとClaude Code</strong> の両方において、アカウントごとに独立したデータ領域を割り当て、トークン流出や履歴の混入を防ぎます。</p>
                 <div class="button-group">
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">macOS版をダウンロード</a>
                     <a href="#guide" class="btn btn-secondary">ドキュメントを読む</a>
@@ -41,7 +44,7 @@
             </div>
             <div class="hero-visual fade-in delay-1">
                 <div class="visual-frame">
-                    <img src="../assets/hero.png" alt="Settings Interface" class="hero-image">
+                    <img src="../assets/ja_hero.png?v=3" alt="Settings Interface" class="hero-image">
                 </div>
             </div>
         </section>
@@ -51,25 +54,25 @@
             <div class="features-grid">
                 <div class="feature-cell cell-large fade-in">
                     <div class="cell-content">
-                        <h2>完全なデータアイソレーション</h2>
-                        <p>APIトークン、チャット履歴、コンテキストなどすべての情報を環境ごとに厳密に隔離します。業務環境で個人のトークンを誤って消費してしまうような事故はもう起きません。</p>
+                        <h2>アカウントごとの独立したデータ領域</h2>
+                        <p>Application Supportディレクトリの参照先とKeychainをプロファイルごとに分離。OSレベルの大がかりな仮想化を行わず、軽量かつ確実にデータを隔離し、アカウントごとの環境を構築します。</p>
                     </div>
-                    <img src="../assets/isolation.png" alt="Isolated Environments" class="feature-img">
+                    <img src="../assets/ja_profile_management.png?v=2" alt="Profile Management" class="feature-img">
                 </div>
                 
                 <div class="feature-cell cell-small fade-in delay-1">
                     <div class="cell-content">
-                        <h2>既存環境へのゼロ・インパクト</h2>
-                        <p>システムの環境変数を汚染したり、既存の設定を上書きすることはありません。すべてはサンドボックス化されたパスで安全に実行されます。</p>
+                        <h2>既存の環境変数を一切汚さない</h2>
+                        <p>システムの環境変数をグローバルで変更したり、既存の設定を上書きすることはありません。すべてはサンドボックス化された専用パスで安全に実行されます。</p>
                     </div>
                 </div>
 
                 <div class="feature-cell cell-small dark-accent fade-in delay-2">
                     <div class="cell-content">
-                        <h2>スマートな同期設定</h2>
+                        <h2>必要な設定ファイルだけの部分同期</h2>
                         <p>会話履歴は隔離しつつも、CLAUDE.mdのグローバルルールやインストール済みのプラグインなど、共通化したい設定だけをプロファイル間で同期することが可能です。</p>
                     </div>
-                    <img src="../assets/sync.png" alt="Sync streams" class="feature-img-small">
+                    <img src="../assets/ja_sync.png?v=2" alt="Sync streams" class="feature-img-small">
                 </div>
             </div>
         </section>
@@ -99,7 +102,7 @@
                     <div class="step-num">03</div>
                     <div class="step-body">
                         <h3>シームレスな切り替え</h3>
-                        <p>アクティブなコンテキストを選択するだけで、CLIもデスクトップアプリも瞬時に切り替わります。</p>
+                        <p>アクティブなプロファイルを選択するだけで、Claude CodeもClaudeデスクトップアプリも瞬時に切り替わります。</p>
                     </div>
                 </div>
             </div>
@@ -107,52 +110,26 @@
         <!-- User Guide -->
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>ユーザーガイド</h2>
-                <p>より詳細な使い方や、隔離・同期の仕組みについて</p>
+                <h2>導入と活用</h2>
+                <p>既存の環境を破壊することなく、完全に隔離されたプロファイルを構築します。</p>
             </div>
             
-            <div class="guide-content">
-                <h3>1. インストールと初期セットアップ</h3>
-                <p>既存のClaude環境（デフォルトの個人環境など）はそのまま維持されます。</p>
-                <ol>
-                    <li>配布された <code>ClaudeDesktopSwitcher.app</code> を、macOSの「アプリケーション」フォルダにドラッグ＆ドロップします。</li>
-                    <li>アプリを起動すると、画面右上のメニューバーに青いアイコンが常駐します。</li>
-                </ol>
-
-                <h4>新しいプロファイル（環境）の作成とカスタマイズ</h4>
-                <p>仕事用や研究用の新しい独立環境を作成します。<strong>本アプリは、データが混ざる事故を防ぐため「すべてが分離される完全隔離」がデフォルト動作となっています。</strong></p>
-                <ol>
-                    <li>メニューバーのアイコンをクリックし、<strong>「Settings...」</strong>を選択します。</li>
-                    <li>設定ウインドウが開いたら、<strong>「+ Create Profile」</strong>ボタンをクリックします。</li>
-                    <li><strong>Name</strong> にプロファイル名（例：<code>Work</code>, <code>Research</code>）を入力します。</li>
-                    <li>構成をカスタマイズ（オプション）します。
-                        <ul>
-                            <li><strong>Isolated（完全隔離）</strong>: デフォルト設定。完全に独立した空の状態からスタートします。</li>
-                            <li><strong>Shared（相互同期）</strong>: トークンは別アカウントで消費しつつ、設定ファイル等（MCP設定等）は元の環境と同期します。</li>
-                        </ul>
-                    </li>
-                    <li><strong>「Create」</strong>を押してプロファイルを保存します。</li>
-                </ol>
-
-                <h3>2. 日々の使い方（ワークフロー）</h3>
-                <h4>シナリオ A: 仕事用アカウントで作業を始める</h4>
-                <ol>
-                    <li>メニューバーから作成した「Work」プロファイルをクリックします。</li>
-                    <li>新しいClaudeデスクトップのウインドウが自動的に立ち上がります。※初回のみログインが必要です。</li>
-                </ol>
-                
-                <h4>シナリオ B: ターミナル（Claude Code）を安全に起動する</h4>
-                <ol>
-                    <li>必ず、目的のアカウント環境（例：Work）のClaudeデスクトップウインドウを一番手前にします。</li>
-                    <li>その画面内から「ターミナルで開く」連携ボタンをクリックしてターミナルを起動します。</li>
-                    <li>そのまま <code>claude</code> と入力して作業を開始します。（自動的に仕事用環境として認識されます）</li>
-                </ol>
-
-                <h4>シナリオ C: いつも通りの個人用環境に戻る</h4>
-                <p>Spotlight等から通常通り <code>Claude.app</code> を起動するか、普通のターミナルで <code>claude</code> と打てば、常にデフォルト（個人用）の環境として動作します。</p>
-
-                <h3>3. 安心・安全の仕様（ゼロ・インパクト）</h3>
-                <p>Claude Desktop Switcherは、システムの環境変数を裏で勝手に書き換えることはありません。本アプリを使わずに普通にClaudeを起動した場合は、100%これまで通りのデフォルト環境として動くため、既存の環境が破壊されることはありません。</p>
+            <div class="guide-grid">
+                <div class="guide-card">
+                    <div class="guide-icon">01</div>
+                    <h3>初期セットアップ</h3>
+                    <p>アプリケーションフォルダに配置して起動するだけ。既存の環境変数は一切書き換わらず、安全に共存します。</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-icon">02</div>
+                    <h3>プロファイル作成</h3>
+                    <p>用途に合わせた独立環境を作成。完全隔離（デフォルト）か、設定のみを共有する構成を選択できます。</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-icon">03</div>
+                    <h3>ターミナル連携</h3>
+                    <p>プロファイルを選択して連携ボタンを押すだけで、Claude Codeも同じ隔離コンテキストで即座に動作を開始します。</p>
+                </div>
             </div>
         </section>
     </main>

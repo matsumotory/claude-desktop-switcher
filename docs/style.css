@@ -156,12 +156,9 @@ body {
     margin-bottom: 24px;
 }
 
-html[lang="ja"] .headline {
-    word-break: keep-all;
-    overflow-wrap: break-word;
-}
-
-.subtext {
+.text-nowrap {
+    display: inline-block;
+}.subtext {
     font-size: 1.125rem;
     color: var(--text-secondary);
     max-width: 480px;
@@ -306,50 +303,44 @@ html[lang="ja"] .headline {
     color: var(--text-secondary);
 }
 
-.guide-content h3 {
-    font-size: 1.5rem;
-    margin-top: 48px;
-    margin-bottom: 16px;
-    color: var(--text-primary);
-    font-weight: 500;
+.guide-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
 }
 
-.guide-content h4 {
+.guide-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 32px;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.guide-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+}
+
+.guide-icon {
+    font-family: monospace;
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 24px;
+    font-weight: 600;
+}
+
+.guide-card h3 {
     font-size: 1.25rem;
-    margin-top: 32px;
+    font-weight: 500;
     margin-bottom: 12px;
     color: var(--text-primary);
-    font-weight: 500;
 }
 
-.guide-content p {
+.guide-card p {
     color: var(--text-secondary);
-    margin-bottom: 16px;
     line-height: 1.6;
-}
-
-.guide-content ul, .guide-content ol {
-    color: var(--text-secondary);
-    margin-bottom: 24px;
-    padding-left: 24px;
-}
-
-.guide-content li {
-    margin-bottom: 8px;
-    line-height: 1.6;
-}
-
-.guide-content code {
-    background: var(--bg-surface-hover);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
-}
-
-.guide-content strong {
-    color: var(--text-primary);
-    font-weight: 600;
+    font-size: 0.95rem;
 }
 
 /* Footer */
@@ -406,6 +397,9 @@ html[lang="ja"] .headline {
     .workflow {
         grid-template-columns: 1fr;
         gap: 32px;
+    }
+    .guide-grid {
+        grid-template-columns: 1fr;
     }
     .site-footer {
         flex-direction: column;
