@@ -107,52 +107,26 @@
         <!-- User Guide -->
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>User Guide</h2>
-                <p>Detailed instructions on usage, isolation, and synchronization.</p>
+                <h2>Integration & Workflow</h2>
+                <p>Build completely isolated profiles without disrupting your existing setup.</p>
             </div>
             
-            <div class="guide-content">
-                <h3>1. Installation & Setup</h3>
-                <p>Your existing Claude environment (default personal setup) remains completely untouched.</p>
-                <ol>
-                    <li>Drag and drop the downloaded <code>ClaudeDesktopSwitcher.app</code> into your macOS "Applications" folder.</li>
-                    <li>Launch the app. A blue icon will appear in your menu bar.</li>
-                </ol>
-
-                <h4>Creating a New Profile</h4>
-                <p>Create a new isolated environment for work or research. <strong>By default, the app enforces "Complete Isolation" to prevent accidental data mixing.</strong></p>
-                <ol>
-                    <li>Click the menu bar icon and select <strong>"Settings..."</strong>.</li>
-                    <li>Click the <strong>"+ Create Profile"</strong> button.</li>
-                    <li>Enter a <strong>Name</strong> (e.g., <code>Work</code>, <code>Research</code>).</li>
-                    <li>Customize configuration (Optional):
-                        <ul>
-                            <li><strong>Isolated</strong>: Default. Starts from a completely empty, isolated state.</li>
-                            <li><strong>Shared</strong>: Consumes tokens on a separate account while syncing settings (like MCP configurations) from your default environment.</li>
-                        </ul>
-                    </li>
-                    <li>Click <strong>"Create"</strong> to save the profile.</li>
-                </ol>
-
-                <h3>2. Daily Workflow</h3>
-                <h4>Scenario A: Starting Work on a Dedicated Account</h4>
-                <ol>
-                    <li>Click the "Work" profile from the menu bar.</li>
-                    <li>A new Claude desktop window automatically opens. (Login required on first launch).</li>
-                </ol>
-                
-                <h4>Scenario B: Safely Launching the Terminal (Claude Code)</h4>
-                <ol>
-                    <li>Ensure the specific Claude desktop window (e.g., your Work environment) is active and in focus.</li>
-                    <li>Click the official "Open in Terminal" button from within that window.</li>
-                    <li>Type <code>claude</code> to begin. The CLI will automatically run under the work environment context.</li>
-                </ol>
-
-                <h4>Scenario C: Returning to Your Default Environment</h4>
-                <p>To use your normal personal environment, simply launch <code>Claude.app</code> from Spotlight, or open a standard terminal and type <code>claude</code>. It will always default to your original setup.</p>
-
-                <h3>3. Safety & Zero Impact Guarantee</h3>
-                <p>Claude Desktop Switcher never modifies your system's global environment variables behind the scenes. If you launch Claude without using this app, it will run 100% as your original default environment. There is zero risk of destroying your existing setup.</p>
+            <div class="guide-grid">
+                <div class="guide-card">
+                    <div class="guide-icon">01</div>
+                    <h3>Initial Setup</h3>
+                    <p>Simply drop it into your Applications folder and launch. Existing environment variables remain untouched, coexisting safely.</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-icon">02</div>
+                    <h3>Profile Creation</h3>
+                    <p>Create independent environments tailored to your needs. Choose between complete isolation (default) or sharing specific configurations.</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-icon">03</div>
+                    <h3>Terminal Integration</h3>
+                    <p>Select a profile and press the integration button. Claude Code instantly operates within the same isolated context.</p>
+                </div>
             </div>
         </section>
     </main>
