@@ -6,7 +6,7 @@ Claude Desktop Switcher is a macOS menu bar utility for safely isolating and man
 The official Claude Desktop App lacks multi-account switching. To work around this, users have historically relied on messy hacks—like forcing separate instances via terminal `--user-data-dir` arguments or using CLI-only switchers like `direnv`. 
 However, these methods fail to bridge the gap between "safe desktop app isolation (like Keychain partitioning)" and "CLI context syncing."
 
-This tool eliminates the need for complex shell scripts. With a single click from the menu bar, it achieves **"Desktop App Isolation" and "Linked CLI Launching"** based on a "Zero-Impact Principle" that never destroys or mutates your system's global environment variables.
+This tool eliminates the need for complex shell scripts. It achieves **"Desktop App Isolation"** with a single click from the menu bar, and allows **"Linked CLI Launching"** via simple terminal commands. It is based on a "Zero-Impact Principle" that never destroys or mutates your system's global environment variables.
 
 ---
 
@@ -77,5 +77,5 @@ This is the safest method to ensure your desktop app and terminal (CLI) accounts
 * **It's safe even if you forget to launch the app (Zero-Impact)**
   Claude Desktop Switcher never silently alters system environment variables. If you launch Claude normally without using this app, it will act as your default environment 100% of the time. Your existing setup cannot be broken.
 * **How to prevent accidental token consumption**
-  If you are unsure which account your terminal is using, simply remember: **"Which Claude Desktop window did I use to call this terminal?"** The parent window's account settings are guaranteed to carry over.
+  If you are unsure which account your terminal is using, simply run the `csw status` command. This will safely display the active profile currently applied to your terminal session.
 
