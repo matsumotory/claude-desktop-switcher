@@ -45,7 +45,7 @@ pub trait PlatformProvider {
     // --- Process control ---
 
     /// Launch Claude Desktop with a specific user-data-dir.
-    fn launch_claude_desktop(&self, user_data_dir: &std::path::Path) -> Result<()>;
+    fn launch_claude_desktop(&self, user_data_dir: &std::path::Path, cli_config_dir: Option<&std::path::Path>) -> Result<()>;
 
     /// Check if Claude Desktop is currently running.
     fn is_claude_desktop_running(&self) -> Result<bool>;

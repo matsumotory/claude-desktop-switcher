@@ -82,20 +82,24 @@ impl PlatformProvider for MacOsProvider {
         path.is_symlink()
     }
 
-    fn launch_claude_desktop(&self, user_data_dir: &Path) -> Result<()> {
+    fn launch_claude_desktop(&self, user_data_dir: &Path, cli_config_dir: Option<&Path>) -> Result<()> {
         let app_path = self.claude_desktop_app_path();
         if !app_path.exists() {
             return Err(CswError::DesktopNotInstalled);
         }
 
-        Command::new("open")
-            .arg("-n")
-            .arg("-a")
-            .arg(&app_path)
-            .arg("--args")
-            .arg(format!("--user-data-dir={}", user_data_dir.display()))
-            .spawn()
-            .map_err(|e| CswError::Other(format!("Failed to launch Claude Desktop: {e}")))?;
+        let mut cmd = Command::new("open");
+        cmd.arg("-n").arg("-a").arg(&app_path);
+        
+        if let Some(cli_dir) = cli_config_dir {
+            cmd.arg("--env")
+               .arg(format!("CLAUDE_CONFIG_DIR={}", cli_dir.display()));
+        }
+
+        cmd.arg("--args")
+           .arg(format!("--user-data-dir={}", user_data_dir.display()))
+           .spawn()
+           .map_err(|e| CswError::Other(format!("Failed to launch Claude Desktop: {e}")))?;
 
         Ok(())
     }
