@@ -34,7 +34,7 @@
             <div class="hero-text fade-in">
                 <span class="eyebrow">Zero-Impact Isolation</span>
                 <h1 class="headline">Isolate Claude Desktop Environments.</h1>
-                <p class="subtext">Customize the separation level of your profiles. This macOS utility lets you control your Claude Desktop and Claude Code environments together based on your specific needs.</p>
+                <p class="subtext">Customize the separation level of your profiles. This macOS utility unifies the management of both your Claude Desktop App and Claude Code (CLI) environments.</p>
                 <div class="button-group">
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">Download for macOS <div class="btn-icon-wrap">↗</div></a>
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md" class="btn btn-secondary">Read Documentation</a>
@@ -51,8 +51,8 @@
         <section id="features" class="features container">
             <div class="features-grid">
                 <div class="feature-intro fade-in">
-                    <h2>Integrated Claude Desktop<br>& Claude Code Control</h2>
-                    <p>Switch profiles from the menu bar to manage your Claude Desktop data directory and Claude Code environment together. Keep both tools aligned under the exact same profile.</p>
+                    <h2>Unified Control of<br>GUI and CLI</h2>
+                    <p>While Claude Desktop and Claude Code are separate tools, this utility manages their backend profiles as one. Access the same isolated environment whether you use the menu bar for the GUI or the terminal for the CLI.</p>
                 </div>
                 
                 <div class="feature-cards-stack">
@@ -76,8 +76,8 @@
         <!-- Vertical Stack: How it Works -->
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
-                <h2>Built for efficiency.</h2>
-                <p>No complex setup required. Operates directly from your menu bar.</p>
+                <h2>Seamless GUI Workflow.</h2>
+                <p>No complex setup for the Desktop app. Operate entirely from your menu bar.</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
@@ -103,28 +103,27 @@
                 </div>
             </div>
         </section>
-        <!-- User Guide -->
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>Integration & Workflow</h2>
-                <p>Build completely isolated profiles without disrupting your existing setup.</p>
+                <h2>Advanced CLI Integration</h2>
+                <p>Leverage the profiles you created in the GUI directly within your terminal for Claude Code.</p>
             </div>
             
             <div class="guide-grid">
                 <div class="guide-card">
                     <div class="guide-icon">01</div>
-                    <h3>Initial Setup</h3>
-                    <p>Simply drop it into your Applications folder and launch. Existing environment variables remain untouched, coexisting safely.</p>
+                    <h3>Unified Profile Management</h3>
+                    <p>Your Desktop app data directories and CLI configuration files are managed together under a single, unified profile.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
-                    <h3>Profile Creation</h3>
-                    <p>Create independent environments tailored to your needs. Choose between complete isolation (default) or sharing specific configurations.</p>
+                    <h3>Flexible Sharing</h3>
+                    <p>Choose between complete isolation (default) or sharing specific configuration files on a per-profile basis.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>Terminal Integration</h3>
-                    <p>Run <code>eval $(csw env)</code> in your terminal. Claude Code instantly operates within the same isolated profile.</p>
+                    <h3>Terminal Context Switching</h3>
+                    <p>Simply run <code>eval $(csw env)</code> in your terminal to instantly operate Claude Code within the isolated environment of your active profile.</p>
                 </div>
             </div>
         </section>

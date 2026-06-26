@@ -36,7 +36,7 @@
                 <h1 class="headline">
                     <span class="text-nowrap">Claudeデスクトップアプリの</span><wbr><span class="text-nowrap">環境を分離する。</span>
                 </h1>
-                <p class="subtext">用途に合わせてアカウントの分離度を細かくカスタマイズ。ClaudeデスクトップアプリとClaude Codeの環境をまとめて制御できるMac用ユーティリティです。</p>
+                <p class="subtext">用途に合わせてアカウントの分離度を細かくカスタマイズ。ClaudeデスクトップアプリとClaude Code（CLI）、両方の環境を統合管理できるMac用ユーティリティです。</p>
                 <div class="button-group">
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">macOS版をダウンロード <div class="btn-icon-wrap">↗</div></a>
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md" class="btn btn-secondary">ドキュメントを読む</a>
@@ -53,8 +53,8 @@
         <section id="features" class="features container">
             <div class="features-grid">
                 <div class="feature-intro fade-in">
-                    <h2>Claudeデスクトップアプリと<br>Claude Codeの統合制御</h2>
-                    <p>メニューバーからの操作で、Claudeデスクトップアプリのデータ領域とClaude Codeの環境をまとめて切り替えます。2つのツールを常に共通のプロファイル設定で連動させることができます。</p>
+                    <h2>GUIとCLIの<br>統合プロファイル管理</h2>
+                    <p>ClaudeデスクトップアプリとClaude Codeは独立したツールですが、本アプリを使えば背後のプロファイルを一元管理できます。GUIを使う際はメニューバーから、CLIを使う際はターミナルから、常に同期された同じ隔離環境を呼び出せます。</p>
                 </div>
                 
                 <div class="feature-cards-stack">
@@ -78,8 +78,8 @@
         <!-- Vertical Stack: How it Works -->
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
-                <h2>無駄のないワークフロー</h2>
-                <p>複雑な初期設定は不要です。すべてメニューバーから直感的に操作できます。</p>
+                <h2>無駄のないGUIワークフロー</h2>
+                <p>デスクトップアプリの管理に複雑な設定は不要です。すべてメニューバーから直感的に操作できます。</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
@@ -105,28 +105,27 @@
                 </div>
             </div>
         </section>
-        <!-- User Guide -->
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>導入と活用</h2>
-                <p>既存の環境を破壊することなく、完全に隔離されたプロファイルを構築します。</p>
+                <h2>CLI環境との高度な連携</h2>
+                <p>GUIで作成したプロファイルを、ターミナル上のClaude Codeでもそのまま活用できます。</p>
             </div>
             
             <div class="guide-grid">
                 <div class="guide-card">
                     <div class="guide-icon">01</div>
-                    <h3>初期セットアップ</h3>
-                    <p>アプリケーションフォルダに配置して起動するだけ。既存の環境変数は一切書き換わらず、安全に共存します。</p>
+                    <h3>プロファイルの一元管理</h3>
+                    <p>デスクトップアプリ用のデータ領域とCLI用の設定ファイルが、1つのプロファイルの下で統合的に管理されます。</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
-                    <h3>プロファイル作成</h3>
-                    <p>用途に合わせた独立環境を作成。完全隔離（デフォルト）か、設定のみを共有する構成を選択できます。</p>
+                    <h3>柔軟な共有設定</h3>
+                    <p>プロファイルごとに完全隔離（デフォルト）か、特定の設定ファイルだけを共有する構成を選択可能です。</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>ターミナル連携</h3>
-                    <p>ターミナルで <code>eval $(csw env)</code> を実行するだけで、Claude Codeも同じ隔離プロファイルで即座に動作を開始します。</p>
+                    <h3>ターミナルでの環境切り替え</h3>
+                    <p>ターミナルで <code>eval $(csw env)</code> を実行するだけで、Claude Codeが対象プロファイルの隔離環境で即座に起動します。</p>
                 </div>
             </div>
         </section>
