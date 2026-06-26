@@ -54,7 +54,7 @@
             <div class="features-grid">
                 <div class="feature-intro fade-in">
                     <h2>GUIとCLIの<br>統合プロファイル管理</h2>
-                    <p>ClaudeデスクトップアプリとClaude Codeは独立したツールですが、本アプリを使えば背後のプロファイルを一元管理できます。GUIを使う際はメニューバーから、CLIを使う際はターミナルから、常に同期された同じ隔離環境を呼び出せます。</p>
+                    <p>ClaudeデスクトップアプリとClaude Code（CLI）は独立したツールですが、本アプリが背後のプロファイルを一元管理します。メニューバーからGUIの環境を切り替えるだけでなく、お使いのターミナルからコマンドを1つ叩くだけで、CLIも全く同じ隔離環境へ同期させることができます。</p>
                 </div>
                 
                 <div class="feature-cards-stack">
@@ -84,23 +84,32 @@
             <div class="usecases-bento">
                 <div class="feature-cell bento-wide fade-in delay-1">
                     <div class="cell-content">
-                        <h2>[Case 01] 個人と組織の完全分離</h2>
-                        <p><strong>課題：</strong>個人のプロジェクトと会社の業務で、チャット履歴や認証データが混ざる事故を絶対に防ぎたい。<br>
-                        <strong>解決：</strong>「完全隔離（Complete Isolation）」構成を使えば、データ領域から設定ファイルまで物理的に参照先が分かれます。一方のアカウントからもう一方の履歴が見えることは決してありません。</p>
+                        <span class="usecase-num">01</span>
+                        <h3 class="usecase-title">個人と組織の完全分離</h3>
+                        <div class="usecase-label">The Need</div>
+                        <p class="usecase-text">個人のプロジェクトと会社の業務で、チャット履歴や認証データが混ざる事故を絶対に防ぎたい。</p>
+                        <div class="usecase-label">The Solution</div>
+                        <p class="usecase-solution">「完全隔離（Complete Isolation）」構成を使えば、データ領域から設定ファイルまで物理的に参照先が分かれます。一方のアカウントからもう一方の履歴が見えることは決してありません。</p>
                     </div>
                 </div>
                 <div class="feature-cell dark-accent fade-in delay-2">
                     <div class="cell-content">
-                        <h2>[Case 02] 開発と研究の部分共有</h2>
-                        <p><strong>課題：</strong>用途ごとに課金アカウントは分けたいが、プラグインや共通設定は同じものを使い回したい。<br>
-                        <strong>解決：</strong>特定の設定ファイルだけを全プロファイルで同期させる「部分共有（Flexible Sharing）」構成が可能です。</p>
+                        <span class="usecase-num">02</span>
+                        <h3 class="usecase-title">開発と研究の部分共有</h3>
+                        <div class="usecase-label">The Need</div>
+                        <p class="usecase-text">用途ごとに課金アカウントは分けたいが、プラグインや共通設定は同じものを使い回したい。</p>
+                        <div class="usecase-label">The Solution</div>
+                        <p class="usecase-solution">特定の設定ファイルだけを全プロファイルで同期させる「部分共有（Flexible Sharing）」構成が可能です。</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
-                        <h2>[Case 03] マルチアカウント拡張</h2>
-                        <p><strong>課題：</strong>無料枠の制限や用途の広がりにより、単純に2つ目、3つ目のアカウントを手軽に追加したい。<br>
-                        <strong>解決：</strong>メニューバーからプロファイルを切り替えるだけで、面倒な再ログインなしに別アカウントの環境へ即座にアクセスできます。</p>
+                        <span class="usecase-num">03</span>
+                        <h3 class="usecase-title">マルチアカウント拡張</h3>
+                        <div class="usecase-label">The Need</div>
+                        <p class="usecase-text">無料枠の制限や用途の広がりにより、単純に2つ目、3つ目のアカウントを手軽に追加したい。</p>
+                        <div class="usecase-label">The Solution</div>
+                        <p class="usecase-solution">メニューバーからプロファイルを切り替えるだけで、面倒な再ログインなしに別アカウントの環境へ即座にアクセスできます。</p>
                     </div>
                 </div>
             </div>
@@ -138,8 +147,8 @@
         </section>
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>CLI環境との高度な連携</h2>
-                <p>GUIで作成したプロファイルを、ターミナル上のClaude Codeでもそのまま活用できます。</p>
+                <h2>外部ターミナル環境との高度な連携</h2>
+                <p>デスクトップアプリ内蔵のターミナルだけでなく、普段お使いの外部ターミナル（iTerm等）でも同じプロファイルを活用できます。</p>
             </div>
             
             <div class="guide-grid">
@@ -155,8 +164,8 @@
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>ターミナルでの環境切り替え</h3>
-                    <p>ターミナルで <code>eval $(csw env)</code> を実行するだけで、Claude Codeが対象プロファイルの隔離環境で即座に起動します。</p>
+                    <h3>外部ターミナルの環境切り替え</h3>
+                    <p>外部のターミナルアプリを利用する際も、<code>eval $(csw env)</code> を実行するだけで、Claude Codeが対象プロファイルの隔離環境で即座に起動します。</p>
                 </div>
             </div>
         </section>

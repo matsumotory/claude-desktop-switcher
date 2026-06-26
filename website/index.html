@@ -52,7 +52,7 @@
             <div class="features-grid">
                 <div class="feature-intro fade-in">
                     <h2>Unified Control of<br>GUI and CLI</h2>
-                    <p>While Claude Desktop and Claude Code are separate tools, this utility manages their backend profiles as one. Access the same isolated environment whether you use the menu bar for the GUI or the terminal for the CLI.</p>
+                    <p>While Claude Desktop and Claude Code are separate tools, this utility manages their backend profiles as one. Switch GUI environments via the menu bar, and sync your external terminal to the exact same isolated environment with a single command.</p>
                 </div>
                 
                 <div class="feature-cards-stack">
@@ -82,23 +82,32 @@
             <div class="usecases-bento">
                 <div class="feature-cell bento-wide fade-in delay-1">
                     <div class="cell-content">
-                        <h2>[Case 01] Strict Personal / Org Separation</h2>
-                        <p><strong>The Need:</strong> You must ensure that personal projects and company data never cross-pollinate, preventing accidental chat history leaks.<br>
-                        <strong>The Solution:</strong> Use "Complete Isolation" to physically separate data directories and configuration files. What happens in one profile stays completely invisible to the other.</p>
+                        <span class="usecase-num">01</span>
+                        <h3 class="usecase-title">Strict Personal / Org Separation</h3>
+                        <div class="usecase-label">The Need</div>
+                        <p class="usecase-text">You must ensure that personal projects and company data never cross-pollinate, preventing accidental chat history leaks.</p>
+                        <div class="usecase-label">The Solution</div>
+                        <p class="usecase-solution">Use "Complete Isolation" to physically separate data directories and configuration files. What happens in one profile stays completely invisible to the other.</p>
                     </div>
                 </div>
                 <div class="feature-cell dark-accent fade-in delay-2">
                     <div class="cell-content">
-                        <h2>[Case 02] Dev / Research Sharing</h2>
-                        <p><strong>The Need:</strong> You want separate billing accounts for development and research, but you want them to share the same plugins and global configurations.<br>
-                        <strong>The Solution:</strong> Use "Flexible Sharing" to sync specific configuration files across profiles while keeping authentication data strictly isolated.</p>
+                        <span class="usecase-num">02</span>
+                        <h3 class="usecase-title">Dev / Research Sharing</h3>
+                        <div class="usecase-label">The Need</div>
+                        <p class="usecase-text">You want separate billing accounts for development and research, but you want them to share the same plugins and global configurations.</p>
+                        <div class="usecase-label">The Solution</div>
+                        <p class="usecase-solution">Use "Flexible Sharing" to sync specific configuration files across profiles while keeping authentication data strictly isolated.</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
-                        <h2>[Case 03] Multi-Account Scaling</h2>
-                        <p><strong>The Need:</strong> One account simply isn't enough, and you need to seamlessly juggle a second or third account throughout the day.<br>
-                        <strong>The Solution:</strong> Switch profiles from the menu bar with a single click. Access entirely separate environments without the friction of constantly logging in and out.</p>
+                        <span class="usecase-num">03</span>
+                        <h3 class="usecase-title">Multi-Account Scaling</h3>
+                        <div class="usecase-label">The Need</div>
+                        <p class="usecase-text">One account simply isn't enough, and you need to seamlessly juggle a second or third account throughout the day.</p>
+                        <div class="usecase-label">The Solution</div>
+                        <p class="usecase-solution">Switch profiles from the menu bar with a single click. Access entirely separate environments without the friction of constantly logging in and out.</p>
                     </div>
                 </div>
             </div>
@@ -136,8 +145,8 @@
         </section>
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>Advanced CLI Integration</h2>
-                <p>Leverage the profiles you created in the GUI directly within your terminal for Claude Code.</p>
+                <h2>Advanced External Terminal Integration</h2>
+                <p>Leverage your profiles not just in the built-in terminal, but directly within your preferred external terminal apps (like iTerm).</p>
             </div>
             
             <div class="guide-grid">
@@ -153,8 +162,8 @@
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>Terminal Context Switching</h3>
-                    <p>Simply run <code>eval $(csw env)</code> in your terminal to instantly operate Claude Code within the isolated environment of your active profile.</p>
+                    <h3>External Terminal Switching</h3>
+                    <p>Simply run <code>eval $(csw env)</code> in your external terminal app to instantly operate Claude Code within the isolated environment of your active profile.</p>
                 </div>
             </div>
         </section>

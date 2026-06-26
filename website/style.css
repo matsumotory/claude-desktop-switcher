@@ -358,6 +358,45 @@ html[lang="ja"] .usecases-header h2 {
     }
 }
 
+.usecase-num {
+    font-family: monospace;
+    font-size: 1rem;
+    color: var(--accent);
+    opacity: 0.8;
+    margin-bottom: 12px;
+    display: block;
+    letter-spacing: 0.05em;
+}
+
+.usecase-title {
+    font-size: 1.75rem;
+    font-weight: 500;
+    margin-bottom: 24px;
+    line-height: 1.3;
+}
+
+.usecase-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.usecase-text {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.usecase-solution {
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
 /* Workflow Stack */
 .workflow {
     padding-bottom: 120px;
