@@ -77,6 +77,24 @@ body {
     color: var(--text-primary);
 }
 
+.lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.lang-toggle a {
+    color: var(--text-secondary);
+    text-decoration: none;
+}
+
+.active-lang {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;
@@ -262,6 +280,73 @@ body {
     color: var(--text-secondary);
 }
 
+/* User Guide */
+.guide {
+    padding-bottom: 120px;
+}
+
+.guide-header {
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 24px;
+}
+
+.guide-header h2 {
+    font-size: 2rem;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+.guide-header p {
+    color: var(--text-secondary);
+}
+
+.guide-content h3 {
+    font-size: 1.5rem;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.guide-content h4 {
+    font-size: 1.25rem;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.guide-content p {
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.guide-content ul, .guide-content ol {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    padding-left: 24px;
+}
+
+.guide-content li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.guide-content code {
+    background: var(--bg-surface-hover);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.guide-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
 /* Footer */
 .site-footer {
     border-top: 1px solid var(--border-color);
@@ -270,6 +355,23 @@ body {
     font-size: 0.875rem;
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
+}
+
+.footer-left p {
+    margin-bottom: 4px;
+}
+
+.author-link {
+    color: var(--text-primary);
+    text-decoration: underline;
+    text-decoration-color: var(--border-color);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.2s;
+}
+
+.author-link:hover {
+    text-decoration-color: var(--accent);
 }
 
 /* Animations */

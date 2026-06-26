@@ -20,6 +20,9 @@
             <nav class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#how-it-works">How it Works</a>
+                <div class="lang-toggle">
+                    <span class="active-lang">EN</span> / <a href="ja/index.html">JA</a>
+                </div>
                 <a href="https://github.com/matsumotory/claude-desktop-switcher" class="btn btn-ghost" target="_blank">GitHub</a>
             </nav>
         </div>
@@ -33,7 +36,7 @@
                 <p class="subtext">The native macOS menu bar utility for power users. Keep personal, work, and research contexts entirely separate without burning API tokens or cross-pollinating histories.</p>
                 <div class="button-group">
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">Download for macOS</a>
-                    <a href="USER_GUIDE.md" class="btn btn-secondary">Read Documentation</a>
+                    <a href="#guide" class="btn btn-secondary">Read Documentation</a>
                 </div>
             </div>
             <div class="hero-visual fade-in delay-1">
@@ -101,11 +104,67 @@
                 </div>
             </div>
         </section>
+        <!-- User Guide -->
+        <section id="guide" class="guide container fade-in">
+            <div class="guide-header">
+                <h2>User Guide</h2>
+                <p>Detailed instructions on usage, isolation, and synchronization.</p>
+            </div>
+            
+            <div class="guide-content">
+                <h3>1. Installation & Setup</h3>
+                <p>Your existing Claude environment (default personal setup) remains completely untouched.</p>
+                <ol>
+                    <li>Drag and drop the downloaded <code>ClaudeDesktopSwitcher.app</code> into your macOS "Applications" folder.</li>
+                    <li>Launch the app. A blue icon will appear in your menu bar.</li>
+                </ol>
+
+                <h4>Creating a New Profile</h4>
+                <p>Create a new isolated environment for work or research. <strong>By default, the app enforces "Complete Isolation" to prevent accidental data mixing.</strong></p>
+                <ol>
+                    <li>Click the menu bar icon and select <strong>"Settings..."</strong>.</li>
+                    <li>Click the <strong>"+ Create Profile"</strong> button.</li>
+                    <li>Enter a <strong>Name</strong> (e.g., <code>Work</code>, <code>Research</code>).</li>
+                    <li>Customize configuration (Optional):
+                        <ul>
+                            <li><strong>Isolated</strong>: Default. Starts from a completely empty, isolated state.</li>
+                            <li><strong>Shared</strong>: Consumes tokens on a separate account while syncing settings (like MCP configurations) from your default environment.</li>
+                        </ul>
+                    </li>
+                    <li>Click <strong>"Create"</strong> to save the profile.</li>
+                </ol>
+
+                <h3>2. Daily Workflow</h3>
+                <h4>Scenario A: Starting Work on a Dedicated Account</h4>
+                <ol>
+                    <li>Click the "Work" profile from the menu bar.</li>
+                    <li>A new Claude desktop window automatically opens. (Login required on first launch).</li>
+                </ol>
+                
+                <h4>Scenario B: Safely Launching the Terminal (Claude Code)</h4>
+                <ol>
+                    <li>Ensure the specific Claude desktop window (e.g., your Work environment) is active and in focus.</li>
+                    <li>Click the official "Open in Terminal" button from within that window.</li>
+                    <li>Type <code>claude</code> to begin. The CLI will automatically run under the work environment context.</li>
+                </ol>
+
+                <h4>Scenario C: Returning to Your Default Environment</h4>
+                <p>To use your normal personal environment, simply launch <code>Claude.app</code> from Spotlight, or open a standard terminal and type <code>claude</code>. It will always default to your original setup.</p>
+
+                <h3>3. Safety & Zero Impact Guarantee</h3>
+                <p>Claude Desktop Switcher never modifies your system's global environment variables behind the scenes. If you launch Claude without using this app, it will run 100% as your original default environment. There is zero risk of destroying your existing setup.</p>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer container">
-        <p>&copy; 2026 Claude Desktop Switcher. Released under MIT License.</p>
-        <p>Not affiliated with Anthropic.</p>
+        <div class="footer-left">
+            <p>&copy; 2026 Claude Desktop Switcher. Released under MIT License.</p>
+            <p>Created by <a href="https://github.com/matsumotory" target="_blank" class="author-link">@matsumotory</a></p>
+        </div>
+        <div class="footer-right">
+            <p>Not affiliated with Anthropic.</p>
+        </div>
     </footer>
 
     <script src="script.js"></script>
