@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.0...v0.4.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* force new release to trigger dmg build ([7caf6e5](https://github.com/matsumotory/claude-desktop-switcher/commit/7caf6e5a48ab16671547db72598c522c9865bcae))
+
 ## [0.4.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.3.2...v0.4.0) (2026-06-26)
 
 
