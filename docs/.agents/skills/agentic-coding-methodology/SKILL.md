@@ -7,8 +7,8 @@ This skill defines the engineering discipline required for AI agents (and human 
 
 ### 1. Design-First Development (No "Vibe Coding")
 * **Never write code without a plan.** AI agents must not generate functional code based on vague prompts. 
-* **Always create an implementation plan first.** When given a complex task, the agent must output a design document (or update `implementation_plan.md`) detailing the components to be touched, the data structures required, and potential edge cases.
-* **Wait for human review.** Crucial architectural decisions must be explicitly approved by the human orchestrator before execution begins.
+* **Always create an implementation plan first.** When given a complex task, the agent must output a design document detailing the components to be touched and the data structures required.
+* **Smart Escalation (Avoid Meaningless Confirmations):** Do not block execution to ask the human for trivial implementation details. Make a sensible engineering decision, document it in the plan, and proceed to execute. Only wait for explicit human approval if the decision drastically alters the system architecture or introduces a breaking change.
 
 ### 2. Spec-Driven & Test-Driven Development (TDD)
 * **Write tests before functional code.** This forces the agent to reason about requirements, interfaces, and edge cases *before* getting lost in implementation details.
@@ -26,9 +26,13 @@ This skill defines the engineering discipline required for AI agents (and human 
   4. Integration and Verification.
 * If context becomes overloaded or the agent begins to hallucinate, STOP. Request a context reset and focus on a narrower sub-task.
 
-### 4. Human-in-the-Loop & Code Review
-* **AI as Subordinate, Human as Architect:** The AI agent acts as a highly capable junior developer. The human acts as the team lead.
-* **Silently Failing Code:** Agents often write syntactically correct but logically flawed code (e.g., missing authentication checks). Always highlight security-sensitive logic for human review.
+### 4. Autonomous Feedback Loops & Self-Correction
+* **Self-Healing Execution:** The agent MUST autonomously run verification steps (e.g., `cargo test`, `cargo check`, `npm run lint`) after writing code.
+* **Read, Diagnose, Fix:** If a test or build fails, do NOT immediately stop and ask the human what to do. Read the error log, diagnose the root cause, apply a fix, and verify again. Repeat this feedback loop autonomously until the code is green.
+* **Escalate on Dead-Ends:** Only escalate to the human if you are trapped in an infinite loop of errors or if fixing the error requires changing a fundamental requirement.
+
+### 5. Code Review & Security
+* **Silently Failing Code:** Agents often write syntactically correct but logically flawed code (e.g., missing authentication checks). Always highlight security-sensitive logic for human review after the autonomous loop completes.
 
 ## Anti-Patterns
 * **Vibe Coding:** Generating massive blocks of code from a 1-sentence prompt.
