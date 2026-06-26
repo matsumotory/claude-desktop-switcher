@@ -2,7 +2,7 @@ pub mod desktop;
 pub mod shell;
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::error::Result;
@@ -11,7 +11,7 @@ use crate::platform::PlatformProvider;
 use crate::profile::{Profile, ProfileManager};
 
 pub struct ContextSwitcher {
-    provider: Arc<dyn PlatformProvider>,
+    _provider: Arc<dyn PlatformProvider>,
     profile_manager: Arc<ProfileManager>,
     keychain: Box<dyn KeychainProvider>,
 }
@@ -22,7 +22,7 @@ impl ContextSwitcher {
         profile_manager: Arc<ProfileManager>,
     ) -> Self {
         Self {
-            provider,
+            _provider: provider,
             profile_manager,
             keychain: create_keychain_provider(),
         }

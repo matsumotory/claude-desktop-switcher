@@ -23,16 +23,15 @@ pub trait KeychainProvider {
 
 /// Create the keychain provider for the current OS.
 pub fn create_keychain_provider() -> Box<dyn KeychainProvider> {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-utils"))]
     {
-        return Box::new(mock::MockKeychainProvider::new());
+        Box::new(mock::MockKeychainProvider::new())
     }
-    #[cfg(target_os = "macos")]
+    #[cfg(all(target_os = "macos", not(any(test, feature = "test-utils"))))]
     {
         Box::new(macos::MacOsKeychainProvider::new())
     }
-
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", test, feature = "test-utils")))]
     {
         // Fallback stub for other OSes
         struct StubKeychainProvider;
@@ -51,5 +50,5 @@ pub fn create_keychain_provider() -> Box<dyn KeychainProvider> {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-utils"))]
 pub mod mock;

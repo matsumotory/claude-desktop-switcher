@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::error::{CswError, Result};
+use crate::error::Result;
 use crate::profile::Profile;
 
 /// Load a profile from a TOML file.

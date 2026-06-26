@@ -3,12 +3,12 @@
 use std::sync::Arc;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
-    tray::{TrayIcon, TrayIconBuilder},
+    tray::TrayIconBuilder,
     AppHandle, Manager, State, Wry,
 };
 
 use csw_core::platform::create_provider;
-use csw_core::profile::{Profile, ProfileManager, SharingConfig, SharingMode};
+use csw_core::profile::{ProfileManager, SharingConfig, SharingMode};
 use csw_core::switcher::ContextSwitcher;
 
 // Global state holding our components
@@ -179,7 +179,7 @@ fn main() {
         .manage(app_state)
         .setup(|app| {
             // Build the system tray for the first time
-            let tray = TrayIconBuilder::with_id("main_tray")
+            let _tray = TrayIconBuilder::with_id("main_tray")
                 .tooltip("Claude Desktop Switcher")
                 .on_menu_event(|app, event| {
                     let id = event.id.as_ref();

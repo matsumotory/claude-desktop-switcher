@@ -1,7 +1,7 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use crate::error::{CswError, Result};
+use crate::error::Result;
 use crate::platform::PlatformProvider;
 use crate::profile::{Profile, SharingMode};
 
