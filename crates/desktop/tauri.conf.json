@@ -1,7 +1,7 @@
 {
-  "productName": "ContextSwitcher",
+  "productName": "Claude Desktop Switcher",
   "version": "0.1.0",
-  "identifier": "com.matsumotory.claude-context-switcher",
+  "identifier": "com.matsumotory.claude-desktop-switcher",
   "build": {
     "frontendDist": "./ui",
     "devUrl": "./ui"
@@ -10,7 +10,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "ContextSwitcher Settings",
+        "title": "Claude Desktop Switcher Settings",
         "width": 640,
         "height": 520,
         "resizable": false,

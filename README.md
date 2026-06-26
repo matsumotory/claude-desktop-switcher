@@ -1,69 +1,60 @@
-# claude-context-switcher
+# Claude Desktop Switcher
 
-Claude Desktop と Claude Code (CLI) の認証コンテキストを同期管理する macOS 常駐メニューバーアプリケーション、および CLI ツール。
+Claude デスクトップアプリのアカウント環境（個人用・仕事用など）を安全に分けて、1つのMacで使い分けるためのメニューバーアプリです。（エンジニア向けに Claude Code (CLI) との連携にも対応しています）
 
 ## 解決する課題
 
-同一マシンで複数の Claude アカウント環境（個人用 / 業務プロジェクト用など）を使い分ける際、Desktop と CLI の認証コンテキストが混在し、意図しないアカウントのトークンリソースやバジェットを消費してしまう事故が発生します。
+1台のMacで「個人のClaudeアカウント」と「仕事のClaudeアカウント」を使い分けようとすると、毎回ログアウト・ログインが必要になったり、データを間違えて仕事用アカウントに送ってしまったりする事故が起きます。
+本アプリは、メニューバーからワンクリックで「個人用」「仕事用」それぞれの全く別のClaudeを起動し、アカウント混在による事故を完全に防ぎます。
 
-本ツールは、ワンクリック（GUI）またはワンコマンド（CLI）で、両者のコンテキスト（OAuthトークン、セッション、設定、メモリ）を確実にペアで切り替え、アカウント混在による事故を完全に防止します。
+## アプリの特徴
 
-## 設計原則
-
-- **既存環境の非破壊**: 既存の `~/.claude/` や `~/Library/Application Support/Claude/` には一切変更を加えません。
-- **逆方向リダイレクション**: プロファイルごとの隔離ディレクトリ（`desktop-data/`, `cli-data/`）を生成し、共有するコンポーネント（MCP設定、CLAUDE.md、`projects/` メモリ等）のみを symlink で本番実体に繋ぐことで、設定の共有とデータ隔離を両立します。
-- **Keychain の自動退避・復元**: サービス名が固定の `Claude Safe Storage` と `Claude Code-credentials` に対し、切り替え時に認証情報を自動で退避・復元し、アカウントのクロス競合を防止します。
-- **選択的共有**: 設定やメモリなどのコンポーネント単位で、共有 (`Share`) / コピー (`Copy`) / 隔離 (`Isolate`) をプロファイルごとに指定可能です。
-- **双方向リアルタイム同期**: `Copy` モードで共有されたファイルは、`notify` によるバックグラウンド監視によって、変更時に他のプロファイルへリアルタイム同期されます。
-
-## 技術スタック
-
-- **コアロジック**: Rust (`csw-core` - Keychain制御、PAL、リンク構築、ファイル監視)
-- **GUI アプリ**: Tauri v2 (`csw-desktop` - macOS常駐メニューバーアプリ ＋ リッチ設定UI)
-- **CLI ツール**: Rust (`csw-cli` - ターミナル切替ツール)
-
-## プロジェクト構成
-
-```
-crates/
-  core/      # コアライブラリ (PAL, Profile Manager, Switcher, Watcher)
-  cli/       # CLIツール (csw コマンド)
-  desktop/   # Tauri v2 メニューバーアプリ & 美麗設定UI
-```
+- **システムを汚さない安全設計**: 既存のClaudeアプリの設定やデータには一切変更を加えません。
+- **アカウントの完全な隔離**: 新しく作ったプロファイル（環境）は、独立したデータ保存領域を持つため、トークン消費やチャット履歴が混ざることはありません。
+- **高度な同期機能**: まったく別の環境を保ちながら、「Claudeへの指示ルール（CLAUDE.mdなど）」だけはすべての環境でリアルタイムに共有・同期する、といった柔軟なカスタマイズが可能です。
+- **エンジニア向け CLI同期機能**: デスクトップで開いた仕事用アカウントからターミナルを起動すれば、ターミナル側も自動で仕事用アカウントになります。（Keychainの退避・復元を自動で行います）
 
 ## 使用方法
 
 ### GUI アプリ (メニューバー)
-1. `csw-desktop` を起動すると、macOS のメニューバーに常駐します。
-2. トレイメニューからプロファイル（`default`, `Work`, `Personal` 等）を選択すると、自動で Keychain 復元 ＋ Desktop 起動 ＋ CLI用のプロファイル切替が行われます。
-3. `Settings...` を開くことで、ガラスモフィズムを施した美麗な設定画面からプロファイルの新規作成、削除、共有モードの設定が可能です。
+1. `Claude Desktop Switcher` を起動すると、macOS のメニューバーに常駐します。
+2. トレイメニューからプロファイル（`default`, `Work`, `Personal` 等）を選び、切り替えるとそのプロファイル専用のClaudeデスクトップアプリが立ち上がります。
+3. `Settings...` を開くことで、美しい設定画面から新しいプロファイルの作成や、共有設定が可能です。
 
-### CLI ツール
+### CLI ツール (エンジニア向け)
+ターミナルからも環境の作成や切り替えが可能です。
 ```bash
-# ContextSwitcherの初期化
+# 初期化
 csw init
 
 # プロファイル一覧の表示
 csw profile list
 
 # 新しいプロファイルの作成
-csw profile create MyWorkProfile --mode share   # default設定を引き継ぐ
-csw profile create MySecretProfile --mode isolate # 完全に隔離する
-
-# プロファイルの切り替え
-csw switch MyWorkProfile
-
-# ターミナルセッションの環境変数切り替え
-eval $(csw env MyWorkProfile)
+csw profile create MyWorkProfile --mode share
 ```
 
-### ビルド方法
+## 配布用ビルド（DMGファイルの作成）
+Tauriを利用して、Mac用のインストーラ（`.dmg`）を簡単にビルドできます。
+
 ```bash
-# ワークスペース全体のビルド
-cargo build --workspace
+# ビルドの実行（事前に npm install 等が必要です）
+npm run tauri build
+
+# または、Cargo を使う場合
+cargo tauri build
+```
+ビルドが完了すると、`crates/desktop/src-tauri/target/release/bundle/dmg/` に `Claude Desktop Switcher.dmg` が生成されます。
+
+## プロジェクト構成（開発者向け）
+
+```
+crates/
+  core/      # コアライブラリ (プロファイル管理、ファイル監視など)
+  cli/       # CLIツール (csw コマンド)
+  desktop/   # Tauri v2 を用いたメニューバーアプリと設定画面
 ```
 
 ## License
 
 MIT
-

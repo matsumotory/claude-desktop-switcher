@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Desktop Switcher</title>
+    <meta name="description" content="Safely manage and switch between multiple Claude Desktop accounts with zero impact on your existing setup.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-container">
+            <div class="logo">
+                <span class="logo-mark"></span>
+                <span class="logo-text">Claude Desktop Switcher</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it Works</a>
+                <a href="https://github.com/matsumotory/claude-desktop-switcher" class="btn btn-ghost" target="_blank">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Split-screen Hero Section -->
+        <section class="hero container">
+            <div class="hero-text fade-in">
+                <h1 class="headline">Run multiple Claude environments. <br>Safely isolated.</h1>
+                <p class="subtext">The native macOS menu bar utility for power users. Keep personal, work, and research contexts entirely separate without burning API tokens or cross-pollinating histories.</p>
+                <div class="button-group">
+                    <a href="https://github.com/matsumotory/claude-desktop-switcher/releases" class="btn btn-primary">Download for macOS</a>
+                    <a href="USER_GUIDE.md" class="btn btn-secondary">Read Documentation</a>
+                </div>
+            </div>
+            <div class="hero-visual fade-in delay-1">
+                <div class="visual-frame">
+                    <img src="assets/hero.png" alt="Settings Interface" class="hero-image">
+                </div>
+            </div>
+        </section>
+
+        <!-- Asymmetric Features Bento -->
+        <section id="features" class="features container">
+            <div class="features-grid">
+                <div class="feature-cell cell-large fade-in">
+                    <div class="cell-content">
+                        <h2>Absolute Data Isolation</h2>
+                        <p>Keep your personal API tokens, chat history, and context entirely separate from your corporate or research environments. Prevent accidental token burns completely.</p>
+                    </div>
+                    <img src="assets/isolation.png" alt="Isolated Environments" class="feature-img">
+                </div>
+                
+                <div class="feature-cell cell-small fade-in delay-1">
+                    <div class="cell-content">
+                        <h2>Zero Impact</h2>
+                        <p>Does not modify global environment variables or break existing setups. Everything runs in sandboxed paths.</p>
+                    </div>
+                </div>
+
+                <div class="feature-cell cell-small dark-accent fade-in delay-2">
+                    <div class="cell-content">
+                        <h2>Smart Sync</h2>
+                        <p>Share global CLAUDE.md rules and installed plugins across profiles while keeping conversations strictly isolated.</p>
+                    </div>
+                    <img src="assets/sync.png" alt="Sync streams" class="feature-img-small">
+                </div>
+            </div>
+        </section>
+
+        <!-- Vertical Stack: How it Works -->
+        <section id="how-it-works" class="workflow container fade-in">
+            <div class="workflow-header">
+                <h2>Built for efficiency.</h2>
+                <p>No complex setup required. Operates directly from your menu bar.</p>
+            </div>
+            <div class="workflow-steps">
+                <div class="step-item">
+                    <div class="step-num">01</div>
+                    <div class="step-body">
+                        <h3>Install & Launch</h3>
+                        <p>Drag to Applications and run. A quiet menu bar icon appears.</p>
+                    </div>
+                </div>
+                <div class="step-item border-top">
+                    <div class="step-num">02</div>
+                    <div class="step-body">
+                        <h3>Create Contexts</h3>
+                        <p>Generate isolated "Work" or "Research" profiles with single clicks.</p>
+                    </div>
+                </div>
+                <div class="step-item border-top">
+                    <div class="step-num">03</div>
+                    <div class="step-body">
+                        <h3>Switch Seamlessly</h3>
+                        <p>Select your active context. The CLI and Desktop app instantly adapt.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer container">
+        <p>&copy; 2026 Claude Desktop Switcher. Released under MIT License.</p>
+        <p>Not affiliated with Anthropic.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

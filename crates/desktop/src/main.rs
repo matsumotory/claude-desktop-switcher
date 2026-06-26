@@ -121,7 +121,7 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let mut menu_items = Vec::new();
     
     // 1. Title Item
-    let title_item = MenuItem::with_id(app, "title", "🔵 ContextSwitcher", false, None::<&str>).map_err(|e| e.to_string())?;
+    let title_item = MenuItem::with_id(app, "title", "🔵 Claude Desktop Switcher", false, None::<&str>).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(title_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
     
     let sep1 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
@@ -180,7 +180,7 @@ fn main() {
         .setup(|app| {
             // Build the system tray for the first time
             let tray = TrayIconBuilder::with_id("main_tray")
-                .tooltip("Claude ContextSwitcher")
+                .tooltip("Claude Desktop Switcher")
                 .on_menu_event(|app, event| {
                     let id = event.id.as_ref();
                     if id == "quit" {

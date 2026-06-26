@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# ContextSwitcher for Claude — Phase 0: Sandbox Validation Script
+# Claude Desktop Switcher — Phase 0: Sandbox Validation Script
 # ============================================================================
 #
 # Purpose: Validate all assumptions about Claude Desktop and CLI isolation
@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-SANDBOX_DIR="$HOME/.context-switcher-sandbox"
+SANDBOX_DIR="$HOME/.claude-desktop-switcher-sandbox"
 RESULTS_FILE="$(cd "$(dirname "$0")/.." && pwd)/sandbox-results.md"
 
 CLAUDE_DESKTOP_APP="/Applications/Claude.app"
@@ -37,7 +37,7 @@ log_skip()  { echo -e "${YELLOW}[SKIP]${NC}  $*"; }
 # Initialize results file
 init_results() {
     cat > "$RESULTS_FILE" << 'EOF'
-# ContextSwitcher Sandbox Validation Results
+# Claude Desktop Switcher Sandbox Validation Results
 
 Generated: $(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
@@ -428,7 +428,7 @@ with open('$test_dir/claude_desktop_config.json') as f:
 main() {
     echo ""
     echo "=============================================="
-    echo "  ContextSwitcher Sandbox Validation"
+    echo "  Claude Desktop Switcher Sandbox Validation"
     echo "=============================================="
     echo ""
 

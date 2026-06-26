@@ -7,7 +7,7 @@ use csw_core::switcher::ContextSwitcher;
 
 #[derive(Parser)]
 #[command(name = "csw")]
-#[command(about = "Claude Context Switcher — Synchronize Desktop & CLI environments")]
+#[command(about = "Claude Desktop Switcher — Synchronize Desktop & CLI environments")]
 #[command(version)]
 struct Cli {
     #[command(subcommand)]
@@ -16,7 +16,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Initialize ContextSwitcher (create ~/.context-switcher-claude/)
+    /// Initialize Claude Desktop Switcher (create ~/.claude-desktop-switcher/)
     Init,
 
     /// Manage profiles
@@ -77,7 +77,7 @@ fn main() -> anyhow::Result<()> {
 
     match cli.command {
         Commands::Init => {
-            println!("{}", "Initializing ContextSwitcher...".bold());
+            println!("{}", "Initializing Claude Desktop Switcher...".bold());
             let manager = ProfileManager::new(provider.clone())?;
             println!("{} Base configuration created.", "✔".green());
             println!("{} Profiles directory: {:?}", "✔".green(), provider.app_data_dir().join("profiles"));

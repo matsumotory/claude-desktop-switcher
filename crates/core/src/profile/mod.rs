@@ -285,3 +285,6 @@ impl ProfileManager {
     }
 }
 
+#[cfg(test)]
+mod tests;
+

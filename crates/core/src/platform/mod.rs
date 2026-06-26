@@ -73,3 +73,6 @@ pub fn create_provider() -> Result<Box<dyn PlatformProvider>> {
         ))
     }
 }
+
+#[cfg(test)]
+pub mod mock;

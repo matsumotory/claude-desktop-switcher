@@ -1,5 +1,5 @@
 // ============================================================================
-// ContextSwitcher for Claude — Frontend Logic (Tauri v2 bindings)
+// Claude Desktop Switcher — Frontend Logic (Tauri v2 bindings)
 // ============================================================================
 
 // Helper to safely invoke Tauri commands
@@ -14,8 +14,8 @@ const invoke = window.__TAURI__ ? window.__TAURI__.core.invoke : async (cmd, arg
       icon: args.name === 'default' ? '💻' : '💼',
       color: '#4A90D9',
       is_default: args.name === 'default',
-      desktop_path: `~/.context-switcher-claude/profiles/${args.name.toLowerCase()}/desktop-data`,
-      cli_path: `~/.context-switcher-claude/profiles/${args.name.toLowerCase()}/cli-data`,
+      desktop_path: `~/.claude-desktop-switcher/profiles/${args.name.toLowerCase()}/desktop-data`,
+      cli_path: `~/.claude-desktop-switcher/profiles/${args.name.toLowerCase()}/cli-data`,
       sharing: {
         desktop_config: 'share',
         cli_settings: 'share',
