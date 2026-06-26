@@ -28,7 +28,7 @@ jobs:
         run: |
           PR_NUMBER=$(echo '${{ steps.release.outputs.pr }}' | jq -r '.number')
           if [ "$PR_NUMBER" != "null" ] && [ -n "$PR_NUMBER" ]; then
-            gh pr merge --auto --merge "$PR_NUMBER"
+            gh pr merge --auto --merge "$PR_NUMBER" -R "${{ github.repository }}"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
