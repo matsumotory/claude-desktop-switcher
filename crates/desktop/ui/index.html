@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContextSwitcher Settings</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>ContextSwitcher</h1>
+      </div>
+      
+      <div class="profiles-section">
+        <h3>PROFILES</h3>
+        <ul id="profile-list" class="profile-list">
+          <!-- Profiles injected here -->
+        </ul>
+      </div>
+
+      <button id="btn-add-profile" class="btn btn-primary add-profile-btn">
+        <span class="icon">+</span> Create Profile
+      </button>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Profile Detail Panel -->
+      <section id="profile-details" class="details-panel hidden">
+        <div class="details-header">
+          <div class="profile-badge-large" id="detail-icon-badge">
+            <span id="detail-icon">💼</span>
+          </div>
+          <div class="profile-title-group">
+            <h2 id="detail-name">Work</h2>
+            <span class="status-tag" id="detail-active-tag">Active</span>
+          </div>
+        </div>
+
+        <div class="details-body">
+          <!-- Paths Section -->
+          <div class="info-group">
+            <h3>Paths</h3>
+            <div class="path-card">
+              <span class="path-label">Desktop User Data</span>
+              <code id="path-desktop">~/.context-switcher-claude/profiles/work/desktop-data</code>
+            </div>
+            <div class="path-card mt-1">
+              <span class="path-label">CLI Config Directory</span>
+              <code id="path-cli">~/.context-switcher-claude/profiles/work/cli-data</code>
+            </div>
+          </div>
+
+          <!-- Sharing Matrix -->
+          <div class="info-group mt-2">
+            <h3>Configuration Sharing</h3>
+            <div class="sharing-grid">
+              <div class="sharing-item">
+                <span class="sharing-name">Desktop Config (MCP)</span>
+                <span class="sharing-badge" id="share-desktop-config">isolate</span>
+              </div>
+              <div class="sharing-item">
+                <span class="sharing-name">CLI Settings & hooks</span>
+                <span class="sharing-badge" id="share-cli-settings">isolate</span>
+              </div>
+              <div class="sharing-item">
+                <span class="sharing-name">CLAUDE.md (Rules)</span>
+                <span class="sharing-badge" id="share-cli-claude-md">isolate</span>
+              </div>
+              <div class="sharing-item">
+                <span class="sharing-name">CLI Project Memory</span>
+                <span class="sharing-badge" id="share-cli-project-memory">isolate</span>
+              </div>
+              <div class="sharing-item">
+                <span class="sharing-name">CLI Plugins</span>
+                <span class="sharing-badge" id="share-cli-plugins">isolate</span>
+              </div>
+              <div class="sharing-item">
+                <span class="sharing-name">Desktop Worktrees</span>
+                <span class="sharing-badge" id="share-desktop-worktrees">isolate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-footer">
+          <button id="btn-switch" class="btn btn-success">Switch to Profile</button>
+          <button id="btn-delete" class="btn btn-danger">Delete Profile</button>
+        </div>
+      </section>
+
+      <!-- Welcome panel (when no profile is selected) -->
+      <section id="welcome-panel" class="welcome-panel">
+        <div class="welcome-icon">🔵</div>
+        <h2>Claude ContextSwitcher</h2>
+        <p>Select a profile from the sidebar to view details, or create a new profile to manage multiple Claude environment sessions.</p>
+      </section>
+
+      <!-- Create Profile Modal -->
+      <div id="modal-create" class="modal hidden">
+        <div class="modal-content">
+          <h2>Create New Profile</h2>
+          <div class="form-group">
+            <label for="input-name">Profile Name</label>
+            <input type="text" id="input-name" placeholder="e.g. Work, Personal, Research">
+          </div>
+          <div class="form-group">
+            <label for="select-preset">Configuration Preset</label>
+            <select id="select-preset">
+              <option value="isolate">Isolated (Clean slate, separate memory/config)</option>
+              <option value="share">Shared (Share MCP, settings, rules with Default)</option>
+            </select>
+          </div>
+          <div class="modal-buttons">
+            <button id="btn-modal-cancel" class="btn btn-secondary">Cancel</button>
+            <button id="btn-modal-submit" class="btn btn-primary">Create</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="main.js"></script>
+</body>
+</html>

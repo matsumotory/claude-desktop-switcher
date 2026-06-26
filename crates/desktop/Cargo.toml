@@ -1,0 +1,16 @@
+[package]
+name = "csw-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Desktop Menu Bar Application for Claude Context Switcher"
+
+[dependencies]
+csw-core = { path = "../core" }
+tauri = { version = "2.0.0", features = ["tray-icon"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+
+[build-dependencies]
+tauri-build = "2.0.0"
