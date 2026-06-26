@@ -32,7 +32,10 @@
         <!-- Split-screen Hero Section -->
         <section class="hero container">
             <div class="hero-text fade-in">
-                <span class="eyebrow">Zero-Impact Isolation</span>
+                <div class="hero-labels">
+                    <span class="eyebrow">Zero-Impact Isolation</span>
+                    <span class="unofficial-badge">Not affiliated with Anthropic.</span>
+                </div>
                 <h1 class="headline">Isolate Claude Desktop Environments.</h1>
                 <p class="subtext">Customize the separation level of your profiles. This macOS utility unifies the management of both your Claude Desktop App and Claude Code (CLI) environments.</p>
                 <div class="button-group">
@@ -84,24 +87,24 @@
                     <div class="cell-content">
                         <span class="usecase-num">01</span>
                         <h3 class="usecase-title">Strict Project / Client Separation</h3>
-                        <p class="usecase-text">You're juggling multiple clients or vastly different projects, and need to ensure their chat histories and contexts never mix.</p>
-                        <p class="usecase-solution">"Complete Isolation" assigns physically separate data directories to each profile. The context or code from Client A will never leak into your session for Client B.</p>
+                        <p class="usecase-text">You're managing multiple clients or navigating vastly different technical projects, and you need an absolute guarantee that chat histories and project contexts never intersect.</p>
+                        <p class="usecase-solution">Selecting "Complete Isolation" assigns physically independent data directories and keychain instances to each profile. Source code and conversations from one client will never structurally leak into another.</p>
                     </div>
                 </div>
                 <div class="feature-cell dark-accent fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">02</span>
                         <h3 class="usecase-title">Dev / Research Sharing</h3>
-                        <p class="usecase-text">You want separate billing accounts for development and research, but you want them to share the same plugins and global configurations.</p>
-                        <p class="usecase-solution">Use "Flexible Sharing" to sync specific configuration files across profiles while keeping authentication data strictly isolated.</p>
+                        <p class="usecase-text">You want separate billing accounts, but wish to share global rules and plugin setups.</p>
+                        <p class="usecase-solution">Use "Flexible Sharing" to seamlessly sync specific configuration files across profiles while preventing redundant management.</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">03</span>
                         <h3 class="usecase-title">Multi-Account Scaling</h3>
-                        <p class="usecase-text">One account simply isn't enough, and you need to seamlessly juggle a second or third account throughout the day.</p>
-                        <p class="usecase-solution">Switch profiles from the menu bar with a single click. Access entirely separate environments without the friction of constantly logging in and out.</p>
+                        <p class="usecase-text">You need to seamlessly juggle secondary or alternative accounts as your usage grows.</p>
+                        <p class="usecase-solution">Switch profiles right from the menu bar to instantly access alternative environments.</p>
                     </div>
                 </div>
             </div>
@@ -147,17 +150,20 @@
                 <div class="guide-card">
                     <div class="guide-icon">01</div>
                     <h3>Unified Profile Management</h3>
-                    <p>Your Desktop app data directories and CLI configuration files are managed together under a single, unified profile.</p>
+                    <p>GUI data and CLI configs are unified and managed under a single, cohesive profile.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
                     <h3>Flexible Sharing</h3>
-                    <p>Choose between complete isolation (default) or sharing specific configuration files on a per-profile basis.</p>
+                    <p>Choose between complete isolation (default) or syncing specific settings seamlessly.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>External Terminal Integration</h3>
-                    <p>Using your preferred terminal emulator? Just run <code class="text-nowrap">eval $(csw env &lt;profile_name&gt;)</code> to instantly drop Claude Code into the isolated environment of that specific profile.</p>
+                    <h3>Terminal<span class="text-nowrap"> Integration</span></h3>
+                    <p>Instantly drop into isolated environments using external terminal emulators.</p>
+                    <div class="code-snippet">
+                        <code>eval $(csw env &lt;profile_name&gt;)</code>
+                    </div>
                 </div>
             </div>
         </section>
@@ -167,9 +173,6 @@
         <div class="footer-left">
             <p>&copy; 2026 Claude Desktop Switcher. Released under MIT License.</p>
             <p>Created by <a href="https://github.com/matsumotory" target="_blank" class="author-link">@matsumotory</a></p>
-        </div>
-        <div class="footer-right">
-            <p>Not affiliated with Anthropic.</p>
         </div>
     </footer>
 
