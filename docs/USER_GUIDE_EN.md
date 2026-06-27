@@ -21,6 +21,9 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 
 ### Step 2: Create and Customize a New Profile
 Create a new isolated environment for work or research.
+
+![Claude Desktop Switcher Settings UI](../website/assets/hero.png)
+
 **By default, this app operates in "Isolated" mode to strictly prevent accidental data mixing.**
 
 For advanced use cases—such as "I want to share my personal MCP settings and rules, but route token usage to my Work account"—we provide flexible customization options.
