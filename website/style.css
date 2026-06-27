@@ -211,12 +211,48 @@ html[lang="ja"] .subtext {
     border-radius: 12px;
     overflow: hidden;
     background: var(--bg-surface);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+}
+
+.menu-bar-mock {
+    height: 28px;
+    background: #111111;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+}
+
+.menu-bar-left {
+    display: flex;
+    gap: 6px;
+}
+
+.menu-bar-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.menu-bar-right {
+    display: flex;
+    align-items: center;
+}
+
+.menu-bar-logo {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
 }
 
 .hero-image {
     width: 100%;
     height: auto;
-    padding-bottom: 64px;
+    display: block;
 }
 
 .hero-note {
