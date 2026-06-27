@@ -92,7 +92,7 @@ fn test_full_profile_switch_workflow() {
 
     // Create a new profile
     let sharing_config = SharingConfig::default(); // default is Isolated
-    profile_manager.create_profile("Work", sharing_config).unwrap();
+    profile_manager.create_profile("Work", sharing_config, None).unwrap();
 
     // Switch to the new profile
     switcher.switch_to("Work").unwrap();
@@ -151,7 +151,7 @@ fn test_profile_sharing_and_isolation_matrix() {
         source: SharingSource::default(),
     };
 
-    let profile = profile_manager.create_profile("CustomMatrix", matrix_sharing).unwrap();
+    let profile = profile_manager.create_profile("CustomMatrix", matrix_sharing, None).unwrap();
     let target_desktop = &profile.isolation.desktop_user_data_dir;
     let target_cli = &profile.isolation.cli_config_dir;
 
@@ -225,7 +225,7 @@ fn test_profile_cloning_with_data() {
     let mut sharing = SharingConfig::default();
     sharing.cli_skills = SharingMode::Copy;
     sharing.cli_sessions = SharingMode::Isolate;
-    let _original_profile = profile_manager.create_profile("OriginalWork", sharing).unwrap();
+    let _original_profile = profile_manager.create_profile("OriginalWork", sharing, None).unwrap();
 
     // Switch to generate credential backup inside OriginalWork
     switcher.switch_to("OriginalWork").unwrap();

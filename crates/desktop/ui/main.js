@@ -6,12 +6,16 @@
 const invoke = window.__TAURI__ ? window.__TAURI__.core.invoke : async (cmd, args) => {
   console.log(`Mock calling command "${cmd}" with args:`, args);
   // Mock implementations for design testing
-  if (cmd === 'list_profiles') return ['default', 'Work', 'Personal'];
+  if (cmd === 'list_profiles') return [
+    { name: 'default', icon: '', is_default: true },
+    { name: 'Work', icon: '💼', is_default: false },
+    { name: 'Personal', icon: '🏠', is_default: false }
+  ];
   if (cmd === 'get_active_profile') return 'default';
   if (cmd === 'get_profile_details') {
     return {
       name: args.name,
-      icon: args.name.charAt(0).toUpperCase(),
+      icon: args.name === 'default' ? '' : (args.name === 'Work' ? '💼' : '🏠'),
       color: '#4A90D9',
       is_default: args.name === 'default',
       desktop_path: `~/.claude-desktop-switcher/profiles/${args.name.toLowerCase()}/desktop-data`,
@@ -69,6 +73,7 @@ const elBtnAddProfile = document.getElementById('btn-add-profile');
 // Modal Elements
 const elModalCreate = document.getElementById('modal-create');
 const elInputName = document.getElementById('input-name');
+const elInputIcon = document.getElementById('input-icon');
 const elSelectPreset = document.getElementById('select-preset');
 const elBtnModalCancel = document.getElementById('btn-modal-cancel');
 const elBtnModalSubmit = document.getElementById('btn-modal-submit');
@@ -107,7 +112,7 @@ async function refreshProfiles() {
     renderProfileList();
     
     // Auto-select active profile detail if none is selected
-    if (selectedProfileName && profilesList.includes(selectedProfileName)) {
+    if (selectedProfileName && profilesList.some(p => p.name === selectedProfileName)) {
       await showProfileDetails(selectedProfileName);
     } else {
       elDetailsPanel.classList.add('hidden');
@@ -123,15 +128,15 @@ async function refreshProfiles() {
 function renderProfileList() {
   elProfileList.innerHTML = '';
   
-  profilesList.forEach(name => {
-    const isActive = name === activeProfileName;
-    const initial = name.charAt(0).toUpperCase();
+  profilesList.forEach(p => {
+    const isActive = p.name === activeProfileName;
+    const iconContent = p.icon ? p.icon : p.name.charAt(0).toUpperCase();
     
     const li = document.createElement('li');
-    li.className = `profile-item ${name === selectedProfileName ? 'active' : ''}`;
+    li.className = `profile-item ${p.name === selectedProfileName ? 'active' : ''}`;
     li.innerHTML = `
-      <span class="profile-avatar">${initial}</span>
-      <span class="profile-name">${name}</span>
+      <span class="profile-avatar">${iconContent}</span>
+      <span class="profile-name">${p.name}</span>
       ${isActive ? '<span class="active-dot"></span>' : ''}
     `;
     
@@ -139,7 +144,7 @@ function renderProfileList() {
       // Remove active class from previous
       document.querySelectorAll('.profile-item').forEach(el => el.classList.remove('active'));
       li.classList.add('active');
-      showProfileDetails(name);
+      showProfileDetails(p.name);
     });
     
     elProfileList.appendChild(li);
@@ -161,7 +166,7 @@ async function showProfileDetails(name) {
     elDetailsPanel.classList.remove('hidden');
     
     // Meta info
-    elDetailIcon.textContent = p.name.charAt(0).toUpperCase();
+    elDetailIcon.textContent = p.icon ? p.icon : p.name.charAt(0).toUpperCase();
     elDetailName.textContent = p.name;
     
     // Status Tag
@@ -221,6 +226,7 @@ function setupEventListeners() {
   // Create Profile Modal
   elBtnAddProfile.addEventListener('click', () => {
     elInputName.value = '';
+    elInputIcon.value = '';
     elModalCreate.classList.remove('hidden');
     elInputName.focus();
   });
@@ -231,6 +237,7 @@ function setupEventListeners() {
   
   elBtnModalSubmit.addEventListener('click', async () => {
     const name = elInputName.value.trim();
+    const icon = elInputIcon.value.trim();
     const mode = elSelectPreset.value;
     
     if (!name) {
@@ -250,7 +257,7 @@ function setupEventListeners() {
     }
     
     try {
-      await invoke('create_profile', { name, mode });
+      await invoke('create_profile', { name, mode, icon: icon || null });
       elModalCreate.classList.add('hidden');
       selectedProfileName = name;
       await refreshProfiles();

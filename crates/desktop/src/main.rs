@@ -25,8 +25,19 @@ async fn get_active_profile(state: State<'_, AppState>) -> Result<String, String
 }
 
 #[tauri::command]
-async fn list_profiles(state: State<'_, AppState>) -> Result<Vec<String>, String> {
-    state.profile_manager.list_profiles().map_err(|e| e.to_string())
+async fn list_profiles(state: State<'_, AppState>) -> Result<Vec<serde_json::Value>, String> {
+    let names = state.profile_manager.list_profiles().map_err(|e| e.to_string())?;
+    let mut list = Vec::new();
+    for name in names {
+        if let Ok(p) = state.profile_manager.get_profile(&name) {
+            list.push(serde_json::json!({
+                "name": p.profile.name,
+                "icon": p.profile.icon,
+                "is_default": p.profile.is_default,
+            }));
+        }
+    }
+    Ok(list)
 }
 
 #[tauri::command]
@@ -59,6 +70,7 @@ async fn get_profile_details(name: String, state: State<'_, AppState>) -> Result
 async fn create_profile(
     name: String,
     mode: String,
+    icon: Option<String>,
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<(), String> {
@@ -71,7 +83,7 @@ async fn create_profile(
         sharing.desktop_worktrees = SharingMode::Share;
     }
 
-    state.profile_manager.create_profile(&name, sharing).map_err(|e| e.to_string())?;
+    state.profile_manager.create_profile(&name, sharing, icon).map_err(|e| e.to_string())?;
     
     // Update system tray menu after change
     update_tray_menu(&app)?;

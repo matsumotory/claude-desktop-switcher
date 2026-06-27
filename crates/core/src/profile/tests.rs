@@ -39,7 +39,7 @@ fn test_default_profile() {
 fn test_create_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
     
-    let profile = manager.create_profile("test_profile", SharingConfig::default())
+    let profile = manager.create_profile("test_profile", SharingConfig::default(), None)
         .expect("Failed to create profile");
         
     assert_eq!(profile.profile.name, "test_profile");
@@ -55,7 +55,7 @@ fn test_create_profile() {
 fn test_delete_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
     
-    manager.create_profile("to_delete", SharingConfig::default())
+    manager.create_profile("to_delete", SharingConfig::default(), None)
         .expect("Failed to create profile");
         
     let list = manager.list_profiles().unwrap();
@@ -76,7 +76,7 @@ fn test_delete_default_or_active_fails() {
     assert!(res.is_err());
     
     // Deleting active fails
-    manager.create_profile("active_prof", SharingConfig::default()).unwrap();
+    manager.create_profile("active_prof", SharingConfig::default(), None).unwrap();
     manager.switch_to("active_prof").unwrap();
     
     let res2 = manager.delete_profile("active_prof");
@@ -88,7 +88,7 @@ fn test_clone_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
     
     // Create an original profile to clone from
-    let original = manager.create_profile("original", SharingConfig::default())
+    let original = manager.create_profile("original", SharingConfig::default(), None)
         .expect("Failed to create original profile");
 
     // Clone it

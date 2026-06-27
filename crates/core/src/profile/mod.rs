@@ -228,7 +228,7 @@ impl ProfileManager {
         config::load_profile(&profile_toml)
     }
 
-    pub fn create_profile(&self, name: &str, sharing: SharingConfig) -> Result<Profile> {
+    pub fn create_profile(&self, name: &str, sharing: SharingConfig, icon: Option<String>) -> Result<Profile> {
         if name == "default" {
             return Err(CswError::ProfileAlreadyExists("default".to_string()));
         }
@@ -244,7 +244,7 @@ impl ProfileManager {
         let profile = Profile {
             profile: ProfileMeta {
                 name: name.to_string(),
-                icon: "💼".to_string(),
+                icon: icon.unwrap_or_else(|| "".to_string()),
                 color: "#4A90D9".to_string(),
                 is_default: false,
             },
