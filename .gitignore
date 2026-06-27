@@ -1,7 +1,9 @@
 # Rust
 /target/
 **/*.rs.bk
-Cargo.lock
+# Cargo.lock is committed: this is a binary application, so we pin the exact
+# dependency graph for reproducible CI/release builds (Cargo's recommendation
+# for binaries). Do not re-add Cargo.lock to .gitignore.
 
 # macOS
 .DS_Store
@@ -20,6 +22,8 @@ Cargo.lock
 # Tauri (Phase 2)
 /crates/tauri-app/dist/
 /crates/tauri-app/node_modules/
+# Tauri-generated ACL/capability schemas (regenerated on every build)
+/crates/desktop/gen/
 
 # Sandbox test artifacts
 /.context-switcher-sandbox/
