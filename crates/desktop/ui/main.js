@@ -1,396 +1,624 @@
 // ============================================================================
-// Claude Desktop Switcher — Frontend Logic (Tauri v2 bindings)
+// Claude Desktop Switcher — settings UI logic (Tauri v2)
+// The WebView is a "dumb terminal": all profile logic lives in Rust.
+// When window.__TAURI__ is absent (plain browser, e.g. screenshots) a dev mock
+// stands in. The shipped app sets withGlobalTauri:true and always reaches Rust.
+//
+// All dynamic UI is built with createElement + textContent (never innerHTML),
+// so backend/user strings are never parsed as HTML — XSS is structurally
+// impossible.
 // ============================================================================
 
-// Helper to safely invoke Tauri commands
-const invoke = window.__TAURI__ ? window.__TAURI__.core.invoke : async (cmd, args) => {
-  console.log(`Mock calling command "${cmd}" with args:`, args);
-  // Mock implementations for design testing
-  if (cmd === 'list_profiles') return [
-    { name: 'default', icon: '', is_default: true },
-    { name: 'Work', icon: '💼', is_default: false },
-    { name: 'Personal', icon: '🏠', is_default: false }
-  ];
-  if (cmd === 'get_active_profile') return 'default';
-  if (cmd === 'get_profile_details') {
-    return {
-      name: args.name,
-      icon: args.name === 'default' ? '' : (args.name === 'Work' ? '💼' : '🏠'),
-      color: '#4A90D9',
-      is_default: args.name === 'default',
-      desktop_path: `~/.context-switcher-claude/profiles/${args.name.toLowerCase()}/desktop-data`,
-      cli_path: `~/.context-switcher-claude/profiles/${args.name.toLowerCase()}/cli-data`,
-      sharing: {
-        desktop_config: 'share',
-        desktop_app_config: 'share',
-        cli_settings: 'share',
-        cli_claude_md: 'share',
-        cli_project_memory: 'isolate',
-        cli_plugins: 'share',
-        cli_skills: 'share',
-        cli_sessions: 'isolate',
-        cli_history: 'isolate',
-        desktop_worktrees: 'isolate',
-        desktop_device_id: 'share'
-      }
-    };
-  }
-  return null;
+const HAS_TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
+const invoke = HAS_TAURI ? window.__TAURI__.core.invoke : devInvoke;
+
+// --- The 11 sharing components, grouped and described in plain language ------
+const SHARE_GROUPS = [
+  {
+    label: 'Claudeデスクトップアプリ',
+    items: [
+      { key: 'desktop_config', name: 'MCP サーバー', desc: '接続済みの MCP サーバー構成' },
+      { key: 'desktop_app_config', name: 'アプリ設定', desc: '表示や挙動などの一般設定' },
+      { key: 'desktop_worktrees', name: 'ワークツリー', desc: 'Git ワークツリーの対応表' },
+    ],
+  },
+  {
+    label: 'Claude Code',
+    items: [
+      { key: 'cli_settings', name: '権限・フック', desc: '許可設定とフック' },
+      { key: 'cli_claude_md', name: 'グローバルルール', desc: 'CLAUDE.md の共通ルール' },
+      { key: 'cli_project_memory', name: 'プロジェクト記憶', desc: 'プロジェクトごとのメモリ' },
+      { key: 'cli_plugins', name: 'プラグイン', desc: 'インストール済みプラグイン' },
+      { key: 'cli_skills', name: 'スキル', desc: 'カスタムスキル定義' },
+      { key: 'cli_sessions', name: '会話履歴', desc: 'これまでの会話セッション' },
+      { key: 'cli_history', name: 'コマンド履歴', desc: '入力したコマンドの履歴' },
+    ],
+  },
+];
+const DEVICE_ID = { key: 'desktop_device_id', name: '端末 ID', desc: '端末を識別するための ID。共有が既定です' };
+const ALL_KEYS = [...SHARE_GROUPS.flatMap((g) => g.items.map((i) => i.key)), DEVICE_ID.key];
+
+// Mode presets (must mirror build_sharing_config in main.rs).
+const PRESETS = {
+  isolate: Object.fromEntries(ALL_KEYS.map((k) => [k, k === 'desktop_device_id' ? 'share' : 'isolate'])),
+  share_settings: {
+    desktop_config: 'share',
+    cli_settings: 'share',
+    cli_claude_md: 'share',
+    cli_plugins: 'share',
+    cli_skills: 'share',
+    desktop_app_config: 'share',
+    desktop_worktrees: 'share',
+    cli_project_memory: 'isolate',
+    cli_sessions: 'isolate',
+    cli_history: 'isolate',
+    desktop_device_id: 'share',
+  },
 };
 
-// DOM State
-let profilesList = [];
-let activeProfileName = 'default';
-let selectedProfileName = null;
+// --- App state --------------------------------------------------------------
+let profiles = [];
+let activeName = 'default';
+let selectedName = null;
+let currentMode = 'isolate';
+let overrides = { ...PRESETS.isolate };
+let advancedCustomized = false;
 
-// DOM Elements
-const elProfileList = document.getElementById('profile-list');
-const elWelcomePanel = document.getElementById('welcome-panel');
-const elDetailsPanel = document.getElementById('profile-details');
+// --- DOM builder helpers (no innerHTML) -------------------------------------
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-const elDetailIcon = document.getElementById('detail-icon');
-const elDetailName = document.getElementById('detail-name');
-const elDetailActiveTag = document.getElementById('detail-active-tag');
-const elPathDesktop = document.getElementById('path-desktop');
-const elPathCli = document.getElementById('path-cli');
-
-const elShareDesktopConfig = document.getElementById('share-desktop-config');
-const elShareDesktopAppConfig = document.getElementById('share-desktop-app-config');
-const elShareCliSettings = document.getElementById('share-cli-settings');
-const elShareCliClaudeMd = document.getElementById('share-cli-claude-md');
-const elShareCliProjectMemory = document.getElementById('share-cli-project-memory');
-const elShareCliPlugins = document.getElementById('share-cli-plugins');
-const elShareCliSkills = document.getElementById('share-cli-skills');
-const elShareCliSessions = document.getElementById('share-cli-sessions');
-const elShareCliHistory = document.getElementById('share-cli-history');
-const elShareDesktopWorktrees = document.getElementById('share-desktop-worktrees');
-
-const elBtnSwitch = document.getElementById('btn-switch');
-const elBtnClone = document.getElementById('btn-clone');
-const elBtnDelete = document.getElementById('btn-delete');
-const elBtnAddProfile = document.getElementById('btn-add-profile');
-
-// Modal Elements
-const elModalCreate = document.getElementById('modal-create');
-const elInputName = document.getElementById('input-name');
-const elInputIcon = document.getElementById('input-icon');
-const elSelectPreset = document.getElementById('select-preset');
-const elBtnModalCancel = document.getElementById('btn-modal-cancel');
-const elBtnModalSubmit = document.getElementById('btn-modal-submit');
-
-// Clone Modal Elements
-const elModalClone = document.getElementById('modal-clone');
-const elInputCloneName = document.getElementById('input-clone-name');
-const elBtnModalCloneCancel = document.getElementById('btn-modal-clone-cancel');
-const elBtnModalCloneSubmit = document.getElementById('btn-modal-clone-submit');
-
-// Onboarding Elements
-const elOnboardingOverlay = document.getElementById('onboarding-overlay');
-const elBtnOnboardingNext = document.getElementById('btn-onboarding-next');
-
-// Init
-async function init() {
-  await refreshProfiles();
-  setupEventListeners();
-  checkOnboarding();
+function h(tag, props, ...kids) {
+  const node = document.createElement(tag);
+  if (props) {
+    for (const k in props) {
+      const v = props[k];
+      if (v == null || v === false) continue;
+      if (k === 'class') node.className = v;
+      else if (k === 'text') node.textContent = v;
+      else if (k === 'dataset') Object.assign(node.dataset, v);
+      else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
+      else if (k === 'disabled' || k === 'checked' || k === 'hidden') { if (v) node[k] = true; }
+      else node.setAttribute(k, v);
+    }
+  }
+  appendKids(node, kids);
+  return node;
 }
 
-function checkOnboarding() {
-  const onboarded = localStorage.getItem('csw_onboarded');
-  if (!onboarded) {
-    elOnboardingOverlay.classList.remove('hidden');
-    showSlide(1);
+function appendKids(node, kids) {
+  for (const c of kids.flat(Infinity)) {
+    if (c == null || c === false) continue;
+    node.appendChild(typeof c === 'object' ? c : document.createTextNode(String(c)));
   }
 }
 
-// Fetch and render profiles list
+function icon(id, cls) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', cls || 'icon');
+  const use = document.createElementNS(SVG_NS, 'use');
+  use.setAttribute('href', '#' + id);
+  svg.appendChild(use);
+  return svg;
+}
+
+const $ = (id) => document.getElementById(id);
+function avatarText(p) {
+  return p.icon ? p.icon : (p.name || '?').charAt(0).toUpperCase();
+}
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function withTransition(update) {
+  if (document.startViewTransition && !reduceMotion()) document.startViewTransition(update);
+  else update();
+}
+
+// --- DOM refs ---------------------------------------------------------------
+const el = {
+  nowClaude: $('nowClaude'),
+  nowClaudeActive: $('nowClaudeActive'),
+  createdSection: $('createdSection'),
+  profileList: $('profileList'),
+  btnCreate: $('btnCreate'),
+  btnCreateEmpty: $('btnCreateEmpty'),
+  viewEmpty: $('viewEmpty'),
+  viewDetail: $('viewDetail'),
+  viewCreate: $('viewCreate'),
+  detailContent: $('detailContent'),
+  detailFooter: $('detailFooter'),
+  emptyFirstRun: $('emptyFirstRun'),
+  firstRunExtra: $('firstRunExtra'),
+  inputName: $('inputName'),
+  inputIcon: $('inputIcon'),
+  nameError: $('nameError'),
+  advancedToggle: $('advancedToggle'),
+  advancedState: $('advancedState'),
+  advancedReset: $('advancedReset'),
+  advancedGroups: $('advancedGroups'),
+  btnCreateCancel: $('btnCreateCancel'),
+  btnCreateSubmit: $('btnCreateSubmit'),
+  emptyScroll: $('emptyScroll'),
+  emptyFade: $('emptyFade'),
+  detailScroll: $('detailScroll'),
+  detailFade: $('detailFade'),
+  createScroll: $('createScroll'),
+  createFade: $('createFade'),
+  toastArea: $('toastArea'),
+};
+
+// --- Toast ------------------------------------------------------------------
+function showToast(msg, isError) {
+  const t = h('div', { class: 'toast' + (isError ? ' error' : '') },
+    icon(isError ? 'i-info' : 'i-check'), h('span', { text: msg }));
+  if (isError) t.setAttribute('role', 'alert'); // announce failures assertively
+  el.toastArea.appendChild(t);
+  setTimeout(() => {
+    t.style.transition = 'opacity .2s';
+    t.style.opacity = '0';
+    setTimeout(() => t.remove(), 220);
+  }, 3200);
+}
+
+// --- View switching ---------------------------------------------------------
+function setView(view) {
+  el.viewEmpty.hidden = view !== 'empty';
+  el.viewDetail.hidden = view !== 'detail';
+  el.viewCreate.hidden = view !== 'create';
+  requestAnimationFrame(refreshFades);
+}
+
+// --- Sidebar ----------------------------------------------------------------
+function renderSidebar() {
+  el.nowClaudeActive.hidden = activeName !== 'default';
+  el.nowClaude.classList.toggle('selected', selectedName === 'default');
+  el.nowClaude.setAttribute('aria-current', selectedName === 'default' ? 'true' : 'false');
+
+  const created = profiles.filter((p) => p.name !== 'default');
+  el.createdSection.hidden = created.length === 0;
+
+  const rows = created.map((p) => {
+    const open = () => withTransition(() => showDetail(p.name));
+    const li = h('li', {
+      class: 'profile-item' + (p.name === selectedName ? ' selected' : ''),
+      role: 'button', tabindex: '0', onclick: open,
+      onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
+    },
+      h('span', { class: 'profile-avatar', text: avatarText(p) }),
+      h('span', { class: 'profile-name', text: p.name }),
+      p.name === activeName ? h('span', { class: 'pill pill-active', text: '使用中' }) : null);
+    return li;
+  });
+  el.profileList.replaceChildren(...rows);
+}
+
+// --- Detail view ------------------------------------------------------------
+async function showDetail(name) {
+  selectedName = name;
+  let d;
+  try {
+    d = await invoke('get_profile_details', { name });
+  } catch (err) {
+    showToast('プロファイルを読み込めませんでした。', true);
+    return;
+  }
+  renderSidebar();
+  const isDefault = !!d.is_default;
+  const isActive = name === activeName;
+
+  const header = h('div', { class: 'detail-header' },
+    h('div', { class: 'detail-bezel' },
+      h('div', { class: 'detail-avatar', text: d.icon ? d.icon : name.charAt(0).toUpperCase() })),
+    h('div', { class: 'detail-titles' },
+      h('div', { class: 'detail-name', text: isDefault ? 'いま使っている Claude' : name }),
+      h('div', { class: 'detail-tagline', text: isDefault ? 'ふだんの環境。CSW は変更しません' : (isActive ? '使用中の環境' : '作成した環境') })),
+    isActive ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', text: '使用中' }) : null);
+
+  const nodes = [header];
+
+  if (isDefault) {
+    nodes.push(section('', [
+      h('div', { class: 'note-card' },
+        'あなたが普段使っている ', h('strong', { text: 'Claudeデスクトップアプリ' }), 'と ',
+        h('strong', { text: 'Claude Code' }),
+        ' の環境です。CSW はここを表示しているだけで、設定・履歴・ログインを変更したり削除したりしません。切り替えると、いつものこの環境に戻ります。'),
+    ]));
+    nodes.push(pathsSection(d, true));
+    nodes.push(section('共有の状態', [h('div', { class: 'note-card', text: 'すべて元のまま（11 項目すべて共有）。' })]));
+  } else {
+    nodes.push(pathsSection(d, false));
+    nodes.push(sharingDisclosure(d.sharing));
+    nodes.push(terminalSection(name));
+  }
+
+  el.detailContent.replaceChildren(...nodes);
+  renderDetailFooter(name, isDefault, isActive);
+  setView('detail');
+}
+
+function section(label, children) {
+  return h('div', { class: 'section' },
+    label ? h('div', { class: 'section-label', text: label }) : null, ...children);
+}
+
+function pathsSection(d, isDefault) {
+  return section(isDefault ? '場所（本物の Claude フォルダ）' : '場所（このプロファイル）', [
+    pathRow('Claudeデスクトップアプリ', d.desktop_path),
+    pathRow('Claude Code', d.cli_path),
+    isDefault ? h('p', { class: 'path-caption', text: 'これは CSW が作った場所ではなく、あなたの本物の Claude フォルダです。' }) : null,
+  ]);
+}
+
+function pathRow(label, value) {
+  return h('div', { class: 'path-row' },
+    h('div', { class: 'path-meta' },
+      h('span', { class: 'path-label', text: label }),
+      h('code', { class: 'path-code', text: value })),
+    copyButton(value, 'パスをコピー'));
+}
+
+function copyButton(value, title) {
+  return h('button', {
+    type: 'button', class: 'icon-btn', title,
+    onclick: () => copyText(value),
+  }, icon('i-copy'));
+}
+
+function terminalSection(name) {
+  const cmd = `eval $(csw env "${name}")`;
+  return section('ターミナルで使う', [
+    h('div', { class: 'note-card', text: 'Claude Code でこの環境を使うには、ターミナルで次を実行します。このタブだけに適用され、普段の環境には影響しません。' }),
+    h('div', { class: 'path-row', style: 'margin-top:8px' },
+      h('div', { class: 'path-meta' }, h('code', { class: 'path-code', text: cmd })),
+      copyButton(cmd, 'コマンドをコピー')),
+  ]);
+}
+
+function sharingDisclosure(sharing) {
+  let shareCount = 0;
+  for (const k of ALL_KEYS) if (sharing[k] === 'share') shareCount++;
+  const isoCount = ALL_KEYS.length - shareCount;
+
+  const inner = [];
+  for (const g of SHARE_GROUPS) {
+    inner.push(h('div', { class: 'share-group' },
+      h('div', { class: 'share-group-label', text: g.label }),
+      ...g.items.map((it) => sharingReadRow(it, sharing[it.key]))));
+  }
+  inner.push(h('div', { class: 'share-group' }, sharingReadRow(DEVICE_ID, sharing[DEVICE_ID.key])));
+
+  const wrap = h('div', { class: 'disclosure' });
+  const toggle = h('button', {
+    type: 'button', class: 'sharing-summary', 'aria-expanded': 'false',
+    onclick: () => {
+      const open = wrap.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+      innerWrap.inert = !open; // keep collapsed rows out of the tab order
+      requestAnimationFrame(refreshFades);
+    },
+  },
+    h('span', { class: 'summary-text' },
+      `共有 ${shareCount} 件・分離 ${isoCount} 件`,
+      h('span', { class: 'summary-sub', text: ' ／ ログインと履歴は分離' })),
+    icon('i-chevron', 'icon summary-chevron'));
+  const innerWrap = h('div', { class: 'disclosure-inner' }, ...inner);
+  innerWrap.inert = true;
+  appendKids(wrap, [toggle, h('div', { class: 'disclosure-panel' }, innerWrap)]);
+
+  return section('この環境が引き継いでいるもの', [wrap]);
+}
+
+function sharingReadRow(item, mode) {
+  return h('div', { class: 'share-line' },
+    h('div', { class: 'share-line-meta' },
+      h('div', { class: 'share-line-name', text: item.name }),
+      h('div', { class: 'share-line-desc', text: item.desc })),
+    badge(mode));
+}
+
+function badge(mode) {
+  if (mode === 'share') return h('span', { class: 'badge badge-share' }, icon('i-link'), '共有');
+  if (mode === 'copy') return h('span', { class: 'badge badge-copy' }, icon('i-copy'), 'コピー');
+  return h('span', { class: 'badge badge-isolate' }, icon('i-lock'), '分離');
+}
+
+function renderDetailFooter(name, isDefault, isActive) {
+  el.detailFooter.className = 'view-footer split';
+  const switchBtn = h('button', {
+    type: 'button', class: 'btn btn-primary', disabled: isActive,
+    onclick: () => { if (!isActive) doSwitch(name); },
+  }, icon('i-switch'), h('span', { text: isActive ? '使用中の環境' : 'この環境に切り替える' }));
+
+  if (isDefault) {
+    el.detailFooter.replaceChildren(
+      h('span', { class: 'confirm-text', style: 'color:var(--ink-muted)', text: 'この環境は変更・削除できません' }),
+      switchBtn);
+    return;
+  }
+  el.detailFooter.replaceChildren(
+    h('div', { class: 'footer-group' },
+      switchBtn,
+      h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showCloneRow(name) },
+        icon('i-duplicate'), h('span', { text: '複製' }))),
+    h('button', { type: 'button', class: 'btn btn-danger', onclick: () => showDeleteRow(name) },
+      icon('i-trash'), h('span', { text: '削除' })));
+}
+
+// --- Inline confirm / clone rows (no window.confirm) ------------------------
+function showDeleteRow(name) {
+  el.detailFooter.className = 'view-footer split';
+  const cancel = h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, 'やめる');
+  el.detailFooter.replaceChildren(
+    h('span', { class: 'confirm-text', text: 'この環境を削除します。共有リンクと分離データが消えます。元の Claude には影響しません。' }),
+    h('div', { class: 'footer-group' },
+      cancel,
+      h('button', { type: 'button', class: 'btn btn-danger-solid', onclick: () => doDelete(name) }, '削除する')));
+  cancel.focus(); // default focus on the safe action
+}
+
+function showCloneRow(name) {
+  el.detailFooter.className = 'view-footer';
+  const input = h('input', {
+    type: 'text', class: 'input', placeholder: '複製先の名前（例: 仕事用-控え）',
+    autocomplete: 'off', spellcheck: 'false', style: 'flex:1',
+    onkeydown: (e) => { if (e.key === 'Enter') doClone(name, input.value.trim()); },
+  });
+  el.detailFooter.replaceChildren(
+    input,
+    h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, 'やめる'),
+    h('button', { type: 'button', class: 'btn btn-primary', onclick: () => doClone(name, input.value.trim()) }, '複製を作る'));
+  input.focus();
+}
+
+// --- Backend operations -----------------------------------------------------
+async function doSwitch(name) {
+  try {
+    await invoke('switch_profile', { name, noLaunch: false });
+    await refreshProfiles();
+    withTransition(() => showDetail(name));
+    showToast(`${name === 'default' ? 'いま使っている Claude' : name}に切り替えました`);
+  } catch (err) {
+    showToast('切り替えできませんでした。もう一度お試しください。', true);
+  }
+}
+
+async function doDelete(name) {
+  try {
+    await invoke('delete_profile', { name });
+    selectedName = null;
+    await refreshProfiles();
+    const remaining = profiles.filter((p) => p.name !== 'default');
+    withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
+    showToast(`${name}を削除しました`);
+  } catch (err) {
+    showToast('削除できませんでした。使用中のプロファイルは切り替えてから削除してください。', true);
+  }
+}
+
+async function doClone(source, target) {
+  const err = validateName(target);
+  if (err) { showToast(err, true); return; }
+  try {
+    await invoke('clone_profile', { source, target });
+    selectedName = target;
+    await refreshProfiles();
+    withTransition(() => showDetail(target));
+    showToast(`${target}を複製しました（元の環境はそのまま）`);
+  } catch (e) {
+    showToast('複製できませんでした。同じ名前がすでにあるか確認してください。', true);
+  }
+}
+
+// --- Empty / create flow ----------------------------------------------------
+function showEmpty() {
+  selectedName = null;
+  renderSidebar();
+  setView('empty');
+}
+
+function showCreate() {
+  localStorage.setItem('csw_onboarded', '1');
+  el.inputName.value = '';
+  el.inputIcon.value = '';
+  el.nameError.hidden = true;
+  setMode('isolate');
+  closeAdvanced();
+  setView('create');
+  setTimeout(() => el.inputName.focus(), 0);
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  const radio = document.querySelector(`input[name="mode"][value="${mode}"]`);
+  if (radio) radio.checked = true;
+  overrides = { ...PRESETS[mode] };
+  advancedCustomized = false;
+  renderAdvancedRows();
+  updateAdvancedState();
+}
+
+function renderAdvancedRows() {
+  const nodes = [];
+  for (const g of SHARE_GROUPS) {
+    nodes.push(h('div', { class: 'share-group' },
+      h('div', { class: 'share-group-label', text: g.label }),
+      ...g.items.map((it) => segRow(it, overrides[it.key], false))));
+  }
+  nodes.push(h('div', { class: 'share-group' },
+    segRow(DEVICE_ID, 'share', true),
+    h('p', { class: 'path-caption', text: '端末識別のため、端末 ID は常に共有されます。' })));
+  el.advancedGroups.replaceChildren(...nodes);
+}
+
+function segRow(item, value, fixed) {
+  const opt = (val, iconId, label) => {
+    const input = h('input', { type: 'radio', name: 'seg-' + item.key, value: val });
+    if (value === val) input.checked = true;
+    if (fixed) input.disabled = true;
+    return h('label', { class: 'seg-opt' }, input, icon(iconId), label);
+  };
+  return h('div', { class: 'share-line' + (fixed ? ' fixed' : '') },
+    h('div', { class: 'share-line-meta' },
+      h('div', { class: 'share-line-name', text: item.name }),
+      h('div', { class: 'share-line-desc', text: item.desc })),
+    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': item.name },
+      opt('share', 'i-link', '共有'), opt('isolate', 'i-lock', '分離'), opt('copy', 'i-copy', 'コピー')));
+}
+
+function updateAdvancedState() {
+  el.advancedState.textContent = advancedCustomized ? 'カスタム設定' : 'モードの既定どおり';
+  el.advancedState.classList.toggle('custom', advancedCustomized);
+  el.advancedReset.hidden = !advancedCustomized;
+}
+
+function openAdvanced() {
+  const adv = el.advancedToggle.closest('.advanced');
+  adv.classList.add('open');
+  el.advancedToggle.setAttribute('aria-expanded', 'true');
+  adv.querySelector('.advanced-inner').inert = false;
+  requestAnimationFrame(refreshFades);
+}
+function closeAdvanced() {
+  const adv = el.advancedToggle.closest('.advanced');
+  adv.classList.remove('open');
+  el.advancedToggle.setAttribute('aria-expanded', 'false');
+  adv.querySelector('.advanced-inner').inert = true; // keep collapsed rows out of the tab order
+}
+
+function validateName(name) {
+  if (!name) return '名前を入力してください。';
+  if (name.toLowerCase() === 'default') return '"default" は使えません。いまの環境を指す予約名です。';
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) return '英数字とハイフン、アンダースコアだけ使えます。';
+  return null;
+}
+
+async function submitCreate() {
+  const name = el.inputName.value.trim();
+  const iconVal = el.inputIcon.value.trim();
+  const err = validateName(name);
+  if (err) { el.nameError.textContent = err; el.nameError.hidden = false; el.inputName.focus(); return; }
+  el.nameError.hidden = true;
+
+  const args = { name, mode: currentMode, icon: iconVal || null };
+  if (advancedCustomized) args.sharingOverrides = { ...overrides };
+
+  el.btnCreateSubmit.disabled = true;
+  try {
+    await invoke('create_profile', args);
+    localStorage.setItem('csw_onboarded', '1');
+    selectedName = name;
+    await refreshProfiles();
+    withTransition(() => showDetail(name));
+    showToast(`${name}を作成しました`);
+  } catch (e) {
+    showToast('作成できませんでした。同じ名前がすでにあるか確認してください。', true);
+  } finally {
+    el.btnCreateSubmit.disabled = false;
+  }
+}
+
+// --- Scroll affordance ------------------------------------------------------
+function fadeFor(scrollEl, fadeEl) {
+  if (!scrollEl || !fadeEl) return;
+  fadeEl.hidden = !(scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight > 4);
+}
+function refreshFades() {
+  fadeFor(el.emptyScroll, el.emptyFade);
+  fadeFor(el.detailScroll, el.detailFade);
+  fadeFor(el.createScroll, el.createFade);
+}
+
+// --- Clipboard --------------------------------------------------------------
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('コピーしました');
+  } catch (e) {
+    showToast('コピーできませんでした。', true);
+  }
+}
+
+// --- Data refresh -----------------------------------------------------------
 async function refreshProfiles() {
   try {
-    profilesList = await invoke('list_profiles');
-    activeProfileName = await invoke('get_active_profile');
-    
-    renderProfileList();
-    
-    // Auto-select active profile detail if none is selected
-    if (selectedProfileName && profilesList.some(p => p.name === selectedProfileName)) {
-      await showProfileDetails(selectedProfileName);
-    } else {
-      elDetailsPanel.classList.add('hidden');
-      elWelcomePanel.classList.remove('hidden');
-      selectedProfileName = null;
-    }
-  } catch (err) {
-    console.error('プロファイルの読み込みに失敗しました:', err);
+    profiles = await invoke('list_profiles');
+    activeName = await invoke('get_active_profile');
+  } catch (e) {
+    profiles = [{ name: 'default', icon: '', is_default: true }];
+    activeName = 'default';
   }
+  renderSidebar();
 }
 
-// Render profiles sidebar list
-function renderProfileList() {
-  elProfileList.innerHTML = '';
-  
-  profilesList.forEach(p => {
-    const isActive = p.name === activeProfileName;
-    const iconContent = p.icon ? p.icon : p.name.charAt(0).toUpperCase();
-    
-    const li = document.createElement('li');
-    li.className = `profile-item ${p.name === selectedProfileName ? 'active' : ''}`;
-    li.innerHTML = `
-      <span class="profile-avatar">${iconContent}</span>
-      <span class="profile-name">${p.name}</span>
-      ${isActive ? '<span class="active-dot"></span>' : ''}
-    `;
-    
-    li.addEventListener('click', () => {
-      // Remove active class from previous
-      document.querySelectorAll('.profile-item').forEach(el => el.classList.remove('active'));
-      li.classList.add('active');
-      showProfileDetails(p.name);
-    });
-    
-    elProfileList.appendChild(li);
+// --- Init -------------------------------------------------------------------
+function wireEvents() {
+  el.btnCreate.addEventListener('click', () => withTransition(showCreate));
+  el.btnCreateEmpty.addEventListener('click', () => withTransition(showCreate));
+  el.btnCreateCancel.addEventListener('click', () => withTransition(() =>
+    selectedName ? showDetail(selectedName) : showEmpty()));
+  el.btnCreateSubmit.addEventListener('click', submitCreate);
+  el.nowClaude.addEventListener('click', () => withTransition(() => showDetail('default')));
+
+  document.querySelectorAll('input[name="mode"]').forEach((r) =>
+    r.addEventListener('change', () => {
+      if (advancedCustomized) showToast('モードを変えたので高度設定をリセットしました');
+      setMode(r.value);
+    }));
+
+  el.advancedToggle.addEventListener('click', () => {
+    const open = el.advancedToggle.closest('.advanced').classList.contains('open');
+    if (open) closeAdvanced(); else openAdvanced();
   });
+  el.advancedReset.addEventListener('click', () => setMode(currentMode));
+  el.advancedGroups.addEventListener('change', (e) => {
+    const input = e.target.closest('input[type="radio"]');
+    if (!input || input.disabled) return;
+    overrides[input.name.replace('seg-', '')] = input.value;
+    advancedCustomized = ALL_KEYS.some((k) => overrides[k] !== PRESETS[currentMode][k]);
+    updateAdvancedState();
+  });
+
+  el.emptyScroll.addEventListener('scroll', () => fadeFor(el.emptyScroll, el.emptyFade), { passive: true });
+  el.detailScroll.addEventListener('scroll', () => fadeFor(el.detailScroll, el.detailFade), { passive: true });
+  el.createScroll.addEventListener('scroll', () => fadeFor(el.createScroll, el.createFade), { passive: true });
+  window.addEventListener('resize', refreshFades);
+  el.inputName.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCreate(); });
 }
 
-// Sharing mode display labels
-function sharingLabel(mode) {
-  return mode === 'share' ? '共有' : '分離';
+function checkFirstRun() {
+  const show = !localStorage.getItem('csw_onboarded');
+  el.emptyFirstRun.hidden = !show;
+  el.firstRunExtra.hidden = !show;
 }
 
-// Load and display profile detailed configuration
-async function showProfileDetails(name) {
-  try {
-    selectedProfileName = name;
-    const p = await invoke('get_profile_details', { name });
-    
-    elWelcomePanel.classList.add('hidden');
-    elDetailsPanel.classList.remove('hidden');
-    
-    // Meta info
-    elDetailIcon.textContent = p.icon ? p.icon : p.name.charAt(0).toUpperCase();
-    elDetailName.textContent = p.name;
-    
-    // Status Tag
-    if (p.name === activeProfileName) {
-      elDetailActiveTag.classList.remove('hidden');
-    } else {
-      elDetailActiveTag.classList.add('hidden');
-    }
-    
-    // Paths
-    elPathDesktop.textContent = p.desktop_path;
-    elPathCli.textContent = p.cli_path;
-    
-    // Sharing Badges
-    updateSharingBadge(elShareDesktopConfig, p.sharing.desktop_config);
-    updateSharingBadge(elShareDesktopAppConfig, p.sharing.desktop_app_config);
-    updateSharingBadge(elShareCliSettings, p.sharing.cli_settings);
-    updateSharingBadge(elShareCliClaudeMd, p.sharing.cli_claude_md);
-    updateSharingBadge(elShareCliProjectMemory, p.sharing.cli_project_memory);
-    updateSharingBadge(elShareCliPlugins, p.sharing.cli_plugins);
-    updateSharingBadge(elShareCliSkills, p.sharing.cli_skills);
-    updateSharingBadge(elShareCliSessions, p.sharing.cli_sessions);
-    updateSharingBadge(elShareCliHistory, p.sharing.cli_history);
-    updateSharingBadge(elShareDesktopWorktrees, p.sharing.desktop_worktrees);
-    
-    // Switch / Delete button states
-    if (p.name === 'default') {
-      elBtnDelete.classList.add('hidden');
-      elBtnClone.classList.add('hidden');
-    } else {
-      elBtnDelete.classList.remove('hidden');
-      elBtnClone.classList.remove('hidden');
-    }
-    
-    if (p.name === activeProfileName) {
-      elBtnSwitch.textContent = '使用中の環境';
-      elBtnSwitch.disabled = true;
-      elBtnSwitch.className = 'btn btn-secondary';
-    } else {
-      elBtnSwitch.textContent = 'このプロファイルに切り替え';
-      elBtnSwitch.disabled = false;
-      elBtnSwitch.className = 'btn btn-success';
-    }
-    
-  } catch (err) {
-    console.error('プロファイル詳細の読み込みに失敗しました:', err);
-  }
+async function init() {
+  wireEvents();
+  await refreshProfiles();
+  checkFirstRun();
+  showEmpty();
 }
 
-function updateSharingBadge(el, mode) {
-  el.textContent = sharingLabel(mode);
-  el.className = `sharing-badge ${mode}`;
-}
-
-// Event Listeners
-function setupEventListeners() {
-  // Create Profile Modal
-  elBtnAddProfile.addEventListener('click', () => {
-    elInputName.value = '';
-    elInputIcon.value = '';
-    elModalCreate.classList.remove('hidden');
-    elInputName.focus();
-  });
-  
-  elBtnModalCancel.addEventListener('click', () => {
-    elModalCreate.classList.add('hidden');
-  });
-  
-  elBtnModalSubmit.addEventListener('click', async () => {
-    const name = elInputName.value.trim();
-    const icon = elInputIcon.value.trim();
-    const mode = elSelectPreset.value;
-    
-    if (!name) {
-      alert('プロファイル名を入力してください。');
-      return;
-    }
-    
-    // Name validations (no default, alphanumeric)
-    if (name.toLowerCase() === 'default') {
-      alert('「default」は予約されたプロファイル名です。');
-      return;
-    }
-    
-    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-      alert('プロファイル名には英数字、ハイフン、アンダースコアのみ使用できます。');
-      return;
-    }
-    
-    try {
-      await invoke('create_profile', { name, mode, icon: icon || null });
-      elModalCreate.classList.add('hidden');
-      selectedProfileName = name;
-      await refreshProfiles();
-    } catch (err) {
-      alert(`プロファイルの作成に失敗しました: ${err}`);
-    }
-  });
-  
-  // Switching Action
-  elBtnSwitch.addEventListener('click', async () => {
-    if (!selectedProfileName || selectedProfileName === activeProfileName) return;
-    
-    const originalText = elBtnSwitch.textContent;
-    elBtnSwitch.textContent = '切り替え中...';
-    elBtnSwitch.disabled = true;
-    
-    try {
-      await invoke('switch_profile', { name: selectedProfileName, noLaunch: false });
-      await refreshProfiles();
-    } catch (err) {
-      alert(`切り替えに失敗しました: ${err}`);
-      elBtnSwitch.textContent = originalText;
-      elBtnSwitch.disabled = false;
-    }
-  });
-  
-  // Deleting Action
-  elBtnDelete.addEventListener('click', async () => {
-    if (!selectedProfileName || selectedProfileName === 'default') return;
-    if (selectedProfileName === activeProfileName) {
-      alert('使用中のプロファイルは削除できません。先に別のプロファイルに切り替えてください。');
-      return;
-    }
-    
-    if (confirm(`プロファイル「${selectedProfileName}」を削除しますか？\nシンボリックリンクと分離ディレクトリがクリーンアップされます。`)) {
-      try {
-        await invoke('delete_profile', { name: selectedProfileName });
-        selectedProfileName = null;
-        await refreshProfiles();
-      } catch (err) {
-        alert(`削除に失敗しました: ${err}`);
-      }
-    }
-  });
-
-  // Clone Modal Show
-  elBtnClone.addEventListener('click', () => {
-    if (!selectedProfileName) return;
-    elInputCloneName.value = '';
-    elModalClone.classList.remove('hidden');
-    elInputCloneName.focus();
-  });
-
-  elBtnModalCloneCancel.addEventListener('click', () => {
-    elModalClone.classList.add('hidden');
-  });
-
-  elBtnModalCloneSubmit.addEventListener('click', async () => {
-    const name = elInputCloneName.value.trim();
-    if (!name) {
-      alert('プロファイル名を入力してください。');
-      return;
-    }
-
-    if (name.toLowerCase() === 'default') {
-      alert('「default」は予約されたプロファイル名です。');
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-      alert('プロファイル名には英数字、ハイフン、アンダースコアのみ使用できます。');
-      return;
-    }
-
-    try {
-      await invoke('clone_profile', { source: selectedProfileName, target: name });
-      elModalClone.classList.add('hidden');
-      selectedProfileName = name;
-      await refreshProfiles();
-    } catch (err) {
-      alert(`プロファイルの複製に失敗しました: ${err}`);
-    }
-  });
-
-  // Onboarding Slides Control
-  let currentSlide = 1;
-  const totalSlides = 3;
-
-  function showSlide(num) {
-    currentSlide = num;
-    for (let i = 1; i <= totalSlides; i++) {
-      const slide = document.getElementById(`slide-${i}`);
-      if (i === num) {
-        slide.classList.remove('hidden');
-      } else {
-        slide.classList.add('hidden');
-      }
-    }
-
-    // Update Dots
-    document.querySelectorAll('.slide-dots .dot').forEach(dot => {
-      if (parseInt(dot.getAttribute('data-slide')) === num) {
-        dot.classList.add('active');
-      } else {
-        dot.classList.remove('active');
-      }
-    });
-
-    // Update Button Text
-    if (num === totalSlides) {
-      elBtnOnboardingNext.textContent = '開始する';
-    } else {
-      elBtnOnboardingNext.textContent = '次へ';
-    }
-  }
-
-  elBtnOnboardingNext.addEventListener('click', () => {
-    if (currentSlide < totalSlides) {
-      showSlide(currentSlide + 1);
-    } else {
-      // End onboarding
-      localStorage.setItem('csw_onboarded', 'true');
-      elOnboardingOverlay.classList.add('hidden');
-    }
-  });
-
-  document.querySelectorAll('.slide-dots .dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      const target = parseInt(dot.getAttribute('data-slide'));
-      showSlide(target);
-    });
-  });
-}
-
-// Start
 document.addEventListener('DOMContentLoaded', init);
+
+// ============================================================================
+// Dev-only mock (used only when window.__TAURI__ is absent, e.g. screenshots).
+// The shipped app sets withGlobalTauri:true and never reaches this path.
+// ============================================================================
+function devInvoke(cmd, args) {
+  const sample = {
+    default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
+    仕事用: { name: '仕事用', icon: '💼', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', sharing: { ...PRESETS.share_settings } },
+    検証用: { name: '検証用', icon: '🧪', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', sharing: { ...PRESETS.isolate } },
+  };
+  switch (cmd) {
+    case 'list_profiles':
+      return Promise.resolve([
+        { name: 'default', icon: '', is_default: true },
+        { name: '仕事用', icon: '💼', is_default: false },
+        { name: '検証用', icon: '🧪', is_default: false },
+      ]);
+    case 'get_active_profile':
+      return Promise.resolve('default');
+    case 'get_profile_details':
+      return Promise.resolve(sample[args.name] || sample['検証用']);
+    default:
+      return Promise.resolve(null);
+  }
+}
