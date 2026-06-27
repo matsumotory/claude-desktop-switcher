@@ -4,6 +4,14 @@
   <img src="website/assets/logo.png" width="96" alt="CSW Logo">
 </p>
 
+<p align="center">
+  <a href="https://matsumotory.github.io/claude-desktop-switcher/"><strong>Website</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest">Download (.dmg)</a>
+  &nbsp;·&nbsp;
+  <a href="docs/USER_GUIDE_EN.md">User Guide</a>
+</p>
+
 *Read this in other languages: [日本語 (Japanese)](#日本語-japanese)*
 
 Claude Desktop Switcher is a macOS menu bar utility for safely isolating and managing multiple account environments (Personal, Work, etc.) for the Claude Desktop App on a single Mac. You can precisely customize the isolation level for each use case, and it allows for integrated management of both the Claude Desktop App and Claude Code (CLI) environments.
@@ -85,6 +93,14 @@ MIT
 
 <p align="center">
   <img src="website/assets/logo.png" width="96" alt="CSW Logo">
+</p>
+
+<p align="center">
+  <a href="https://matsumotory.github.io/claude-desktop-switcher/"><strong>Web サイト</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest">ダウンロード (.dmg)</a>
+  &nbsp;·&nbsp;
+  <a href="docs/USER_GUIDE.md">ユーザーガイド</a>
 </p>
 
 Claude デスクトップアプリのアカウント環境（個人用・仕事用など）を安全に分けて、1つのMacで使い分けるためのメニューバーアプリです。用途に合わせてアカウントの分離度を細かくカスタマイズでき、ClaudeデスクトップアプリとClaude Code（CLI）の両方の環境を統合管理できます。
