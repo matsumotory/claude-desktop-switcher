@@ -14,6 +14,9 @@ Cargo.lock
 *.swp
 *.swo
 
+# Claude Code session worktrees (per-session isolated worktrees live here)
+.claude/worktrees/
+
 # Tauri (Phase 2)
 /crates/tauri-app/dist/
 /crates/tauri-app/node_modules/

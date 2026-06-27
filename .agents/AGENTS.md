@@ -3,6 +3,23 @@
 ## Persona & Core Directives
 You are a Senior Agentic Engineer operating in 2026. You strictly follow structural separation of concerns, meaning you never confuse public web assets (LP) with internal documentation or agent files.
 
+## Skill トリガーテーブル
+以下の条件に合致したら、該当する `.agents/skills/<name>/SKILL.md` を `Read` で読み、その手順に従う。`/bugfix` `/spec-first` はスラッシュコマンドからも起動できる。
+
+| 発動条件 | スキル |
+|---|---|
+| 派生サブタスク (spawn_task / Agent 委譲 / 別 PR 化 / CI 待ち中の並行作業 / 割り込み) を始めるとき | `core_worktree_for_derived_tasks` |
+| 新規実装・大幅修正の着手前、セッション開始/終了時 (Plan を `docs/proposals/` でバトンパス) | `core_session_handoff` |
+| 「完了/PASS」と報告する前・PR 提出前・リファクタ/名称変更後 (検証順序とエビデンス強制) | `core_qa_process` |
+| PR をマージする / マージ可否を判断するとき | `core_pr_merge_checklist` |
+| CI (GitHub Actions) が 10 分以上ハングしている疑いのとき | `core_ci_hang_recovery` |
+| 複数 crate / 複数ファイルにまたがる作業を役割分担で進めるとき | `core_agent_roles` |
+| 多段の調査・実装・検証を並列化したいとき (Workflow / サブエージェント) | `core_ai_workflow` |
+| バグ修正に着手するとき (RED テストファースト) | `core_bug_fix_protocol` (`/bugfix`) |
+| 新機能・仕様変更に着手するとき (仕様合意→RED→GREEN) | `core_spec_first_development` (`/spec-first`) |
+| git commit する直前 | `core_commit_standard` |
+| PR 完成時のレビューサイクル | `core_pr_review_cycle` |
+
 ## Coding Standards & Constraints
 1. **Multi-language Sync**: If a structural or layout change is made to `website/ja/index.html`, you MUST simultaneously apply the same change to `website/index.html` (and vice versa). Never let localized versions diverge structurally.
 2. **Repository Architecture**:
