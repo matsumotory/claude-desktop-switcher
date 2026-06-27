@@ -52,4 +52,12 @@ sandbox-results.md
 *token*
 *.passwd
 *.password
+*.certSigningRequest
+keychain_backup.json
+*keychain*backup*
+
+# Build artifacts
+*.dmg
+*.pkg
+*.app.zip
 

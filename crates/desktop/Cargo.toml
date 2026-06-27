@@ -7,7 +7,7 @@ description = "Desktop Menu Bar Application for Claude Context Switcher"
 
 [dependencies]
 csw-core = { path = "../core" }
-tauri = { version = "2.0.0", features = ["tray-icon"] }
+tauri = { version = "2.0.0", features = ["tray-icon", "image-png"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
