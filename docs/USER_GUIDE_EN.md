@@ -4,7 +4,7 @@ Claude Desktop Switcher is a macOS menu bar utility for safely isolating and man
 
 ### Why do you need this tool?
 The official Claude Desktop App lacks multi-account switching. To work around this, users have historically relied on messy hacks—like forcing separate instances via terminal `--user-data-dir` arguments or using CLI-only switchers like `direnv`. 
-However, these methods fail to bridge the gap between "safe desktop app isolation (like Keychain partitioning)" and "CLI context syncing."
+However, these methods fail to bridge the gap between "safe desktop app isolation (a dedicated data directory per profile)" and "CLI context syncing."
 
 This tool eliminates the need for complex shell scripts. It achieves **"Desktop App Isolation"** with a single click from the menu bar, and allows **"Linked CLI Launching"** via simple terminal commands. It is based on a "Zero-Impact Principle" that never destroys or mutates your system's global environment variables.
 
