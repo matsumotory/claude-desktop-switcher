@@ -818,4 +818,66 @@ html[lang="ja"] .usecases-header h2 {
     }
 }
 
+/* See it in action — real product screenshots (1 wide + 2) */
+.screens {
+    padding-bottom: 120px;
+}
+.screens-header {
+    margin-bottom: 48px;
+}
+.screens-header h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    margin-bottom: 16px;
+}
+html[lang="ja"] .screens-header h2 {
+    font-size: 2.25rem;
+}
+.screens-header p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 650px;
+    line-height: 1.6;
+}
+.screens-bento {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+.screen-card {
+    margin: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--bg-surface);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+.screen-card.screen-wide {
+    grid-column: 1 / -1;
+}
+.screen-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid var(--border-color);
+}
+.screen-card figcaption {
+    padding: 16px 20px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+@media (max-width: 768px) {
+    .screens-bento {
+        grid-template-columns: 1fr;
+    }
+    .screens-header h2 {
+        font-size: 2rem;
+    }
+    html[lang="ja"] .screens-header h2 {
+        font-size: 1.75rem;
+    }
+}
+
 
