@@ -64,6 +64,29 @@ jobs:
           tagName: ${{ needs.release-please.outputs.tag_name }}
           args: --target universal-apple-darwin
 
+      # tauri-action notarizes and staples the .app, but the .dmg wrapper is only
+      # signed. Notarize + staple the .dmg too so downloaded disk images mount
+      # without a Gatekeeper warning, then replace the uploaded asset.
+      - name: Notarize and staple the DMG
+        env:
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PATH: ${{ runner.temp }}/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          DMG="$(find target/universal-apple-darwin/release/bundle/dmg -name '*.dmg' | head -n 1)"
+          echo "Notarizing $DMG"
+          xcrun notarytool submit "$DMG" \
+            --key "$APPLE_API_KEY_PATH" \
+            --key-id "$APPLE_API_KEY" \
+            --issuer "$APPLE_API_ISSUER" \
+            --wait
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+          gh release upload "$TAG_NAME" "$DMG" --clobber
+
       - name: Clean up App Store Connect API Key
         if: always()
         run: rm -f "${{ runner.temp }}"/AuthKey_*.p8
