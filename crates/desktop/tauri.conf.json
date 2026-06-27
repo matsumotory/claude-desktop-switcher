@@ -34,10 +34,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "macOS": {
-      "infoPlist": {
-        "CFBundleDisplayName": "Claude Desktop Switcher"
-      }
-    }
+    "macOS": {}
   }
 }
