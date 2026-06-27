@@ -48,7 +48,7 @@ For advanced use cases—such as "I want to share my personal MCP settings and r
 5. Click **"Create"** to save the profile.
 
 > **Duplicating an existing profile**
-> Select a profile in the settings window and click **"Clone"** to create a new profile that inherits its sharing configuration, files, and login credentials. This saves you from recreating a similar setup from scratch.
+> Select a profile in the settings window and click the **複製 (Duplicate)** button to create a new profile that inherits its sharing configuration and layout. Login state follows each component's sharing mode—isolated components are not carried over, so you may need to sign in again in the new profile.
 
 ---
 
@@ -62,7 +62,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
 3. **A new Claude Desktop window will launch automatically.**
    （This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.）
 
-> **💡 Tip: You can run multiple apps simultaneously**
+> **Tip: You can run multiple apps simultaneously**
 > Your original personal (Default) Claude window remains active. You can run your personal window alongside your work window to review code or multitask.
 
 ### Scenario B: Safely launching the Terminal (Claude Code)
