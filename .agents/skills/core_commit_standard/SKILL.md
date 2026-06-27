@@ -23,7 +23,7 @@ This project uses a standardized git commit message format based on Conventional
 Must be one of the following:
 - `feat`: A new feature (e.g., adding a new user profile section)
 - `fix`: A bug fix (e.g., fixing tooltip text)
-- `docs`: Documentation only changes (e.g., updating README or dictionaries)
+- `docs`: Documentation only changes (e.g., updating README, SPECIFICATION, or USER_GUIDE)
 - `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - `refactor`: A code change that neither fixes a bug nor adds a feature
 - `perf`: A code change that improves performance
@@ -32,12 +32,12 @@ Must be one of the following:
 
 ### 2. Scope (Optional but Recommended)
 Indicates the area of the codebase the commit affects. Common scopes in this project:
-- `dashboard`: Admin/User dashboard UI or logic
-- `components`: Reusable UI elements
-- `utils`: Shared utility functions
-- `auth`: Authentication flows
-- `payment`: Payment and webhook integrations
-- `i18n`: Dictionaries and localization
+- `core`: `csw-core` library (profile / switcher / linker / keychain / platform)
+- `cli`: `csw-cli` command-line interface
+- `desktop`: `csw-desktop` Tauri GUI (tray, settings UI)
+- `ci`: GitHub Actions workflows, release tooling
+- `docs`: SPECIFICATION / USER_GUIDE / README
+- `website`: landing page (`website/`)
 
 ### 3. Subject
 - Use the imperative, present tense: "change" not "changed" nor "changes".
@@ -65,11 +65,12 @@ user onboarding and integrate them into the login screen.
 ## Agent Instructions
 When you are asked to commit changes, ALWAYS reference this skill and follow the format precisely. If committing multiple diverse changes, try to group them logically or use `feat(core)` / `chore(all)` if they span the entire project.
 
-**CRITICAL RULE FOR AI AGENTS (Jules & Antigravity):**
+**CRITICAL RULE FOR THE AGENT (Claude Code):**
 1. All commit subjects and bodies MUST be written in **Japanese (日本語)**, regardless of the prompt language. The `<type>(<scope>)` prefix remains in English.
-   Example: `feat(auth): Googleログインを追加`
+   Example: `feat(core): プロファイル複製コマンドを追加`
+   Commit only when the user asks. End commit messages with the trailer `Co-Authored-By: Claude <noreply@anthropic.com>`.
 2. **Untracked Files Check**: Before committing, ALWAYS ensure you haven't forgotten to stage newly created files (e.g., new workflow files, reports, components). Do not blindly use `git add file1 file2` without considering if you created `file3` during the task. Use `git add .` or explicitly add all relevant new files.
-3. **GIT_EDITOR問題の回避**: このプロジェクトでは `GIT_EDITOR` がVSCodeに設定されているため、`git merge` や `git commit` でエディタが開いてハングする。以下の対策を**必ず**実施すること：
+3. **対話エディタの回避**: Claude Code の Bash ツールは対話的エディタを開けないため、`git merge` や `git commit`（マージコミット等）でエディタが起動するとハングする。以下の対策を**必ず**実施すること：
    - `git merge` → `git merge --no-edit <branch>` を使用
    - `git commit`（マージコミット等） → `GIT_EDITOR=true git commit --no-edit` を使用
    - **絶対にエディタが開くコマンドを素のまま実行しないこと**
@@ -84,5 +85,5 @@ When you are asked to commit changes, ALWAYS reference this skill and follow the
 
 ### 運用ルール
 1. **すべての変更**（コード・ドキュメント・plan ファイル含む）は必ず feature ブランチで作業する
-2. PR を作成し、CI（lint, typecheck, test, e2e）が全てパスしてからマージする
-3. `main` への直接 push は禁止（GitHub branch protection rule で物理的に阻止されており例外はない）。ドキュメントのみの変更も feature ブランチ + PR 経由でマージする。詳細は [AGENTS.md](../../../AGENTS.md) §4.4
+2. PR を作成し、CI（`cargo fmt` / `cargo clippy` / `cargo test`）が全てパスしてからマージする
+3. `main` への直接 push は禁止（GitHub branch protection rule で物理的に阻止されており例外はない）。ドキュメントのみの変更も feature ブランチ + PR 経由でマージする。詳細は [AGENTS.md](../../AGENTS.md) の Branch Strategy Enforcement
