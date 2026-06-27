@@ -82,3 +82,27 @@ fn test_delete_default_or_active_fails() {
     let res2 = manager.delete_profile("active_prof");
     assert!(res2.is_err());
 }
+
+#[test]
+fn test_clone_profile() {
+    let (_, manager, _tmp_dir) = setup_test_manager();
+    
+    // Create an original profile to clone from
+    let original = manager.create_profile("original", SharingConfig::default())
+        .expect("Failed to create original profile");
+
+    // Clone it
+    let cloned = manager.clone_profile("original", "cloned")
+        .expect("Failed to clone profile");
+
+    assert_eq!(cloned.profile.name, "cloned");
+    assert_eq!(cloned.profile.icon, original.profile.icon);
+    assert_eq!(cloned.profile.color, original.profile.color);
+    assert_eq!(cloned.profile.is_default, false);
+
+    // Verify it exists in profiles list
+    let list = manager.list_profiles().unwrap();
+    assert!(list.contains(&"original".to_string()));
+    assert!(list.contains(&"cloned".to_string()));
+}
+

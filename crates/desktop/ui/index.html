@@ -14,7 +14,10 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h1>Claude Desktop Switcher</h1>
+        <div class="logo-area">
+          <img src="logo.png" id="img-logo" alt="CSW Logo" class="app-logo">
+          <h1>CSW</h1>
+        </div>
       </div>
       
       <div class="profiles-section">
@@ -66,6 +69,10 @@
                 <span class="sharing-badge" id="share-desktop-config">isolate</span>
               </div>
               <div class="sharing-item">
+                <span class="sharing-name">Desktop 一般設定</span>
+                <span class="sharing-badge" id="share-desktop-app-config">isolate</span>
+              </div>
+              <div class="sharing-item">
                 <span class="sharing-name">CLI 設定・フック</span>
                 <span class="sharing-badge" id="share-cli-settings">isolate</span>
               </div>
@@ -82,6 +89,18 @@
                 <span class="sharing-badge" id="share-cli-plugins">isolate</span>
               </div>
               <div class="sharing-item">
+                <span class="sharing-name">CLI スキル定義</span>
+                <span class="sharing-badge" id="share-cli-skills">isolate</span>
+              </div>
+              <div class="sharing-item">
+                <span class="sharing-name">CLI 会話セッション</span>
+                <span class="sharing-badge" id="share-cli-sessions">isolate</span>
+              </div>
+              <div class="sharing-item">
+                <span class="sharing-name">CLI コマンド履歴</span>
+                <span class="sharing-badge" id="share-cli-history">isolate</span>
+              </div>
+              <div class="sharing-item">
                 <span class="sharing-name">Desktop ワークツリー</span>
                 <span class="sharing-badge" id="share-desktop-worktrees">isolate</span>
               </div>
@@ -90,7 +109,10 @@
         </div>
 
         <div class="details-footer">
-          <button id="btn-switch" class="btn btn-success">このプロファイルに切り替え</button>
+          <div class="footer-left">
+            <button id="btn-switch" class="btn btn-success">このプロファイルに切り替え</button>
+            <button id="btn-clone" class="btn btn-secondary">複製</button>
+          </div>
           <button id="btn-delete" class="btn btn-danger">プロファイルを削除</button>
         </div>
       </section>
@@ -120,6 +142,93 @@
           <div class="modal-buttons">
             <button id="btn-modal-cancel" class="btn btn-secondary">キャンセル</button>
             <button id="btn-modal-submit" class="btn btn-primary">作成</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clone Profile Modal -->
+      <div id="modal-clone" class="modal hidden">
+        <div class="modal-content">
+          <h2>プロファイルを複製</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+            選択中のプロファイル設定とログイン情報を複製して新しいプロファイルを作成します。
+          </p>
+          <div class="form-group">
+            <label for="input-clone-name">新しいプロファイル名</label>
+            <input type="text" id="input-clone-name" placeholder="例: Work-Backup, Personal-Copy">
+          </div>
+          <div class="modal-buttons">
+            <button id="btn-modal-clone-cancel" class="btn btn-secondary">キャンセル</button>
+            <button id="btn-modal-clone-submit" class="btn btn-primary">複製を作成</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onboarding Overlay -->
+      <div id="onboarding-overlay" class="modal hidden">
+        <div class="modal-content onboarding-content">
+          <div class="onboarding-slides">
+            <!-- Slide 1 -->
+            <div class="onboarding-slide" id="slide-1">
+              <div class="onboarding-logo">🔵</div>
+              <h2>ようこそ！CSW へ</h2>
+              <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                Claude Desktop Switcher (CSW) は、仕事用・個人用・プロジェクト用など、複数の Claude 環境を安全に切り替えるためのツールです。
+              </p>
+              <div class="onboarding-feature-list">
+                <div class="feature-item">
+                  <span class="feature-icon">🛡️</span>
+                  <div>
+                    <strong>既存の環境は安全です</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                      現在の設定や会話履歴は「default」プロファイルとして保護されており、一切破壊されません。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="onboarding-slide hidden" id="slide-2">
+              <div class="onboarding-logo">⚙️</div>
+              <h2>簡単な使い方</h2>
+              <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                プロファイルの切り替えやアプリの終了は、メニューバー（システムトレイ）のアイコンからいつでも簡単に行えます。
+              </p>
+              <div class="onboarding-feature-list">
+                <div class="feature-item">
+                  <span class="feature-icon">🔘</span>
+                  <div>
+                    <strong>トレイメニューから切替</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                      メニューからプロファイルを選ぶと、自動的にキーチェーンと設定が切り替わり、該当のアカウントでアプリが立ち上がります。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="onboarding-slide hidden" id="slide-3">
+              <div class="onboarding-logo">💻</div>
+              <h2>ターミナル連携</h2>
+              <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                Claude Code（CLI）でプロファイルを切り替えるには、ターミナルで以下のコマンドを実行します。
+              </p>
+              <div class="path-card" style="margin-bottom: 1rem;">
+                <code style="font-size: 0.85rem;">eval $(csw env &lt;プロファイル名&gt;)</code>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                これにより、そのターミナルセッション内でのみ隔離されたプロファイルが適用されます。
+              </p>
+            </div>
+          </div>
+          
+          <div class="onboarding-footer">
+            <div class="slide-dots">
+              <span class="dot active" data-slide="1"></span>
+              <span class="dot" data-slide="2"></span>
+              <span class="dot" data-slide="3"></span>
+            </div>
+            <button id="btn-onboarding-next" class="btn btn-primary">次へ</button>
           </div>
         </div>
       </div>

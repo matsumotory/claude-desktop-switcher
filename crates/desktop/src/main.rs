@@ -87,6 +87,18 @@ async fn delete_profile(name: String, state: State<'_, AppState>, app: AppHandle
 }
 
 #[tauri::command]
+async fn clone_profile(
+    source: String,
+    target: String,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<(), String> {
+    state.profile_manager.clone_profile(&source, &target).map_err(|e| e.to_string())?;
+    update_tray_menu(&app)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn switch_profile(
     name: String,
     no_launch: bool,
@@ -179,7 +191,7 @@ fn main() {
         .manage(app_state)
         .setup(|app| {
             // Build the system tray for the first time
-            let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/32x32.png"))
+            let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))
                 .expect("Failed to load tray icon");
             let _tray = TrayIconBuilder::with_id("main_tray")
                 .icon(icon)
@@ -225,6 +237,7 @@ fn main() {
             get_profile_details,
             create_profile,
             delete_profile,
+            clone_profile,
             switch_profile,
             get_desktop_running_status
         ])

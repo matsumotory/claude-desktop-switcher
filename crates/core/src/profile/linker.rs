@@ -67,6 +67,30 @@ impl<'a> Linker<'a> {
             true,
         )?;
 
+        // 5b. CLI Skills (skills/ directory)
+        self.apply_link(
+            &source_cli_dir.join("skills"),
+            &target_cli_dir.join("skills"),
+            target_profile.sharing.cli_skills.clone(),
+            true,
+        )?;
+
+        // 5c. CLI Sessions (sessions/ directory)
+        self.apply_link(
+            &source_cli_dir.join("sessions"),
+            &target_cli_dir.join("sessions"),
+            target_profile.sharing.cli_sessions.clone(),
+            true,
+        )?;
+
+        // 5d. CLI Command History (history.jsonl file)
+        self.apply_link(
+            &source_cli_dir.join("history.jsonl"),
+            &target_cli_dir.join("history.jsonl"),
+            target_profile.sharing.cli_history.clone(),
+            false,
+        )?;
+
         // 6. Desktop Worktrees (git-worktrees.json)
         self.apply_link(
             &source_desktop_dir.join("git-worktrees.json"),
@@ -83,6 +107,14 @@ impl<'a> Linker<'a> {
             false,
         )?;
 
+        // 8. Desktop App Configuration (config.json)
+        self.apply_link(
+            &source_desktop_dir.join("config.json"),
+            &target_desktop_dir.join("config.json"),
+            target_profile.sharing.desktop_app_config.clone(),
+            false,
+        )?;
+
         Ok(())
     }
 
@@ -95,10 +127,14 @@ impl<'a> Linker<'a> {
             target_desktop_dir.join("claude_desktop_config.json"),
             target_desktop_dir.join("git-worktrees.json"),
             target_desktop_dir.join("ant-did"),
+            target_desktop_dir.join("config.json"),
             target_cli_dir.join("settings.json"),
             target_cli_dir.join("CLAUDE.md"),
             target_cli_dir.join("projects"),
             target_cli_dir.join("plugins"),
+            target_cli_dir.join("skills"),
+            target_cli_dir.join("sessions"),
+            target_cli_dir.join("history.jsonl"),
         ];
 
         for path in paths_to_unlink {

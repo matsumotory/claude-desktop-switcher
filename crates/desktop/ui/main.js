@@ -18,10 +18,14 @@ const invoke = window.__TAURI__ ? window.__TAURI__.core.invoke : async (cmd, arg
       cli_path: `~/.claude-desktop-switcher/profiles/${args.name.toLowerCase()}/cli-data`,
       sharing: {
         desktop_config: 'share',
+        desktop_app_config: 'share',
         cli_settings: 'share',
         cli_claude_md: 'share',
         cli_project_memory: 'isolate',
         cli_plugins: 'share',
+        cli_skills: 'share',
+        cli_sessions: 'isolate',
+        cli_history: 'isolate',
         desktop_worktrees: 'isolate',
         desktop_device_id: 'share'
       }
@@ -47,13 +51,18 @@ const elPathDesktop = document.getElementById('path-desktop');
 const elPathCli = document.getElementById('path-cli');
 
 const elShareDesktopConfig = document.getElementById('share-desktop-config');
+const elShareDesktopAppConfig = document.getElementById('share-desktop-app-config');
 const elShareCliSettings = document.getElementById('share-cli-settings');
 const elShareCliClaudeMd = document.getElementById('share-cli-claude-md');
 const elShareCliProjectMemory = document.getElementById('share-cli-project-memory');
 const elShareCliPlugins = document.getElementById('share-cli-plugins');
+const elShareCliSkills = document.getElementById('share-cli-skills');
+const elShareCliSessions = document.getElementById('share-cli-sessions');
+const elShareCliHistory = document.getElementById('share-cli-history');
 const elShareDesktopWorktrees = document.getElementById('share-desktop-worktrees');
 
 const elBtnSwitch = document.getElementById('btn-switch');
+const elBtnClone = document.getElementById('btn-clone');
 const elBtnDelete = document.getElementById('btn-delete');
 const elBtnAddProfile = document.getElementById('btn-add-profile');
 
@@ -64,10 +73,29 @@ const elSelectPreset = document.getElementById('select-preset');
 const elBtnModalCancel = document.getElementById('btn-modal-cancel');
 const elBtnModalSubmit = document.getElementById('btn-modal-submit');
 
+// Clone Modal Elements
+const elModalClone = document.getElementById('modal-clone');
+const elInputCloneName = document.getElementById('input-clone-name');
+const elBtnModalCloneCancel = document.getElementById('btn-modal-clone-cancel');
+const elBtnModalCloneSubmit = document.getElementById('btn-modal-clone-submit');
+
+// Onboarding Elements
+const elOnboardingOverlay = document.getElementById('onboarding-overlay');
+const elBtnOnboardingNext = document.getElementById('btn-onboarding-next');
+
 // Init
 async function init() {
   await refreshProfiles();
   setupEventListeners();
+  checkOnboarding();
+}
+
+function checkOnboarding() {
+  const onboarded = localStorage.getItem('csw_onboarded');
+  if (!onboarded) {
+    elOnboardingOverlay.classList.remove('hidden');
+    showSlide(1);
+  }
 }
 
 // Fetch and render profiles list
@@ -150,17 +178,23 @@ async function showProfileDetails(name) {
     
     // Sharing Badges
     updateSharingBadge(elShareDesktopConfig, p.sharing.desktop_config);
+    updateSharingBadge(elShareDesktopAppConfig, p.sharing.desktop_app_config);
     updateSharingBadge(elShareCliSettings, p.sharing.cli_settings);
     updateSharingBadge(elShareCliClaudeMd, p.sharing.cli_claude_md);
     updateSharingBadge(elShareCliProjectMemory, p.sharing.cli_project_memory);
     updateSharingBadge(elShareCliPlugins, p.sharing.cli_plugins);
+    updateSharingBadge(elShareCliSkills, p.sharing.cli_skills);
+    updateSharingBadge(elShareCliSessions, p.sharing.cli_sessions);
+    updateSharingBadge(elShareCliHistory, p.sharing.cli_history);
     updateSharingBadge(elShareDesktopWorktrees, p.sharing.desktop_worktrees);
     
     // Switch / Delete button states
     if (p.name === 'default') {
       elBtnDelete.classList.add('hidden');
+      elBtnClone.classList.add('hidden');
     } else {
       elBtnDelete.classList.remove('hidden');
+      elBtnClone.classList.remove('hidden');
     }
     
     if (p.name === activeProfileName) {
@@ -261,6 +295,94 @@ function setupEventListeners() {
         alert(`削除に失敗しました: ${err}`);
       }
     }
+  });
+
+  // Clone Modal Show
+  elBtnClone.addEventListener('click', () => {
+    if (!selectedProfileName) return;
+    elInputCloneName.value = '';
+    elModalClone.classList.remove('hidden');
+    elInputCloneName.focus();
+  });
+
+  elBtnModalCloneCancel.addEventListener('click', () => {
+    elModalClone.classList.add('hidden');
+  });
+
+  elBtnModalCloneSubmit.addEventListener('click', async () => {
+    const name = elInputCloneName.value.trim();
+    if (!name) {
+      alert('プロファイル名を入力してください。');
+      return;
+    }
+
+    if (name.toLowerCase() === 'default') {
+      alert('「default」は予約されたプロファイル名です。');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+      alert('プロファイル名には英数字、ハイフン、アンダースコアのみ使用できます。');
+      return;
+    }
+
+    try {
+      await invoke('clone_profile', { source: selectedProfileName, target: name });
+      elModalClone.classList.add('hidden');
+      selectedProfileName = name;
+      await refreshProfiles();
+    } catch (err) {
+      alert(`プロファイルの複製に失敗しました: ${err}`);
+    }
+  });
+
+  // Onboarding Slides Control
+  let currentSlide = 1;
+  const totalSlides = 3;
+
+  function showSlide(num) {
+    currentSlide = num;
+    for (let i = 1; i <= totalSlides; i++) {
+      const slide = document.getElementById(`slide-${i}`);
+      if (i === num) {
+        slide.classList.remove('hidden');
+      } else {
+        slide.classList.add('hidden');
+      }
+    }
+
+    // Update Dots
+    document.querySelectorAll('.slide-dots .dot').forEach(dot => {
+      if (parseInt(dot.getAttribute('data-slide')) === num) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+
+    // Update Button Text
+    if (num === totalSlides) {
+      elBtnOnboardingNext.textContent = '開始する';
+    } else {
+      elBtnOnboardingNext.textContent = '次へ';
+    }
+  }
+
+  elBtnOnboardingNext.addEventListener('click', () => {
+    if (currentSlide < totalSlides) {
+      showSlide(currentSlide + 1);
+    } else {
+      // End onboarding
+      localStorage.setItem('csw_onboarded', 'true');
+      elOnboardingOverlay.classList.add('hidden');
+    }
+  });
+
+  document.querySelectorAll('.slide-dots .dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = parseInt(dot.getAttribute('data-slide'));
+      showSlide(target);
+    });
   });
 }
 
