@@ -20,6 +20,8 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 3. Launch the app. A blue icon will appear in your macOS menu bar.
 4. On first launch only, the settings window shows a short 3-step onboarding tour (Welcome / How to use / Terminal integration). Once you read and close it, it will not appear again.
 
+![First-run onboarding](../website/assets/screen_onboarding.png)
+
 ### Step 2: Create and Customize a New Profile
 Create a new isolated environment for work or research.
 
@@ -46,6 +48,8 @@ For advanced use cases—such as "I want to share my personal MCP settings and r
      Change settings to **Shared**. You can bring your familiar environment (MCP settings, CLAUDE.md rules) into the new profile.
 
 5. Click **"Create"** to save the profile.
+
+![Create-profile dialog](../website/assets/screen_create.png)
 
 > **Duplicating an existing profile**
 > Select a profile in the settings window and click the **複製 (Duplicate)** button to create a new profile that inherits its sharing configuration and layout. Login state follows each component's sharing mode—isolated components are not carried over, so you may need to sign in again in the new profile.
