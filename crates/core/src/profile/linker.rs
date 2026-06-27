@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::error::{CswError, Result};
 use crate::platform::PlatformProvider;
@@ -184,37 +184,28 @@ impl<'a> Linker<'a> {
         mode: SharingMode,
         is_directory: bool,
     ) -> Result<()> {
-        // Clear target if it exists and is a symlink (avoid duplicates/errors)
+        // A pre-existing symlink points elsewhere, so removing it never loses
+        // real data; clear it before re-applying.
         if self.provider.is_symlink(target) {
             self.provider.remove_symlink(target)?;
-        } else if target.exists() {
-            // Keep existing files if they were manually created or copies,
-            // but if we are switching to Share, we must clear them.
-            if mode == SharingMode::Share {
-                self.assert_safe_to_delete(target)?;
-                if target.is_file() {
-                    fs::remove_file(target)?;
-                } else {
-                    fs::remove_dir_all(target)?;
-                }
-            } else {
-                // If target exists and mode is copy or isolate, leave it as is
-                return Ok(());
-            }
+        } else if target.exists() && mode != SharingMode::Share {
+            // For Copy/Isolate, an existing real target is left untouched.
+            return Ok(());
         }
 
-        // Apply based on mode
         match mode {
             SharingMode::Share => {
                 if source.exists() {
-                    self.provider.create_symlink(source, target)?;
-                } else {
-                    // Source doesn't exist, we don't symlink yet.
-                    // Instead, we might create the directory structure if it is a directory.
-                    if is_directory {
-                        fs::create_dir_all(target)?;
-                    }
+                    // Replace the target with a symlink without a destructive
+                    // gap: a real target is moved aside and only dropped once the
+                    // symlink exists (restored on failure).
+                    self.replace_with_symlink(source, target)?;
+                } else if is_directory && !target.exists() {
+                    // No source to share yet: just ensure the directory exists.
+                    fs::create_dir_all(target)?;
                 }
+                // Source missing but a real target exists: leave it as-is rather
+                // than destroying real data for nothing.
             }
             SharingMode::Copy => {
                 if source.exists() {
@@ -228,13 +219,60 @@ impl<'a> Linker<'a> {
             SharingMode::Isolate => {
                 if is_directory {
                     fs::create_dir_all(target)?;
-                } else {
-                    // Create an empty file or basic default config if needed,
-                    // but for most, leaving it empty/absent is correct.
                 }
             }
         }
 
+        Ok(())
+    }
+
+    /// Replace `target` with a symlink to `source`. If `target` is an existing
+    /// real (non-symlink) file or directory, move it aside first and only delete
+    /// the backup once the symlink is created — restoring it on failure — so a
+    /// crash mid-operation never loses the data.
+    fn replace_with_symlink(&self, source: &Path, target: &Path) -> Result<()> {
+        if !target.exists() {
+            self.provider.create_symlink(source, target)?;
+            return Ok(());
+        }
+
+        // A real target is about to be replaced; never touch the real default data.
+        self.assert_safe_to_delete(target)?;
+
+        let backup = Self::backup_path(target);
+        Self::remove_path(&backup)?; // clear any stale backup from an interrupted run
+        fs::rename(target, &backup)?;
+
+        match self.provider.create_symlink(source, target) {
+            Ok(()) => {
+                Self::remove_path(&backup)?;
+                Ok(())
+            }
+            Err(e) => {
+                // Roll back: restore the original target.
+                let _ = fs::rename(&backup, target);
+                Err(e)
+            }
+        }
+    }
+
+    /// Sibling backup path used while atomically replacing a target.
+    fn backup_path(target: &Path) -> PathBuf {
+        let mut name = target
+            .file_name()
+            .map(|n| n.to_os_string())
+            .unwrap_or_default();
+        name.push(".csw-backup");
+        target.with_file_name(name)
+    }
+
+    /// Remove a file or directory if it exists (no-op otherwise).
+    fn remove_path(path: &Path) -> Result<()> {
+        if path.is_dir() {
+            fs::remove_dir_all(path)?;
+        } else if path.symlink_metadata().is_ok() {
+            fs::remove_file(path)?;
+        }
         Ok(())
     }
 
@@ -378,5 +416,43 @@ mod tests {
 
         // After Share, the target becomes a symlink to the source.
         assert!(provider.is_symlink(&target));
+    }
+
+    /// If creating the symlink fails mid-operation, a pre-existing real target
+    /// (and its data) must be restored rather than left deleted.
+    #[test]
+    fn apply_link_share_restores_target_when_symlink_fails() {
+        let desktop_dir = tempdir().unwrap();
+        let cli_dir = tempdir().unwrap();
+        let app_dir = tempdir().unwrap();
+        let profile_dir = tempdir().unwrap();
+
+        // Real per-profile target dir (NOT under the default dirs) with data.
+        let target = profile_dir.path().join("plugins");
+        fs::create_dir_all(&target).unwrap();
+        let data = target.join("keep.js");
+        fs::write(&data, "important").unwrap();
+
+        let source_dir = tempdir().unwrap();
+        let source_plugins = source_dir.path().join("plugins");
+        fs::create_dir_all(&source_plugins).unwrap();
+
+        // Provider whose create_symlink always fails.
+        let provider = MockPlatformProvider::new(
+            desktop_dir.path().to_path_buf(),
+            cli_dir.path().to_path_buf(),
+            app_dir.path().to_path_buf(),
+        )
+        .with_symlink_failure(true);
+
+        let linker = Linker::new(&provider);
+        let result = linker.apply_link(&source_plugins, &target, SharingMode::Share, true);
+
+        assert!(result.is_err(), "a failed symlink must surface an error");
+        assert!(target.exists(), "the original target must be restored");
+        assert!(data.exists(), "the original data must be preserved");
+        assert_eq!(fs::read_to_string(&data).unwrap(), "important");
+        let backup = target.with_file_name("plugins.csw-backup");
+        assert!(!backup.exists(), "no backup should be left behind");
     }
 }

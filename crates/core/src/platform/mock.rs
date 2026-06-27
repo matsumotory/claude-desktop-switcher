@@ -1,11 +1,16 @@
-use crate::error::Result;
+use crate::error::{CswError, Result};
 use crate::platform::PlatformProvider;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 pub struct MockPlatformProvider {
     pub desktop_default: PathBuf,
     pub cli_default: PathBuf,
     pub app_data: PathBuf,
+    /// Test knob: report Claude Desktop as running.
+    desktop_running: AtomicBool,
+    /// Test knob: make `create_symlink` fail (to exercise rollback paths).
+    fail_symlink: AtomicBool,
 }
 
 impl MockPlatformProvider {
@@ -14,7 +19,21 @@ impl MockPlatformProvider {
             desktop_default,
             cli_default,
             app_data,
+            desktop_running: AtomicBool::new(false),
+            fail_symlink: AtomicBool::new(false),
         }
+    }
+
+    /// Builder: make `is_claude_desktop_running` report `running`.
+    pub fn with_desktop_running(self, running: bool) -> Self {
+        self.desktop_running.store(running, Ordering::SeqCst);
+        self
+    }
+
+    /// Builder: make `create_symlink` fail, to test rollback/atomicity paths.
+    pub fn with_symlink_failure(self, fail: bool) -> Self {
+        self.fail_symlink.store(fail, Ordering::SeqCst);
+        self
     }
 }
 
@@ -40,6 +59,9 @@ impl PlatformProvider for MockPlatformProvider {
         target_path: &std::path::Path,
         link_path: &std::path::Path,
     ) -> Result<()> {
+        if self.fail_symlink.load(Ordering::SeqCst) {
+            return Err(CswError::Other("mock: create_symlink failed".to_string()));
+        }
         #[cfg(unix)]
         std::os::unix::fs::symlink(target_path, link_path)?;
         #[cfg(windows)]
@@ -67,7 +89,7 @@ impl PlatformProvider for MockPlatformProvider {
     }
 
     fn is_claude_desktop_running(&self) -> Result<bool> {
-        Ok(false)
+        Ok(self.desktop_running.load(Ordering::SeqCst))
     }
 
     fn claude_desktop_pids(&self) -> Result<Vec<u32>> {

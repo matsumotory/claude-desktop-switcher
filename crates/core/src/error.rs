@@ -31,6 +31,11 @@ pub enum CswError {
     #[error("Refused to delete '{0}': path lies inside the real Claude default data directory")]
     RefusedDefaultDataDeletion(String),
 
+    #[error(
+        "Claude Desktop is running. Quit it before switching profiles to avoid cache write-back and data races."
+    )]
+    DesktopRunning,
+
     #[error("Platform not supported: {0}")]
     UnsupportedPlatform(String),
 
