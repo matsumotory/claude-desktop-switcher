@@ -4,4 +4,10 @@
 [toolchain]
 channel = "1.96.0"
 components = ["clippy", "rustfmt"]
+# Both Apple targets are required for the universal-apple-darwin release build.
+# They must be declared here (not only via the release workflow's toolchain
+# action) because this file pins the toolchain used for every cargo invocation;
+# without this, the pinned 1.96.0 toolchain lacks x86_64 and the universal
+# build fails with "Target x86_64-apple-darwin is not installed".
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
 profile = "minimal"
