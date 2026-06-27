@@ -29,6 +29,9 @@ pub enum CswError {
     #[error("Existing file would be overwritten (non-destructive violation): {0}")]
     NonDestructiveViolation(String),
 
+    #[error("Refused to delete '{0}': path lies inside the real Claude default data directory")]
+    RefusedDefaultDataDeletion(String),
+
     #[error("Platform not supported: {0}")]
     UnsupportedPlatform(String),
 
