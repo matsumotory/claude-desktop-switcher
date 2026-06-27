@@ -5,6 +5,7 @@
 
 ### Features
 
+* **desktop:** 設定UIをスキル準拠で全面再設計し実データ接続・2モード化 ([#46](https://github.com/matsumotory/claude-desktop-switcher/issues/46)) ([7d629a5](https://github.com/matsumotory/claude-desktop-switcher/commit/7d629a59a753b00542dfadda647ca9b5d7ec1edf))
 * **website,docs,desktop:** 実スクショで LP/ガイドを強化し AI 図スロップを撤去 ([#43](https://github.com/matsumotory/claude-desktop-switcher/issues/43)) ([c0baa24](https://github.com/matsumotory/claude-desktop-switcher/commit/c0baa24e8d0373f4807ad8b0e8b4766430d894a0))
 
 ## [0.5.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.2...v0.5.3) (2026-06-27)
