@@ -1,5 +1,6 @@
-use csw_core::keychain::{create_keychain_provider, KeychainProvider};
+use csw_core::keychain::create_keychain_provider;
 use csw_core::platform::mock::MockPlatformProvider;
+use csw_core::platform::PlatformProvider;
 use csw_core::profile::{ProfileManager, SharingConfig, SharingMode, SharingSource};
 use csw_core::switcher::ContextSwitcher;
 use std::fs;
@@ -223,7 +224,7 @@ fn test_profile_cloning_with_data() {
     let mut sharing = SharingConfig::default();
     sharing.cli_skills = SharingMode::Copy;
     sharing.cli_sessions = SharingMode::Isolate;
-    let original_profile = profile_manager.create_profile("OriginalWork", sharing).unwrap();
+    let _original_profile = profile_manager.create_profile("OriginalWork", sharing).unwrap();
 
     // Switch to generate credential backup inside OriginalWork
     switcher.switch_to("OriginalWork").unwrap();
