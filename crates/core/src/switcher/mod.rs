@@ -28,6 +28,18 @@ impl ContextSwitcher {
         }
     }
 
+    pub fn new_with_keychain(
+        provider: Arc<dyn PlatformProvider>,
+        profile_manager: Arc<ProfileManager>,
+        keychain: Box<dyn KeychainProvider>,
+    ) -> Self {
+        Self {
+            _provider: provider,
+            profile_manager,
+            keychain,
+        }
+    }
+
     /// Backup the currently active profile's credentials from Keychain to files.
     pub fn backup_active_credentials(&self) -> Result<()> {
         let active_profile = self.profile_manager.active_profile()?;
