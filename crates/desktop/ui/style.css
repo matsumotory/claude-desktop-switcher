@@ -18,7 +18,7 @@
   --border-color: rgba(255, 255, 255, 0.08);
   --border-hover: rgba(255, 255, 255, 0.15);
   
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", Roboto, sans-serif;
   
   --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -41,6 +41,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  line-height: 1.7;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* App Container */
@@ -83,8 +86,7 @@ body {
 .profiles-section h3 {
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
   margin-bottom: 0.75rem;
   padding-left: 0.5rem;
@@ -140,14 +142,15 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
+  padding: 0.6rem 1rem;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
   transition: var(--transition-smooth);
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -302,9 +305,8 @@ body {
 .info-group h3 {
   font-size: 0.85rem;
   font-weight: 600;
-  text-transform: uppercase;
   color: var(--text-muted);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   margin-bottom: 0.75rem;
 }
 
@@ -345,19 +347,24 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .sharing-name {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .sharing-badge {
   font-size: 0.7rem;
   font-weight: 700;
-  text-transform: uppercase;
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sharing-badge.isolate {
@@ -428,7 +435,6 @@ body {
   color: var(--text-muted);
   font-weight: 600;
   margin-bottom: 0.5rem;
-  text-transform: uppercase;
 }
 
 .form-group input, .form-group select {
@@ -439,7 +445,7 @@ body {
   border-radius: 8px;
   color: white;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   transition: var(--transition-smooth);
 }
 

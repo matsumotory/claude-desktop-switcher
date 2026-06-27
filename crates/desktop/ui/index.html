@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Claude Desktop Switcher Settings</title>
+  <title>Claude Desktop Switcher 設定</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,14 +18,14 @@
       </div>
       
       <div class="profiles-section">
-        <h3>PROFILES</h3>
+        <h3>プロファイル</h3>
         <ul id="profile-list" class="profile-list">
           <!-- Profiles injected here -->
         </ul>
       </div>
 
       <button id="btn-add-profile" class="btn btn-primary add-profile-btn">
-        <span class="icon">+</span> Create Profile
+        <span class="icon">+</span> プロファイルを作成
       </button>
     </aside>
 
@@ -39,50 +39,50 @@
           </div>
           <div class="profile-title-group">
             <h2 id="detail-name">Work</h2>
-            <span class="status-tag" id="detail-active-tag">Active</span>
+            <span class="status-tag" id="detail-active-tag">使用中</span>
           </div>
         </div>
 
         <div class="details-body">
           <!-- Paths Section -->
           <div class="info-group">
-            <h3>Paths</h3>
+            <h3>パス</h3>
             <div class="path-card">
-              <span class="path-label">Desktop User Data</span>
+              <span class="path-label">Desktop ユーザーデータ</span>
               <code id="path-desktop">~/.claude-desktop-switcher/profiles/work/desktop-data</code>
             </div>
             <div class="path-card mt-1">
-              <span class="path-label">CLI Config Directory</span>
+              <span class="path-label">CLI 設定ディレクトリ</span>
               <code id="path-cli">~/.claude-desktop-switcher/profiles/work/cli-data</code>
             </div>
           </div>
 
           <!-- Sharing Matrix -->
           <div class="info-group mt-2">
-            <h3>Configuration Sharing</h3>
+            <h3>設定の共有</h3>
             <div class="sharing-grid">
               <div class="sharing-item">
-                <span class="sharing-name">Desktop Config (MCP)</span>
+                <span class="sharing-name">Desktop 設定 (MCP)</span>
                 <span class="sharing-badge" id="share-desktop-config">isolate</span>
               </div>
               <div class="sharing-item">
-                <span class="sharing-name">CLI Settings & hooks</span>
+                <span class="sharing-name">CLI 設定・フック</span>
                 <span class="sharing-badge" id="share-cli-settings">isolate</span>
               </div>
               <div class="sharing-item">
-                <span class="sharing-name">CLAUDE.md (Rules)</span>
+                <span class="sharing-name">CLAUDE.md (ルール)</span>
                 <span class="sharing-badge" id="share-cli-claude-md">isolate</span>
               </div>
               <div class="sharing-item">
-                <span class="sharing-name">CLI Project Memory</span>
+                <span class="sharing-name">CLI プロジェクトメモリ</span>
                 <span class="sharing-badge" id="share-cli-project-memory">isolate</span>
               </div>
               <div class="sharing-item">
-                <span class="sharing-name">CLI Plugins</span>
+                <span class="sharing-name">CLI プラグイン</span>
                 <span class="sharing-badge" id="share-cli-plugins">isolate</span>
               </div>
               <div class="sharing-item">
-                <span class="sharing-name">Desktop Worktrees</span>
+                <span class="sharing-name">Desktop ワークツリー</span>
                 <span class="sharing-badge" id="share-desktop-worktrees">isolate</span>
               </div>
             </div>
@@ -90,8 +90,8 @@
         </div>
 
         <div class="details-footer">
-          <button id="btn-switch" class="btn btn-success">Switch to Profile</button>
-          <button id="btn-delete" class="btn btn-danger">Delete Profile</button>
+          <button id="btn-switch" class="btn btn-success">このプロファイルに切り替え</button>
+          <button id="btn-delete" class="btn btn-danger">プロファイルを削除</button>
         </div>
       </section>
 
@@ -99,27 +99,27 @@
       <section id="welcome-panel" class="welcome-panel">
         <div class="welcome-icon">🔵</div>
         <h2>Claude Desktop Switcher</h2>
-        <p>Select a profile from the sidebar to view details, or create a new profile to manage multiple Claude environment sessions.</p>
+        <p>サイドバーからプロファイルを選択して詳細を確認するか、新しいプロファイルを作成して複数の Claude 環境を管理できます。</p>
       </section>
 
       <!-- Create Profile Modal -->
       <div id="modal-create" class="modal hidden">
         <div class="modal-content">
-          <h2>Create New Profile</h2>
+          <h2>新しいプロファイルを作成</h2>
           <div class="form-group">
-            <label for="input-name">Profile Name</label>
-            <input type="text" id="input-name" placeholder="e.g. Work, Personal, Research">
+            <label for="input-name">プロファイル名</label>
+            <input type="text" id="input-name" placeholder="例: Work, Personal, Research">
           </div>
           <div class="form-group">
-            <label for="select-preset">Configuration Preset</label>
+            <label for="select-preset">設定プリセット</label>
             <select id="select-preset">
-              <option value="isolate">Isolated (Clean slate, separate memory/config)</option>
-              <option value="share">Shared (Share MCP, settings, rules with Default)</option>
+              <option value="isolate">分離 (独立した設定・メモリ・データ)</option>
+              <option value="share">共有 (MCP・設定・ルールをデフォルトと共有)</option>
             </select>
           </div>
           <div class="modal-buttons">
-            <button id="btn-modal-cancel" class="btn btn-secondary">Cancel</button>
-            <button id="btn-modal-submit" class="btn btn-primary">Create</button>
+            <button id="btn-modal-cancel" class="btn btn-secondary">キャンセル</button>
+            <button id="btn-modal-submit" class="btn btn-primary">作成</button>
           </div>
         </div>
       </div>

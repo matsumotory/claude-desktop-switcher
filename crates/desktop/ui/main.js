@@ -87,7 +87,7 @@ async function refreshProfiles() {
       selectedProfileName = null;
     }
   } catch (err) {
-    console.error('Failed to load profiles:', err);
+    console.error('プロファイルの読み込みに失敗しました:', err);
   }
 }
 
@@ -117,6 +117,11 @@ function renderProfileList() {
     
     elProfileList.appendChild(li);
   });
+}
+
+// Sharing mode display labels
+function sharingLabel(mode) {
+  return mode === 'share' ? '共有' : '分離';
 }
 
 // Load and display profile detailed configuration
@@ -159,22 +164,22 @@ async function showProfileDetails(name) {
     }
     
     if (p.name === activeProfileName) {
-      elBtnSwitch.textContent = 'Active Environment';
+      elBtnSwitch.textContent = '使用中の環境';
       elBtnSwitch.disabled = true;
       elBtnSwitch.className = 'btn btn-secondary';
     } else {
-      elBtnSwitch.textContent = 'Switch to Profile';
+      elBtnSwitch.textContent = 'このプロファイルに切り替え';
       elBtnSwitch.disabled = false;
       elBtnSwitch.className = 'btn btn-success';
     }
     
   } catch (err) {
-    console.error('Failed to load profile details:', err);
+    console.error('プロファイル詳細の読み込みに失敗しました:', err);
   }
 }
 
 function updateSharingBadge(el, mode) {
-  el.textContent = mode;
+  el.textContent = sharingLabel(mode);
   el.className = `sharing-badge ${mode}`;
 }
 
@@ -196,18 +201,18 @@ function setupEventListeners() {
     const mode = elSelectPreset.value;
     
     if (!name) {
-      alert('Please enter a profile name.');
+      alert('プロファイル名を入力してください。');
       return;
     }
     
     // Name validations (no default, alphanumeric)
     if (name.toLowerCase() === 'default') {
-      alert('Profile name "default" is reserved.');
+      alert('「default」は予約されたプロファイル名です。');
       return;
     }
     
     if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-      alert('Profile name can only contain letters, numbers, hyphens, and underscores.');
+      alert('プロファイル名には英数字、ハイフン、アンダースコアのみ使用できます。');
       return;
     }
     
@@ -217,7 +222,7 @@ function setupEventListeners() {
       selectedProfileName = name;
       await refreshProfiles();
     } catch (err) {
-      alert(`Error creating profile: ${err}`);
+      alert(`プロファイルの作成に失敗しました: ${err}`);
     }
   });
   
@@ -226,14 +231,14 @@ function setupEventListeners() {
     if (!selectedProfileName || selectedProfileName === activeProfileName) return;
     
     const originalText = elBtnSwitch.textContent;
-    elBtnSwitch.textContent = 'Switching...';
+    elBtnSwitch.textContent = '切り替え中...';
     elBtnSwitch.disabled = true;
     
     try {
       await invoke('switch_profile', { name: selectedProfileName, noLaunch: false });
       await refreshProfiles();
     } catch (err) {
-      alert(`Switch failed: ${err}`);
+      alert(`切り替えに失敗しました: ${err}`);
       elBtnSwitch.textContent = originalText;
       elBtnSwitch.disabled = false;
     }
@@ -243,17 +248,17 @@ function setupEventListeners() {
   elBtnDelete.addEventListener('click', async () => {
     if (!selectedProfileName || selectedProfileName === 'default') return;
     if (selectedProfileName === activeProfileName) {
-      alert('Cannot delete active profile. Switch to another profile first.');
+      alert('使用中のプロファイルは削除できません。先に別のプロファイルに切り替えてください。');
       return;
     }
     
-    if (confirm(`Are you sure you want to delete profile "${selectedProfileName}"?\nThis will clean up its symlinks and isolated directories.`)) {
+    if (confirm(`プロファイル「${selectedProfileName}」を削除しますか？\nシンボリックリンクと分離ディレクトリがクリーンアップされます。`)) {
       try {
         await invoke('delete_profile', { name: selectedProfileName });
         selectedProfileName = null;
         await refreshProfiles();
       } catch (err) {
-        alert(`Delete failed: ${err}`);
+        alert(`削除に失敗しました: ${err}`);
       }
     }
   });

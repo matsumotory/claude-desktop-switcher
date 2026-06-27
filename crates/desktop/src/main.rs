@@ -130,7 +130,7 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     // 2. Add profile switchers
     for p_name in profiles {
         let label = if p_name == active_name {
-            format!("● {} (active)", p_name)
+            format!("● {} (使用中)", p_name)
         } else {
             format!("○ {}", p_name)
         };
@@ -150,10 +150,10 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let sep2 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(sep2) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
-    let settings_item = MenuItem::with_id(app, "settings", "⚙ Settings...", true, None::<&str>).map_err(|e| e.to_string())?;
+    let settings_item = MenuItem::with_id(app, "settings", "⚙ 設定...", true, None::<&str>).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(settings_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
-    let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).map_err(|e| e.to_string())?;
+    let quit_item = MenuItem::with_id(app, "quit", "終了", true, None::<&str>).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(quit_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
     // Reconstruct the menu
