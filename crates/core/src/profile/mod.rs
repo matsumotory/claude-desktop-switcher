@@ -308,19 +308,6 @@ impl ProfileManager {
         let source_cli = &source_profile.isolation.cli_config_dir;
 
         let linker = linker::Linker::new(self.provider.as_ref());
-        
-        // Helper copy function for non-symlink objects
-        let copy_object = |src: &std::path::Path, dst: &std::path::Path, is_dir: bool| -> Result<()> {
-            if src.exists() && !self.provider.is_symlink(src) {
-                if is_dir {
-                    // Recursive copy directory
-                    self.copy_dir_recursive(src, dst)?;
-                } else {
-                    fs::copy(src, dst)?;
-                }
-            }
-            Ok(())
-        };
 
         // 1. Copy desktop-data and cli-data files that are not symlinks
         // If the source profile is "default" or other, we clone its current physical configurations.

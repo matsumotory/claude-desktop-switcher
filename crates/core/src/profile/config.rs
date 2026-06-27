@@ -95,10 +95,14 @@ mod tests {
             },
             sharing: SharingConfig {
                 desktop_config: SharingMode::Share,
+                desktop_app_config: SharingMode::Share,
                 cli_settings: SharingMode::Share,
                 cli_claude_md: SharingMode::Share,
                 cli_project_memory: SharingMode::Isolate,
                 cli_plugins: SharingMode::Share,
+                cli_skills: SharingMode::Share,
+                cli_sessions: SharingMode::Share,
+                cli_history: SharingMode::Share,
                 desktop_worktrees: SharingMode::Share,
                 desktop_device_id: SharingMode::Share,
                 source: SharingSource {
