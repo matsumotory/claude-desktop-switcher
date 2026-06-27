@@ -8,6 +8,12 @@ pub struct MacOsProvider {
     home_dir: PathBuf,
 }
 
+impl Default for MacOsProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MacOsProvider {
     pub fn new() -> Self {
         Self {
@@ -18,8 +24,7 @@ impl MacOsProvider {
 
 impl PlatformProvider for MacOsProvider {
     fn claude_desktop_default_dir(&self) -> PathBuf {
-        self.home_dir
-            .join("Library/Application Support/Claude")
+        self.home_dir.join("Library/Application Support/Claude")
     }
 
     fn claude_cli_default_dir(&self) -> PathBuf {
@@ -82,7 +87,11 @@ impl PlatformProvider for MacOsProvider {
         path.is_symlink()
     }
 
-    fn launch_claude_desktop(&self, user_data_dir: &Path, cli_config_dir: Option<&Path>) -> Result<()> {
+    fn launch_claude_desktop(
+        &self,
+        user_data_dir: &Path,
+        cli_config_dir: Option<&Path>,
+    ) -> Result<()> {
         let app_path = self.claude_desktop_app_path();
         if !app_path.exists() {
             return Err(CswError::DesktopNotInstalled);
@@ -90,16 +99,16 @@ impl PlatformProvider for MacOsProvider {
 
         let mut cmd = Command::new("open");
         cmd.arg("-n").arg("-a").arg(&app_path);
-        
+
         if let Some(cli_dir) = cli_config_dir {
             cmd.arg("--env")
-               .arg(format!("CLAUDE_CONFIG_DIR={}", cli_dir.display()));
+                .arg(format!("CLAUDE_CONFIG_DIR={}", cli_dir.display()));
         }
 
         cmd.arg("--args")
-           .arg(format!("--user-data-dir={}", user_data_dir.display()))
-           .spawn()
-           .map_err(|e| CswError::Other(format!("Failed to launch Claude Desktop: {e}")))?;
+            .arg(format!("--user-data-dir={}", user_data_dir.display()))
+            .spawn()
+            .map_err(|e| CswError::Other(format!("Failed to launch Claude Desktop: {e}")))?;
 
         Ok(())
     }
@@ -135,17 +144,21 @@ mod tests {
     fn test_default_paths() {
         let provider = MacOsProvider::new();
         let desktop_dir = provider.claude_desktop_default_dir();
-        assert!(desktop_dir
-            .to_string_lossy()
-            .contains("Application Support/Claude"));
+        assert!(
+            desktop_dir
+                .to_string_lossy()
+                .contains("Application Support/Claude")
+        );
 
         let cli_dir = provider.claude_cli_default_dir();
         assert!(cli_dir.to_string_lossy().ends_with(".claude"));
 
         let app_data = provider.app_data_dir();
-        assert!(app_data
-            .to_string_lossy()
-            .ends_with(".context-switcher-claude"));
+        assert!(
+            app_data
+                .to_string_lossy()
+                .ends_with(".context-switcher-claude")
+        );
     }
 
     #[test]
@@ -192,7 +205,10 @@ mod tests {
         ));
 
         // Verify existing file was not modified
-        assert_eq!(std::fs::read_to_string(&existing).unwrap(), "do not overwrite");
+        assert_eq!(
+            std::fs::read_to_string(&existing).unwrap(),
+            "do not overwrite"
+        );
 
         let _ = std::fs::remove_dir_all(&tmp);
     }

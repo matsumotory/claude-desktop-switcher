@@ -17,7 +17,6 @@ pub enum CswError {
     #[error("Active profile '{0}' cannot be deleted. Switch to another profile first.")]
     ActiveProfileCannotBeDeleted(String),
 
-
     #[error("Symlink creation failed: {source} -> {target}")]
     SymlinkFailed {
         source: String,

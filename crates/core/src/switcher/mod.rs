@@ -27,10 +27,7 @@ pub struct ContextSwitcher {
 }
 
 impl ContextSwitcher {
-    pub fn new(
-        provider: Arc<dyn PlatformProvider>,
-        profile_manager: Arc<ProfileManager>,
-    ) -> Self {
+    pub fn new(provider: Arc<dyn PlatformProvider>, profile_manager: Arc<ProfileManager>) -> Self {
         Self {
             _provider: provider,
             profile_manager,

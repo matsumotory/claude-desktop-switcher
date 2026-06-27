@@ -5,25 +5,21 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use serde::{Deserialize, Serialize};
 use crate::error::{CswError, Result};
+use serde::{Deserialize, Serialize};
 
 /// Sharing mode for a configuration component.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum SharingMode {
     /// Fully isolated: new profile gets its own independent copy.
+    #[default]
     Isolate,
     /// Shared via symlink to the source profile's file/directory.
     Share,
     /// One-time copy from the source (diverges after creation).
     Copy,
-}
-
-impl Default for SharingMode {
-    fn default() -> Self {
-        Self::Isolate
-    }
 }
 
 /// A profile representing a Claude account environment.
@@ -159,7 +155,7 @@ impl ProfileManager {
     pub fn new(provider: Arc<dyn crate::platform::PlatformProvider>) -> Result<Self> {
         let app_data_dir = provider.app_data_dir();
         let app_config_path = app_data_dir.join("config.toml");
-        
+
         let app_config = if app_config_path.exists() {
             config::AppConfig::load(&app_config_path)?
         } else {
@@ -228,7 +224,12 @@ impl ProfileManager {
         config::load_profile(&profile_toml)
     }
 
-    pub fn create_profile(&self, name: &str, sharing: SharingConfig, icon: Option<String>) -> Result<Profile> {
+    pub fn create_profile(
+        &self,
+        name: &str,
+        sharing: SharingConfig,
+        icon: Option<String>,
+    ) -> Result<Profile> {
         if name == "default" {
             return Err(CswError::ProfileAlreadyExists("default".to_string()));
         }
@@ -244,7 +245,7 @@ impl ProfileManager {
         let profile = Profile {
             profile: ProfileMeta {
                 name: name.to_string(),
-                icon: icon.unwrap_or_else(|| "".to_string()),
+                icon: icon.unwrap_or_default(),
                 color: "#4A90D9".to_string(),
                 is_default: false,
             },
@@ -270,11 +271,13 @@ impl ProfileManager {
             return Err(CswError::ProfileAlreadyExists("default".to_string()));
         }
         if source_name == target_name {
-            return Err(CswError::Other("Source and target profile names must be different".to_string()));
+            return Err(CswError::Other(
+                "Source and target profile names must be different".to_string(),
+            ));
         }
 
         let source_profile = self.get_profile(source_name)?;
-        
+
         let profiles_dir = self.app_config.lock().unwrap().profiles_dir.clone();
         let target_dir = profiles_dir.join(target_name);
         let target_toml = target_dir.join("profile.toml");
@@ -316,11 +319,18 @@ impl ProfileManager {
                 let entry = entry?;
                 let path = entry.path();
                 let filename = entry.file_name();
-                let target_path = target_profile.isolation.desktop_user_data_dir.join(&filename);
+                let target_path = target_profile
+                    .isolation
+                    .desktop_user_data_dir
+                    .join(&filename);
 
                 // Skip files managed by linker (will link/copy them via apply_link in linker)
                 let name_str = filename.to_string_lossy();
-                if name_str == "claude_desktop_config.json" || name_str == "git-worktrees.json" || name_str == "ant-did" || name_str == "config.json" {
+                if name_str == "claude_desktop_config.json"
+                    || name_str == "git-worktrees.json"
+                    || name_str == "ant-did"
+                    || name_str == "config.json"
+                {
                     continue;
                 }
 
@@ -343,8 +353,14 @@ impl ProfileManager {
                 let target_path = target_profile.isolation.cli_config_dir.join(&filename);
 
                 let name_str = filename.to_string_lossy();
-                if name_str == "settings.json" || name_str == "CLAUDE.md" || name_str == "projects" || name_str == "plugins" 
-                   || name_str == "skills" || name_str == "sessions" || name_str == "history.jsonl" {
+                if name_str == "settings.json"
+                    || name_str == "CLAUDE.md"
+                    || name_str == "projects"
+                    || name_str == "plugins"
+                    || name_str == "skills"
+                    || name_str == "sessions"
+                    || name_str == "history.jsonl"
+                {
                     continue;
                 }
 
@@ -393,7 +409,7 @@ impl ProfileManager {
 
         let profile = self.get_profile(name)?;
         let linker = linker::Linker::new(self.provider.as_ref());
-        
+
         // Clean up symlinks first
         linker.unlink_profile(&profile)?;
 
@@ -430,4 +446,3 @@ impl ProfileManager {
 
 #[cfg(test)]
 mod tests;
-

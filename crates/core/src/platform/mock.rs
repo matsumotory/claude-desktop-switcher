@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use crate::error::Result;
 use crate::platform::PlatformProvider;
+use std::path::PathBuf;
 
 pub struct MockPlatformProvider {
     pub desktop_default: PathBuf,
@@ -35,7 +35,11 @@ impl PlatformProvider for MockPlatformProvider {
         self.app_data.clone()
     }
 
-    fn create_symlink(&self, target_path: &std::path::Path, link_path: &std::path::Path) -> Result<()> {
+    fn create_symlink(
+        &self,
+        target_path: &std::path::Path,
+        link_path: &std::path::Path,
+    ) -> Result<()> {
         #[cfg(unix)]
         std::os::unix::fs::symlink(target_path, link_path)?;
         #[cfg(windows)]
@@ -49,10 +53,16 @@ impl PlatformProvider for MockPlatformProvider {
     }
 
     fn is_symlink(&self, path: &std::path::Path) -> bool {
-        path.symlink_metadata().map(|m| m.file_type().is_symlink()).unwrap_or(false)
+        path.symlink_metadata()
+            .map(|m| m.file_type().is_symlink())
+            .unwrap_or(false)
     }
 
-    fn launch_claude_desktop(&self, _user_data_dir: &std::path::Path, _cli_config_dir: Option<&std::path::Path>) -> Result<()> {
+    fn launch_claude_desktop(
+        &self,
+        _user_data_dir: &std::path::Path,
+        _cli_config_dir: Option<&std::path::Path>,
+    ) -> Result<()> {
         Ok(())
     }
 
