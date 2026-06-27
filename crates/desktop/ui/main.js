@@ -11,7 +11,7 @@ const invoke = window.__TAURI__ ? window.__TAURI__.core.invoke : async (cmd, arg
   if (cmd === 'get_profile_details') {
     return {
       name: args.name,
-      icon: args.name === 'default' ? '💻' : '💼',
+      icon: args.name.charAt(0).toUpperCase(),
       color: '#4A90D9',
       is_default: args.name === 'default',
       desktop_path: `~/.claude-desktop-switcher/profiles/${args.name.toLowerCase()}/desktop-data`,
@@ -124,14 +124,13 @@ function renderProfileList() {
   elProfileList.innerHTML = '';
   
   profilesList.forEach(name => {
-    const isDefault = name === 'default';
     const isActive = name === activeProfileName;
-    const icon = isDefault ? '💻' : '💼';
+    const initial = name.charAt(0).toUpperCase();
     
     const li = document.createElement('li');
     li.className = `profile-item ${name === selectedProfileName ? 'active' : ''}`;
     li.innerHTML = `
-      <span class="profile-icon">${icon}</span>
+      <span class="profile-avatar">${initial}</span>
       <span class="profile-name">${name}</span>
       ${isActive ? '<span class="active-dot"></span>' : ''}
     `;
@@ -162,7 +161,7 @@ async function showProfileDetails(name) {
     elDetailsPanel.classList.remove('hidden');
     
     // Meta info
-    elDetailIcon.textContent = p.name === 'default' ? '💻' : '💼';
+    elDetailIcon.textContent = p.name.charAt(0).toUpperCase();
     elDetailName.textContent = p.name;
     
     // Status Tag

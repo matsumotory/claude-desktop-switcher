@@ -38,7 +38,7 @@
       <section id="profile-details" class="details-panel hidden">
         <div class="details-header">
           <div class="profile-badge-large" id="detail-icon-badge">
-            <span id="detail-icon">💼</span>
+            <span id="detail-icon" class="profile-avatar-large">W</span>
           </div>
           <div class="profile-title-group">
             <h2 id="detail-name">Work</h2>
@@ -119,11 +119,11 @@
 
       <!-- Welcome panel (when no profile is selected) -->
       <section id="welcome-panel" class="welcome-panel">
-        <div class="welcome-icon">🔵</div>
+        <div class="welcome-icon logo-mark"></div>
         <h2>Claude Desktop Switcher</h2>
         <p>サイドバーからプロファイルを選択して詳細を確認するか、新しいプロファイルを作成して複数の Claude 環境を管理できます。</p>
       </section>
-
+ 
       <!-- Create Profile Modal -->
       <div id="modal-create" class="modal hidden">
         <div class="modal-content">
@@ -145,7 +145,7 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- Clone Profile Modal -->
       <div id="modal-clone" class="modal hidden">
         <div class="modal-content">
@@ -163,21 +163,21 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- Onboarding Overlay -->
       <div id="onboarding-overlay" class="modal hidden">
         <div class="modal-content onboarding-content">
           <div class="onboarding-slides">
             <!-- Slide 1 -->
             <div class="onboarding-slide" id="slide-1">
-              <div class="onboarding-logo">🔵</div>
+              <div class="onboarding-logo logo-mark"></div>
               <h2>ようこそ！CSW へ</h2>
               <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
                 Claude Desktop Switcher (CSW) は、仕事用・個人用・プロジェクト用など、複数の Claude 環境を安全に切り替えるためのツールです。
               </p>
               <div class="onboarding-feature-list">
                 <div class="feature-item">
-                  <span class="feature-icon">🛡️</span>
+                  <span class="feature-icon">-</span>
                   <div>
                     <strong>既存の環境は安全です</strong>
                     <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
@@ -189,14 +189,14 @@
             </div>
             <!-- Slide 2 -->
             <div class="onboarding-slide hidden" id="slide-2">
-              <div class="onboarding-logo">⚙️</div>
+              <div class="onboarding-logo logo-mark"></div>
               <h2>簡単な使い方</h2>
               <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
                 プロファイルの切り替えやアプリの終了は、メニューバー（システムトレイ）のアイコンからいつでも簡単に行えます。
               </p>
               <div class="onboarding-feature-list">
                 <div class="feature-item">
-                  <span class="feature-icon">🔘</span>
+                  <span class="feature-icon">-</span>
                   <div>
                     <strong>トレイメニューから切替</strong>
                     <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
@@ -208,7 +208,7 @@
             </div>
             <!-- Slide 3 -->
             <div class="onboarding-slide hidden" id="slide-3">
-              <div class="onboarding-logo">💻</div>
+              <div class="onboarding-logo logo-mark"></div>
               <h2>ターミナル連携</h2>
               <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
                 Claude Code（CLI）でプロファイルを切り替えるには、ターミナルで以下のコマンドを実行します。
