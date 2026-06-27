@@ -1,5 +1,3 @@
-use csw_core::keychain::mock::MockKeychainProvider;
-use csw_core::keychain::KeychainProvider;
 use csw_core::platform::mock::MockPlatformProvider;
 use csw_core::platform::PlatformProvider;
 use csw_core::profile::{ProfileManager, SharingConfig, SharingMode, SharingSource};
@@ -62,6 +60,9 @@ fn setup_dummy_claude_data(desktop_path: &Path, cli_path: &Path) {
     ).unwrap();
 }
 
+// Account/session isolation is achieved purely via per-profile directories
+// (--user-data-dir / CLAUDE_CONFIG_DIR), so switching only updates the active
+// profile. CSW does not touch the Keychain, hence no keychain assertions here.
 #[test]
 fn test_full_profile_switch_workflow() {
     let desktop_dir = tempdir().unwrap();
@@ -75,47 +76,28 @@ fn test_full_profile_switch_workflow() {
     ));
 
     let profile_manager = Arc::new(ProfileManager::new(platform.clone()).unwrap());
-    let keychain = Arc::new(MockKeychainProvider::new());
-    
-    // Inject MockKeychainProvider explicitly
-    let switcher = ContextSwitcher::new_with_keychain(
-        platform.clone(),
-        profile_manager.clone(),
-        Box::new((*keychain).clone()),
-    );
-
-    // Set default credentials
-    keychain.set_password("Claude Safe Storage", "Claude Key", "default-secret-token").unwrap();
+    let switcher = ContextSwitcher::new(platform.clone(), profile_manager.clone());
 
     // Verify default active profile
     assert_eq!(profile_manager.active_profile_name(), "default");
 
-    // Create a new profile
-    let sharing_config = SharingConfig::default(); // default is Isolated
-    profile_manager.create_profile("Work", sharing_config, None).unwrap();
+    // Create a new profile (default sharing config = Isolated)
+    profile_manager
+        .create_profile("Work", SharingConfig::default(), None)
+        .unwrap();
 
     // Switch to the new profile
     switcher.switch_to("Work").unwrap();
-
-    // Verify the active profile changed
     assert_eq!(profile_manager.active_profile_name(), "Work");
-
-    // Verify that the keychain was cleared for the new isolated profile
-    let pwd = keychain.get_password("Claude Safe Storage", "Claude Key").unwrap();
-    assert_eq!(pwd, None, "Keychain should be empty for the new profile");
-
-    // Set a password for the Work profile
-    keychain.set_password("Claude Safe Storage", "Claude Key", "work-secret-token").unwrap();
 
     // Switch back to default
     switcher.switch_to("default").unwrap();
-
-    // Verify the active profile changed back
     assert_eq!(profile_manager.active_profile_name(), "default");
 
-    // Verify the original default credentials were restored
-    let restored_pwd = keychain.get_password("Claude Safe Storage", "Claude Key").unwrap();
-    assert_eq!(restored_pwd.unwrap(), "default-secret-token");
+    // Switching to a non-existent profile must fail and leave the active
+    // profile unchanged.
+    assert!(switcher.switch_to("DoesNotExist").is_err());
+    assert_eq!(profile_manager.active_profile_name(), "default");
 }
 
 #[test]
@@ -193,6 +175,9 @@ fn test_profile_sharing_and_isolation_matrix() {
     assert!(!target_history.exists());
 }
 
+// Cloning duplicates a profile's sharing config and physical data. Credentials
+// are never stored by CSW (each profile logs in within its own directory), so
+// cloning does not duplicate any keychain backup file.
 #[test]
 fn test_profile_cloning_with_data() {
     let desktop_dir = tempdir().unwrap();
@@ -209,51 +194,43 @@ fn test_profile_cloning_with_data() {
     ));
 
     let profile_manager = Arc::new(ProfileManager::new(platform.clone()).unwrap());
-    let keychain = Arc::new(MockKeychainProvider::new());
-    
-    // Inject MockKeychainProvider explicitly
-    let switcher = ContextSwitcher::new_with_keychain(
-        platform.clone(),
-        profile_manager.clone(),
-        Box::new((*keychain).clone()),
-    );
 
-    // Switch/create to set credentials and create a credential backup
-    keychain.set_password("Claude Code-credentials", "CloudFlare", "original-flare-token").unwrap();
-
-    // Create Work profile
+    // Create OriginalWork that copies skills from the default environment.
     let mut sharing = SharingConfig::default();
     sharing.cli_skills = SharingMode::Copy;
     sharing.cli_sessions = SharingMode::Isolate;
-    let _original_profile = profile_manager.create_profile("OriginalWork", sharing, None).unwrap();
+    profile_manager
+        .create_profile("OriginalWork", sharing, None)
+        .unwrap();
 
-    // Switch to generate credential backup inside OriginalWork
-    switcher.switch_to("OriginalWork").unwrap();
-    
-    // Keychain for OriginalWork set
-    keychain.set_password("Claude Code-credentials", "CloudFlare", "work-flare-token").unwrap();
-    
-    // Switch away to trigger backup serialization
-    switcher.switch_to("default").unwrap();
+    // Clone OriginalWork to ClonedWork.
+    let cloned_profile = profile_manager
+        .clone_profile("OriginalWork", "ClonedWork")
+        .unwrap();
 
-    // Now, clone OriginalWork to cloned_work
-    let cloned_profile = profile_manager.clone_profile("OriginalWork", "ClonedWork").unwrap();
-
-    // --- VERIFY DATA DUPLICATION ---
-    let target_cli = &cloned_profile.isolation.cli_config_dir;
-    let target_backup_keychain = target_cli.join("keychain_backup.json");
-    
-    // Verify keychain backup was cloned
-    assert!(target_backup_keychain.exists(), "Keychain backup file must be duplicated");
-    let backup_content = fs::read_to_string(target_backup_keychain).unwrap();
-    assert!(backup_content.contains("work-flare-token"));
-
-    // Verify sharing configuration was inherited
+    // --- VERIFY SHARING CONFIG INHERITED ---
     assert_eq!(cloned_profile.sharing.cli_skills, SharingMode::Copy);
     assert_eq!(cloned_profile.sharing.cli_sessions, SharingMode::Isolate);
 
-    // Switch to ClonedWork and verify that credentials were correctly restored
-    switcher.switch_to("ClonedWork").unwrap();
-    let restored_cred = keychain.get_password("Claude Code-credentials", "CloudFlare").unwrap();
-    assert_eq!(restored_cred.unwrap(), "work-flare-token", "Cloned credentials must be restored upon switching");
+    // --- VERIFY PHYSICAL DATA DUPLICATION ---
+    // Copy-mode skills should be physically present in the clone.
+    let cloned_skill = cloned_profile
+        .isolation
+        .cli_config_dir
+        .join("skills")
+        .join("git_helper.json");
+    assert!(
+        cloned_skill.exists(),
+        "Copy-mode skills must be duplicated into the cloned profile"
+    );
+
+    // No credential/keychain backup file should ever be produced.
+    let leaked_backup = cloned_profile
+        .isolation
+        .cli_config_dir
+        .join("keychain_backup.json");
+    assert!(
+        !leaked_backup.exists(),
+        "CSW must not write any keychain backup file"
+    );
 }
