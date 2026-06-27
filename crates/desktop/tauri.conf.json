@@ -1,5 +1,5 @@
 {
-  "productName": "Claude Desktop Switcher",
+  "productName": "Claude-Desktop-Switcher",
   "version": "0.4.4",
   "identifier": "com.matsumotory.claude-desktop-switcher",
   "build": {
@@ -33,6 +33,11 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "infoPlist": {
+        "CFBundleDisplayName": "Claude Desktop Switcher"
+      }
+    }
   }
 }

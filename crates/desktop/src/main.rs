@@ -179,7 +179,11 @@ fn main() {
         .manage(app_state)
         .setup(|app| {
             // Build the system tray for the first time
+            let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/32x32.png"))
+                .expect("Failed to load tray icon");
             let _tray = TrayIconBuilder::with_id("main_tray")
+                .icon(icon)
+                .icon_as_template(true)
                 .tooltip("Claude Desktop Switcher")
                 .on_menu_event(|app, event| {
                     let id = event.id.as_ref();
