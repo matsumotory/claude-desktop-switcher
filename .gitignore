@@ -22,6 +22,34 @@ Cargo.lock
 /.context-switcher-sandbox/
 sandbox-results.md
 
-# Environment
+# Environment and Secrets
 .env
-.env.local
+.env.*
+!.env.example
+*.env
+*.env.local
+
+# Private Keys and Certificates
+*.pem
+*.key
+*.p12
+*.p8
+*.cer
+*.der
+*.pfx
+*.crt
+*.pub
+*.pkcs12
+
+# Apple Provisioning & Signing
+*.mobileprovision
+*.provisionprofile
+*.developerprofile
+
+# Credentials & Passwords
+*credentials*
+*secret*
+*token*
+*.passwd
+*.password
+

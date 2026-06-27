@@ -1,12 +1,10 @@
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use std::cell::RefCell;
 use crate::error::Result;
 use crate::keychain::KeychainProvider;
 
-static STORE: OnceLock<Mutex<HashMap<String, HashMap<String, String>>>> = OnceLock::new();
-
-fn get_store() -> &'static Mutex<HashMap<String, HashMap<String, String>>> {
-    STORE.get_or_init(|| Mutex::new(HashMap::new()))
+thread_local! {
+    static STORE: RefCell<HashMap<String, HashMap<String, String>>> = RefCell::new(HashMap::new());
 }
 
 #[derive(Clone, Default)]
@@ -20,29 +18,35 @@ impl MockKeychainProvider {
 
 impl KeychainProvider for MockKeychainProvider {
     fn get_password(&self, service: &str, account: &str) -> Result<Option<String>> {
-        let store = get_store().lock().unwrap();
-        if let Some(accounts) = store.get(service) {
-            if let Some(pwd) = accounts.get(account) {
-                return Ok(Some(pwd.clone()));
+        STORE.with(|store| {
+            let store = store.borrow();
+            if let Some(accounts) = store.get(service) {
+                if let Some(pwd) = accounts.get(account) {
+                    return Ok(Some(pwd.clone()));
+                }
             }
-        }
-        Ok(None)
+            Ok(None)
+        })
     }
 
     fn set_password(&self, service: &str, account: &str, password: &str) -> Result<()> {
-        let mut store = get_store().lock().unwrap();
-        store
-            .entry(service.to_string())
-            .or_insert_with(HashMap::new)
-            .insert(account.to_string(), password.to_string());
-        Ok(())
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            store
+                .entry(service.to_string())
+                .or_insert_with(HashMap::new)
+                .insert(account.to_string(), password.to_string());
+            Ok(())
+        })
     }
 
     fn delete_password(&self, service: &str, account: &str) -> Result<()> {
-        let mut store = get_store().lock().unwrap();
-        if let Some(accounts) = store.get_mut(service) {
-            accounts.remove(account);
-        }
-        Ok(())
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            if let Some(accounts) = store.get_mut(service) {
+                accounts.remove(account);
+            }
+            Ok(())
+        })
     }
 }
