@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.4...v0.5.0) (2026-06-27)
+
+
+### Features
+
+* **desktop:** implement profile cloning, onboarding walkthrough, and enhanced isolation ([64d2f25](https://github.com/matsumotory/claude-desktop-switcher/commit/64d2f25988e1090634e9b61d990cfc1f45481d57))
+* **desktop:** localize UI and tray menu to Japanese ([ebf696c](https://github.com/matsumotory/claude-desktop-switcher/commit/ebf696c18bad87d7ba42d36aa4734d33dc2aaa8c))
+* **desktop:** プロファイルごとに任意のカスタムアイコン（絵文字等）を設定できる機能を追加 ([996afb4](https://github.com/matsumotory/claude-desktop-switcher/commit/996afb474bad0cdfeca565702f7f0550d8f6014d))
+* **desktop:** プロファイル作成時に任意のカスタム絵文字アイコンを設定できる機能を追加 ([e1bd106](https://github.com/matsumotory/claude-desktop-switcher/commit/e1bd106600224d68091fd9a591be66000d4a451f))
+* **docs:** replace abstract mockup images with real HTML/CSS app screenshots in website assets ([f9c42b8](https://github.com/matsumotory/claude-desktop-switcher/commit/f9c42b8e6b988d58a64f5b5280e6ab57291aa800))
+* **docs:** update README with logo and new settings UI preview, refresh LP hero assets ([764c840](https://github.com/matsumotory/claude-desktop-switcher/commit/764c8402370058399ce723fd9fc3ce8dbe1baca7))
+
+
+### Bug Fixes
+
+* **cli:** create_profileのシグネチャ変更に伴うCLI側のコンパイルエラーを修正 ([372152b](https://github.com/matsumotory/claude-desktop-switcher/commit/372152b3942f79f8fa6db9e40272285540341a3d))
+* **core:** import std::fs in profile/mod.rs ([3b9482c](https://github.com/matsumotory/claude-desktop-switcher/commit/3b9482cfea5f69986c534e1d955678348daff449))
+* **core:** resolve build issues by adding fields to test config and removing unused helper ([18946e2](https://github.com/matsumotory/claude-desktop-switcher/commit/18946e24f79a61fc3c1a3cb0d76d16dcfb19b487))
+* **core:** 不要な結合テストを削除し、LP画像アセットを正しいサイズに更新 ([4484870](https://github.com/matsumotory/claude-desktop-switcher/commit/4484870b765832e913d0e6b4dbf01965cb3dadd2))
+* **desktop:** add tray icon and fix DMG filename dots ([e08f760](https://github.com/matsumotory/claude-desktop-switcher/commit/e08f7602da518858a8a13e3e5844a1b5cfa85328))
+* **desktop:** アプリUIから絵文字を完全に排除し、頭文字のアバターに置き換え ([3d6704b](https://github.com/matsumotory/claude-desktop-switcher/commit/3d6704b5f619e04c8579383b0f987f1d3abb43e0))
+* **desktop:** アプリUIから絵文字を排除し、イニシャルアバターに更新 ([7b858cb](https://github.com/matsumotory/claude-desktop-switcher/commit/7b858cb2b2d645c8aa668869c8728bdeac0403c8))
+* **test:** import PlatformProvider and resolve unused warnings in integration tests ([c5d1f43](https://github.com/matsumotory/claude-desktop-switcher/commit/c5d1f43e070f5e561b6155d9bf05717b0934db17))
+
 ## [0.4.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.3...v0.4.4) (2026-06-26)
 
 
