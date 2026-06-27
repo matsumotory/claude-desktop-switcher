@@ -1,13 +1,23 @@
 version: 2
 updates:
-  # Keep GitHub Actions SHA pins fresh (security: avoid stale third-party actions)
+  # Keep GitHub Actions SHA pins fresh (security: avoid stale third-party actions).
+  # Group all action bumps into a single weekly PR to minimize CI runs.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
-  # Keep Rust dependencies updated
+  # Keep Rust dependencies updated. Group all cargo bumps into a single weekly
+  # PR (one CI run instead of one per crate).
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      cargo:
+        patterns:
+          - "*"
