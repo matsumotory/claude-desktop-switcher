@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.2...v0.5.3) (2026-06-27)
+
+
+### Bug Fixes
+
+* **website:** LP のモバイルレイアウト崩れを修正(デスクトップ不変) ([#40](https://github.com/matsumotory/claude-desktop-switcher/issues/40)) ([2e0cfd4](https://github.com/matsumotory/claude-desktop-switcher/commit/2e0cfd47ec2ff7044254ebbd0d66e2eb4dc4e239))
+
 ## [0.5.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.1...v0.5.2) (2026-06-27)
 
 
