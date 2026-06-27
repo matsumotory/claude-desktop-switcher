@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.0...v0.5.1) (2026-06-27)
+
+
+### Bug Fixes
+
+* **core:** linker が実 default データを破壊的削除しないようガード ([#31](https://github.com/matsumotory/claude-desktop-switcher/issues/31)) ([8095858](https://github.com/matsumotory/claude-desktop-switcher/commit/809585846f76d482e13bc57bab42eeaeb8a26d69))
+* **core:** プロファイル操作を堅牢化(apply_link 原子化 + 切替前プロセス検知) ([#36](https://github.com/matsumotory/claude-desktop-switcher/issues/36)) ([d4c952f](https://github.com/matsumotory/claude-desktop-switcher/commit/d4c952f63b9811d5fa0420006699c56a50b48481))
+* **desktop,docs,ci:** GUIバッジ破損・docs不整合を修正しCIビルド/secretスキャンを追加 ([#21](https://github.com/matsumotory/claude-desktop-switcher/issues/21)) ([b1ac199](https://github.com/matsumotory/claude-desktop-switcher/commit/b1ac199f9c652ac5bb5dcced01a78e8fa0ef7595))
+* **desktop:** fix invalid infoPlist in tauri.conf.json causing build error ([7151211](https://github.com/matsumotory/claude-desktop-switcher/commit/7151211b756d7afba4bddc262299f50004cdcbac))
+
 ## [0.5.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.4.4...v0.5.0) (2026-06-27)
 
 
