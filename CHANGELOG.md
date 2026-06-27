@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.1...v0.5.2) (2026-06-27)
+
+
+### Bug Fixes
+
+* **release:** universal ビルド用に x86_64 ターゲットを toolchain に追加 ([#38](https://github.com/matsumotory/claude-desktop-switcher/issues/38)) ([3dae440](https://github.com/matsumotory/claude-desktop-switcher/commit/3dae440b3c2ccec56f66a6bef7e09741d51df857))
+
 ## [0.5.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.0...v0.5.1) (2026-06-27)
 
 
