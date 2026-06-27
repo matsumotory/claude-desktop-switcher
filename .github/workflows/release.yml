@@ -16,7 +16,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
         id: release
         with:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
@@ -38,25 +38,28 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
 
       - name: Configure App Store Connect API Key
+        env:
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         run: |
-          echo "${{ secrets.APPLE_API_KEY_CONTENT }}" | base64 -d > ${{ runner.temp }}/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+          echo "$APPLE_API_KEY_CONTENT" | base64 -d > "${{ runner.temp }}/AuthKey_${APPLE_API_KEY}.p8"
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           targets: aarch64-apple-darwin, x86_64-apple-darwin
 
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # action-v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -68,3 +71,7 @@ jobs:
         with:
           tagName: ${{ needs.release-please.outputs.tag_name }}
           args: --target universal-apple-darwin
+
+      - name: Clean up App Store Connect API Key
+        if: always()
+        run: rm -f "${{ runner.temp }}"/AuthKey_*.p8

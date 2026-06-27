@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Keep GitHub Actions SHA pins fresh (security: avoid stale third-party actions)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # Keep Rust dependencies updated
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"

@@ -54,10 +54,14 @@ async fn get_profile_details(name: String, state: State<'_, AppState>) -> Result
         "cli_path": p.isolation.cli_config_dir,
         "sharing": {
             "desktop_config": format!("{:?}", p.sharing.desktop_config).to_lowercase(),
+            "desktop_app_config": format!("{:?}", p.sharing.desktop_app_config).to_lowercase(),
             "cli_settings": format!("{:?}", p.sharing.cli_settings).to_lowercase(),
             "cli_claude_md": format!("{:?}", p.sharing.cli_claude_md).to_lowercase(),
             "cli_project_memory": format!("{:?}", p.sharing.cli_project_memory).to_lowercase(),
             "cli_plugins": format!("{:?}", p.sharing.cli_plugins).to_lowercase(),
+            "cli_skills": format!("{:?}", p.sharing.cli_skills).to_lowercase(),
+            "cli_sessions": format!("{:?}", p.sharing.cli_sessions).to_lowercase(),
+            "cli_history": format!("{:?}", p.sharing.cli_history).to_lowercase(),
             "desktop_worktrees": format!("{:?}", p.sharing.desktop_worktrees).to_lowercase(),
             "desktop_device_id": format!("{:?}", p.sharing.desktop_device_id).to_lowercase()
         }

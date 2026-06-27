@@ -18,6 +18,7 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 1. Download the latest `.dmg` file from the [Releases](https://github.com/matsumotory/claude-desktop-switcher/releases/latest) page.
 2. Drag and drop the downloaded `ClaudeDesktopSwitcher.app` into your macOS `Applications` folder.
 3. Launch the app. A blue icon will appear in your macOS menu bar.
+4. On first launch only, the settings window shows a short 3-step onboarding tour (Welcome / How to use / Terminal integration). Once you read and close it, it will not appear again.
 
 ### Step 2: Create and Customize a New Profile
 Create a new isolated environment for work or research.
@@ -45,6 +46,9 @@ For advanced use cases—such as "I want to share my personal MCP settings and r
      Change settings to **Shared**. You can bring your familiar environment (MCP settings, CLAUDE.md rules) into the new profile.
 
 5. Click **"Create"** to save the profile.
+
+> **Duplicating an existing profile**
+> Select a profile in the settings window and click **"Clone"** to create a new profile that inherits its sharing configuration, files, and login credentials. This saves you from recreating a similar setup from scratch.
 
 ---
 

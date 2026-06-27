@@ -16,7 +16,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Initialize Claude Desktop Switcher (create ~/.claude-desktop-switcher/)
+    /// Initialize Claude Desktop Switcher (create ~/.context-switcher-claude/)
     Init,
 
     /// Manage profiles
