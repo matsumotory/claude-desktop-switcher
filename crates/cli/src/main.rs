@@ -99,7 +99,7 @@ fn main() -> anyhow::Result<()> {
                         sharing.desktop_worktrees = SharingMode::Share;
                     } // Else keep defaults (Isolate)
                     
-                    match manager.create_profile(&name, sharing) {
+                    match manager.create_profile(&name, sharing, None) {
                         Ok(_) => {
                             println!("{} Profile '{}' created successfully!", "✔".green(), name.cyan());
                             println!("  Desktop Data: {:?}", provider.app_data_dir().join("profiles").join(&name).join("desktop-data"));
