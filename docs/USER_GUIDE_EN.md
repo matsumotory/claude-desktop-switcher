@@ -32,22 +32,23 @@ Create a new isolated environment for work or research.
 For advanced use cases—such as "I want to share my personal MCP settings and rules, but route token usage to my Work account"—we provide flexible customization options.
 
 1. Click the Claude Desktop Switcher icon in the menu bar and select **"Settings..."**.
-2. In the settings window, click **"+ Create Profile"**.
+2. In the settings window, click **"New environment"**.
 3. Enter the profile information.
    * **Name**: (e.g., `Work`, `Research`)
-4. **Configuration (Optional)**
-   You can customize how data is handled for each component to fit your requirements:
-   
-   * **Isolated**: [Default] Starts from a completely clean slate. Tokens and data are strictly separated from other profiles.
-   * **Shared**: "Tokens are consumed by the new account, but config files are synchronized in real-time with the original environment."
+   * **Icon (optional)**: an emoji or a single character
+4. **Choose how it should be separated (pick one of two modes first)**
+   To keep first-time use simple, there are just two choices. Open **"Configure in detail (11 items)"** only if you want to change individual components.
 
-   **< Configuration Examples >**
+   * **Start fresh (recommended, default)**: Login, settings, and history all start from scratch. Your current Claude is never touched—you get a fully independent environment.
+   * **Reuse settings**: Keep your usual MCP, rules, and skills; only login and history move to a separate account. Reuse your config assets while spending tokens on a different account.
+
+   **< How to choose >**
    * **Case A (Completely separate project)**:
-     Leave everything as **Isolated**. You get a pristine environment cleanly detached from your personal one.
+     Pick **"Start fresh"**. You get a pristine environment cleanly detached from your personal one.
    * **Case B (Switching accounts while keeping personal environment config)**:
-     Change settings to **Shared**. You can bring your familiar environment (MCP settings, CLAUDE.md rules) into the new profile.
+     Pick **"Reuse settings"** to bring your familiar environment (MCP settings, CLAUDE.md rules) into the new profile.
 
-5. Click **"Create"** to save the profile.
+5. Click **"Create this profile"** to save.
 
 ![Create-profile dialog](../website/assets/screen_create.png)
 
