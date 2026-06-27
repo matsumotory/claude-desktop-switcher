@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::{
     AppHandle, Manager, State, Wry,
@@ -79,22 +80,75 @@ async fn get_profile_details(
     Ok(val)
 }
 
+/// Parse a sharing-mode string coming from the frontend ("share" / "isolate" / "copy").
+fn parse_sharing_mode(value: &str) -> Option<SharingMode> {
+    match value {
+        "share" => Some(SharingMode::Share),
+        "isolate" => Some(SharingMode::Isolate),
+        "copy" => Some(SharingMode::Copy),
+        _ => None,
+    }
+}
+
+/// Build the per-component sharing config for a new profile from the chosen mode preset,
+/// then apply any explicit per-component overrides coming from the "advanced settings" UI.
+fn build_sharing_config(mode: &str, overrides: Option<HashMap<String, String>>) -> SharingConfig {
+    // Two-mode model surfaced in the UI:
+    //   "isolate"        — a brand-new, empty environment (= SharingConfig::default()).
+    //   "share_settings" — reuse the settings assets (MCP servers, global rules, skills,
+    //                      plugins, app config, worktrees) from the default profile via
+    //                      symlink, while keeping the account login, conversation sessions,
+    //                      command history and project memory isolated for safety.
+    // "share" is kept as a backward-compatible alias for "share_settings".
+    let mut sharing = SharingConfig::default();
+    if mode == "share_settings" || mode == "share" {
+        sharing.desktop_config = SharingMode::Share; // MCP servers
+        sharing.cli_settings = SharingMode::Share; // permissions / hooks
+        sharing.cli_claude_md = SharingMode::Share; // global rules
+        sharing.cli_plugins = SharingMode::Share;
+        sharing.cli_skills = SharingMode::Share;
+        sharing.desktop_app_config = SharingMode::Share;
+        sharing.desktop_worktrees = SharingMode::Share;
+        // cli_project_memory / cli_sessions / cli_history stay Isolate (safety side).
+        // desktop_device_id is already Share in SharingConfig::default().
+    }
+
+    // Advanced settings: explicit per-component choices override the mode preset.
+    if let Some(overrides) = overrides {
+        for (key, value) in overrides {
+            let Some(m) = parse_sharing_mode(&value) else {
+                continue;
+            };
+            match key.as_str() {
+                "desktop_config" => sharing.desktop_config = m,
+                "cli_settings" => sharing.cli_settings = m,
+                "cli_claude_md" => sharing.cli_claude_md = m,
+                "cli_project_memory" => sharing.cli_project_memory = m,
+                "cli_plugins" => sharing.cli_plugins = m,
+                "cli_skills" => sharing.cli_skills = m,
+                "cli_sessions" => sharing.cli_sessions = m,
+                "cli_history" => sharing.cli_history = m,
+                "desktop_app_config" => sharing.desktop_app_config = m,
+                "desktop_worktrees" => sharing.desktop_worktrees = m,
+                "desktop_device_id" => sharing.desktop_device_id = m,
+                _ => {}
+            }
+        }
+    }
+
+    sharing
+}
+
 #[tauri::command]
 async fn create_profile(
     name: String,
     mode: String,
     icon: Option<String>,
+    sharing_overrides: Option<HashMap<String, String>>,
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<(), String> {
-    let mut sharing = SharingConfig::default();
-    if mode == "share" {
-        sharing.desktop_config = SharingMode::Share;
-        sharing.cli_settings = SharingMode::Share;
-        sharing.cli_claude_md = SharingMode::Share;
-        sharing.cli_plugins = SharingMode::Share;
-        sharing.desktop_worktrees = SharingMode::Share;
-    }
+    let sharing = build_sharing_config(&mode, sharing_overrides);
 
     state
         .profile_manager
@@ -256,6 +310,14 @@ fn main() {
 
     tauri::Builder::default()
         .manage(app_state)
+        .on_window_event(|window, event| {
+            // Closing the settings window must not destroy it or quit the app:
+            // keep running in the tray/Dock and just hide, so it can be reopened.
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .setup(|app| {
             // Build the system tray for the first time
             let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))
@@ -301,6 +363,13 @@ fn main() {
             // Initial tray update
             let _ = update_tray_menu(app.handle());
 
+            // Show the settings window on launch so the app is usable even when
+            // the menu-bar tray icon is hidden behind a crowded menu bar / notch.
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -313,6 +382,15 @@ fn main() {
             switch_profile,
             get_desktop_running_status
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|app_handle, event| {
+            // Clicking the Dock icon (macOS "reopen") re-shows the settings window.
+            if let tauri::RunEvent::Reopen { .. } = event
+                && let Some(window) = app_handle.get_webview_window("main")
+            {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        });
 }

@@ -6,13 +6,16 @@
     "frontendDist": "./ui"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "label": "main",
-        "title": "Claude Desktop Switcher Settings",
-        "width": 640,
-        "height": 520,
-        "resizable": false,
+        "title": "Claude Desktop Switcher",
+        "width": 720,
+        "height": 600,
+        "minWidth": 600,
+        "minHeight": 520,
+        "resizable": true,
         "fullscreen": false,
         "visible": false,
         "center": true

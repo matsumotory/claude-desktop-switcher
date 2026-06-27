@@ -3,242 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Claude Desktop Switcher 設定</title>
+  <meta name="color-scheme" content="light dark">
+  <title>Claude Desktop Switcher</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Sidebar -->
+  <!-- Inline SVG icon sprite (no external icon library: CSP forbids CDN, no bundler) -->
+  <svg width="0" height="0" class="svg-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6M12 17v4"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+    <symbol id="i-duplicate" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><rect x="4" y="4" width="11" height="11" rx="2"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/><path d="M9 7V4h6v3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.3-2.3a4 4 0 0 0-5.7-5.7l-1.1 1.1"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0l-2.3 2.3a4 4 0 0 0 5.7 5.7l1.1-1.1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.6" r="0.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-switch" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></symbol>
+  </svg>
+
+  <div class="app">
+    <!-- Left sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="logo-area">
-          <img src="logo.png" id="img-logo" alt="CSW Logo" class="app-logo">
-          <h1>CSW</h1>
-        </div>
-      </div>
-      
-      <div class="profiles-section">
-        <h3>プロファイル</h3>
-        <ul id="profile-list" class="profile-list">
-          <!-- Profiles injected here -->
-        </ul>
+      <div class="wordmark">
+        <img src="logo.png" alt="" class="wordmark-mark">
+        <span class="wordmark-text">Claude Desktop Switcher</span>
       </div>
 
-      <button id="btn-add-profile" class="btn btn-primary add-profile-btn">
-        <span class="icon">+</span> プロファイルを作成
+      <!-- "The Claude you use now" = the user's real, untouched environment (default) -->
+      <button type="button" class="now-claude" id="nowClaude">
+        <span class="now-claude-bezel">
+          <span class="now-claude-icon"><svg class="icon"><use href="#i-monitor"/></svg></span>
+        </span>
+        <span class="now-claude-text">
+          <span class="now-claude-title">いま使っている Claude</span>
+          <span class="now-claude-sub">ふだんの環境。CSW は変更しません</span>
+        </span>
+        <span class="pill pill-active" id="nowClaudeActive" hidden>使用中</span>
+      </button>
+
+      <div class="sidebar-divider"></div>
+
+      <nav class="sidebar-section" id="createdSection" hidden aria-label="作った環境">
+        <h2 class="sidebar-label">作った環境</h2>
+        <ul class="profile-list" id="profileList"></ul>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+
+      <button type="button" class="btn btn-primary sidebar-create" id="btnCreate">
+        <svg class="icon"><use href="#i-plus"/></svg>
+        <span>環境を作る</span>
       </button>
     </aside>
 
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <!-- Profile Detail Panel -->
-      <section id="profile-details" class="details-panel hidden">
-        <div class="details-header">
-          <div class="profile-badge-large" id="detail-icon-badge">
-            <span id="detail-icon" class="profile-avatar-large">W</span>
-          </div>
-          <div class="profile-title-group">
-            <h2 id="detail-name">Work</h2>
-            <span class="status-tag" id="detail-active-tag">使用中</span>
-          </div>
-        </div>
+    <!-- Right pane: one of empty / detail / create is visible -->
+    <main class="pane">
+      <!-- (a) Empty / welcome -->
+      <section class="view" id="viewEmpty">
+        <div class="view-main">
+          <div class="view-scroll" id="emptyScroll">
+            <div class="view-pad">
+              <div class="empty" id="emptyFirstRun" hidden>
+                <p class="empty-eyebrow">はじめまして</p>
+              </div>
+              <h1 class="empty-title">環境を分けて、混ぜない。</h1>
+              <p class="empty-lead">いまの Claude はそのまま。仕事用や検証用に、独立した Claude 環境を作れます。</p>
 
-        <div class="details-body">
-          <!-- Paths Section -->
-          <div class="info-group">
-            <h3>パス</h3>
-            <div class="path-card">
-              <span class="path-label">Desktop ユーザーデータ</span>
-              <code id="path-desktop">~/.context-switcher-claude/profiles/work/desktop-data</code>
-            </div>
-            <div class="path-card mt-1">
-              <span class="path-label">CLI 設定ディレクトリ</span>
-              <code id="path-cli">~/.context-switcher-claude/profiles/work/cli-data</code>
-            </div>
-          </div>
+              <ol class="steps">
+                <li class="step"><span class="step-num">1</span><span class="step-text"><strong>環境を作る</strong> を押す</span></li>
+                <li class="step"><span class="step-num">2</span><span class="step-text"><strong>まっさらに分ける</strong> か <strong>設定だけ引き継ぐ</strong> を選ぶ</span></li>
+                <li class="step"><span class="step-num">3</span><span class="step-text">メニューバーから切り替える</span></li>
+              </ol>
 
-          <!-- Sharing Matrix -->
-          <div class="info-group mt-2">
-            <h3>設定の共有</h3>
-            <div class="sharing-grid">
-              <div class="sharing-item">
-                <span class="sharing-name">Desktop 設定 (MCP)</span>
-                <span class="sharing-badge" id="share-desktop-config">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">Desktop 一般設定</span>
-                <span class="sharing-badge" id="share-desktop-app-config">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">CLI 設定・フック</span>
-                <span class="sharing-badge" id="share-cli-settings">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">CLAUDE.md (ルール)</span>
-                <span class="sharing-badge" id="share-cli-claude-md">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">CLI プロジェクトメモリ</span>
-                <span class="sharing-badge" id="share-cli-project-memory">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">CLI プラグイン</span>
-                <span class="sharing-badge" id="share-cli-plugins">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">CLI スキル定義</span>
-                <span class="sharing-badge" id="share-cli-skills">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">CLI 会話セッション</span>
-                <span class="sharing-badge" id="share-cli-sessions">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">CLI コマンド履歴</span>
-                <span class="sharing-badge" id="share-cli-history">isolate</span>
-              </div>
-              <div class="sharing-item">
-                <span class="sharing-name">Desktop ワークツリー</span>
-                <span class="sharing-badge" id="share-desktop-worktrees">isolate</span>
-              </div>
-            </div>
-          </div>
-        </div>
+              <button type="button" class="btn btn-primary" id="btnCreateEmpty">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                <span>環境を作る</span>
+              </button>
 
-        <div class="details-footer">
-          <div class="footer-left">
-            <button id="btn-switch" class="btn btn-success">このプロファイルに切り替え</button>
-            <button id="btn-clone" class="btn btn-secondary">複製</button>
-          </div>
-          <button id="btn-delete" class="btn btn-danger">プロファイルを削除</button>
-        </div>
-      </section>
-
-      <!-- Welcome panel (when no profile is selected) -->
-      <section id="welcome-panel" class="welcome-panel">
-        <div class="welcome-icon logo-mark"></div>
-        <h2>Claude Desktop Switcher</h2>
-        <p>サイドバーからプロファイルを選択して詳細を確認するか、新しいプロファイルを作成して複数の Claude 環境を管理できます。</p>
-      </section>
- 
-      <!-- Create Profile Modal -->
-      <div id="modal-create" class="modal hidden">
-        <div class="modal-content">
-          <h2>新しいプロファイルを作成</h2>
-          <div class="form-group">
-            <label for="input-name">プロファイル名</label>
-            <input type="text" id="input-name" placeholder="例: Work, Personal, Research">
-          </div>
-          <div class="form-group">
-            <label for="input-icon">アイコン (絵文字等 - 任意)</label>
-            <input type="text" id="input-icon" placeholder="例: 💼, 🏠, 🧪 (空欄なら頭文字)" maxlength="2">
-          </div>
-          <div class="form-group">
-            <label for="select-preset">設定プリセット</label>
-            <select id="select-preset">
-              <option value="isolate">分離 (独立した設定・メモリ・データ)</option>
-              <option value="share">共有 (MCP・設定・ルールをデフォルトと共有)</option>
-            </select>
-          </div>
-          <div class="modal-buttons">
-            <button id="btn-modal-cancel" class="btn btn-secondary">キャンセル</button>
-            <button id="btn-modal-submit" class="btn btn-primary">作成</button>
-          </div>
-        </div>
-      </div>
- 
-      <!-- Clone Profile Modal -->
-      <div id="modal-clone" class="modal hidden">
-        <div class="modal-content">
-          <h2>プロファイルを複製</h2>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
-            選択中のプロファイルの設定とデータを複製して新しいプロファイルを作成します。ログイン状態は共有設定により異なり、新しいプロファイルで再ログインが必要な場合があります。
-          </p>
-          <div class="form-group">
-            <label for="input-clone-name">新しいプロファイル名</label>
-            <input type="text" id="input-clone-name" placeholder="例: Work-Backup, Personal-Copy">
-          </div>
-          <div class="modal-buttons">
-            <button id="btn-modal-clone-cancel" class="btn btn-secondary">キャンセル</button>
-            <button id="btn-modal-clone-submit" class="btn btn-primary">複製を作成</button>
-          </div>
-        </div>
-      </div>
- 
-      <!-- Onboarding Overlay -->
-      <div id="onboarding-overlay" class="modal hidden">
-        <div class="modal-content onboarding-content">
-          <div class="onboarding-slides">
-            <!-- Slide 1 -->
-            <div class="onboarding-slide" id="slide-1">
-              <div class="onboarding-logo logo-mark"></div>
-              <h2>ようこそ！CSW へ</h2>
-              <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
-                Claude Desktop Switcher (CSW) は、仕事用・個人用・プロジェクト用など、複数の Claude 環境を安全に切り替えるためのツールです。
-              </p>
-              <div class="onboarding-feature-list">
-                <div class="feature-item">
-                  <span class="feature-icon">-</span>
-                  <div>
-                    <strong>既存の環境は安全です</strong>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-                      現在の設定や会話履歴は「default」プロファイルとして保護されており、一切破壊されません。
-                    </p>
+              <div class="firstrun" id="firstRunExtra" hidden>
+                <div class="firstrun-card">
+                  <div class="firstrun-row">
+                    <span class="firstrun-icon"><svg class="icon"><use href="#i-monitor"/></svg></span>
+                    <div>
+                      <p class="firstrun-head">いまの環境はそのまま残ります</p>
+                      <p class="firstrun-body">あなたが普段使っている Claudeデスクトップアプリと Claude Code の環境は「いま使っている Claude」として保護され、設定・履歴・ログインは変更されません。</p>
+                    </div>
+                  </div>
+                  <div class="firstrun-row">
+                    <span class="firstrun-icon"><svg class="icon"><use href="#i-terminal"/></svg></span>
+                    <div>
+                      <p class="firstrun-head">ターミナルでも同じ環境を使えます</p>
+                      <p class="firstrun-body">Claude Code（CLI）で使うには、ターミナルで次のコマンドを実行します。このタブだけに適用され、普段の環境には影響しません。</p>
+                      <code class="code-line">eval $(csw env "&lt;名前&gt;")</code>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <!-- Slide 2 -->
-            <div class="onboarding-slide hidden" id="slide-2">
-              <div class="onboarding-logo logo-mark"></div>
-              <h2>簡単な使い方</h2>
-              <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
-                プロファイルの切り替えやアプリの終了は、メニューバー（システムトレイ）のアイコンからいつでも簡単に行えます。
-              </p>
-              <div class="onboarding-feature-list">
-                <div class="feature-item">
-                  <span class="feature-icon">-</span>
-                  <div>
-                    <strong>トレイメニューから切替</strong>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-                      メニューからプロファイルを選ぶと、自動的にプロファイルの設定が切り替わり、該当の環境でアプリが立ち上がります。
-                    </p>
+          </div>
+          <div class="view-fade" id="emptyFade" hidden></div>
+        </div>
+      </section>
+
+      <!-- (b) Detail -->
+      <section class="view" id="viewDetail" hidden>
+        <div class="view-main">
+          <div class="view-scroll" id="detailScroll">
+            <div class="view-pad" id="detailContent"></div>
+          </div>
+          <div class="view-fade" id="detailFade" hidden></div>
+        </div>
+        <div class="view-footer" id="detailFooter"></div>
+      </section>
+
+      <!-- (c) Create sheet -->
+      <section class="view" id="viewCreate" hidden>
+        <div class="view-main">
+          <div class="view-scroll" id="createScroll">
+            <div class="view-pad">
+              <h1 class="view-title">新しい環境を作る</h1>
+
+              <div class="field">
+                <label class="field-label" for="inputName">名前</label>
+                <input type="text" id="inputName" class="input" placeholder="例: 仕事用、検証用" autocomplete="off" spellcheck="false">
+                <p class="field-error" id="nameError" hidden></p>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="inputIcon">アイコン（任意）</label>
+                <input type="text" id="inputIcon" class="input input-icon" placeholder="絵文字や1文字" maxlength="2" autocomplete="off">
+              </div>
+
+              <div class="field">
+                <span class="field-label">どう分けますか?</span>
+                <div class="mode-cards" role="radiogroup" aria-label="分け方">
+                  <label class="mode-card">
+                    <input type="radio" name="mode" value="isolate" checked>
+                    <span class="mode-card-body">
+                      <span class="mode-card-icon"><svg class="icon"><use href="#i-lock"/></svg></span>
+                      <span class="mode-card-main">
+                        <span class="mode-card-head">まっさらに分ける <span class="tag-recommend">推奨</span></span>
+                        <span class="mode-card-desc">ログインも設定も履歴も、ぜんぶゼロから。いまの Claude には一切触れません。</span>
+                        <span class="mode-card-preview">
+                          <span class="prev"><span class="prev-k">ログイン</span><span class="prev-v">新規</span></span>
+                          <span class="prev"><span class="prev-k">設定・履歴</span><span class="prev-v">空</span></span>
+                        </span>
+                      </span>
+                      <span class="mode-card-check"><svg class="icon"><use href="#i-check"/></svg></span>
+                    </span>
+                  </label>
+
+                  <label class="mode-card">
+                    <input type="radio" name="mode" value="share_settings">
+                    <span class="mode-card-body">
+                      <span class="mode-card-icon"><svg class="icon"><use href="#i-link"/></svg></span>
+                      <span class="mode-card-main">
+                        <span class="mode-card-head">設定だけ引き継ぐ</span>
+                        <span class="mode-card-desc">いつもの MCP・ルール・スキルはそのまま使い、ログインと履歴だけ別アカウントにします。</span>
+                        <span class="mode-card-preview">
+                          <span class="prev"><span class="prev-k">ログイン・履歴</span><span class="prev-v">別</span></span>
+                          <span class="prev"><span class="prev-k">MCP・ルール・スキル</span><span class="prev-v">共有</span></span>
+                        </span>
+                      </span>
+                      <span class="mode-card-check"><svg class="icon"><use href="#i-check"/></svg></span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="advanced">
+                <button type="button" class="advanced-toggle" id="advancedToggle" aria-expanded="false" aria-controls="advancedPanel">
+                  <svg class="icon advanced-chevron"><use href="#i-chevron"/></svg>
+                  <span>詳しく設定する（11項目を個別に）</span>
+                </button>
+                <div class="advanced-panel" id="advancedPanel">
+                  <div class="advanced-inner">
+                    <div class="advanced-head">
+                      <span class="advanced-state" id="advancedState">モードの既定どおり</span>
+                      <button type="button" class="link-reset" id="advancedReset" hidden>モードの既定に戻す</button>
+                    </div>
+                    <div id="advancedGroups"></div>
                   </div>
                 </div>
               </div>
             </div>
-            <!-- Slide 3 -->
-            <div class="onboarding-slide hidden" id="slide-3">
-              <div class="onboarding-logo logo-mark"></div>
-              <h2>ターミナル連携</h2>
-              <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
-                Claude Code（CLI）でプロファイルを切り替えるには、ターミナルで以下のコマンドを実行します。
-              </p>
-              <div class="path-card" style="margin-bottom: 1rem;">
-                <code style="font-size: 0.85rem;">eval $(csw env &lt;プロファイル名&gt;)</code>
-              </div>
-              <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-                これにより、そのターミナルセッション内でのみ隔離されたプロファイルが適用されます。
-              </p>
-            </div>
           </div>
-          
-          <div class="onboarding-footer">
-            <div class="slide-dots">
-              <span class="dot active" data-slide="1"></span>
-              <span class="dot" data-slide="2"></span>
-              <span class="dot" data-slide="3"></span>
-            </div>
-            <button id="btn-onboarding-next" class="btn btn-primary">次へ</button>
-          </div>
+          <div class="view-fade" id="createFade" hidden></div>
         </div>
-      </div>
+        <div class="view-footer">
+          <button type="button" class="btn btn-ghost" id="btnCreateCancel">やめる</button>
+          <button type="button" class="btn btn-primary" id="btnCreateSubmit">このプロファイルを作る</button>
+        </div>
+      </section>
     </main>
   </div>
-  
+
+  <div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
+
   <script src="main.js"></script>
 </body>
 </html>
