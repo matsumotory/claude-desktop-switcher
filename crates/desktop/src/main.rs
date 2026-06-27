@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 use tauri::{
+    AppHandle, Manager, State, Wry,
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Manager, State, Wry,
 };
 
 use csw_core::platform::create_provider;
@@ -26,7 +26,10 @@ async fn get_active_profile(state: State<'_, AppState>) -> Result<String, String
 
 #[tauri::command]
 async fn list_profiles(state: State<'_, AppState>) -> Result<Vec<serde_json::Value>, String> {
-    let names = state.profile_manager.list_profiles().map_err(|e| e.to_string())?;
+    let names = state
+        .profile_manager
+        .list_profiles()
+        .map_err(|e| e.to_string())?;
     let mut list = Vec::new();
     for name in names {
         if let Ok(p) = state.profile_manager.get_profile(&name) {
@@ -41,9 +44,15 @@ async fn list_profiles(state: State<'_, AppState>) -> Result<Vec<serde_json::Val
 }
 
 #[tauri::command]
-async fn get_profile_details(name: String, state: State<'_, AppState>) -> Result<serde_json::Value, String> {
-    let p = state.profile_manager.get_profile(&name).map_err(|e| e.to_string())?;
-    
+async fn get_profile_details(
+    name: String,
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let p = state
+        .profile_manager
+        .get_profile(&name)
+        .map_err(|e| e.to_string())?;
+
     // Convert to JSON representation for frontend
     let val = serde_json::json!({
         "name": p.profile.name,
@@ -66,7 +75,7 @@ async fn get_profile_details(name: String, state: State<'_, AppState>) -> Result
             "desktop_device_id": format!("{:?}", p.sharing.desktop_device_id).to_lowercase()
         }
     });
-    
+
     Ok(val)
 }
 
@@ -87,17 +96,27 @@ async fn create_profile(
         sharing.desktop_worktrees = SharingMode::Share;
     }
 
-    state.profile_manager.create_profile(&name, sharing, icon).map_err(|e| e.to_string())?;
-    
+    state
+        .profile_manager
+        .create_profile(&name, sharing, icon)
+        .map_err(|e| e.to_string())?;
+
     // Update system tray menu after change
     update_tray_menu(&app)?;
-    
+
     Ok(())
 }
 
 #[tauri::command]
-async fn delete_profile(name: String, state: State<'_, AppState>, app: AppHandle) -> Result<(), String> {
-    state.profile_manager.delete_profile(&name).map_err(|e| e.to_string())?;
+async fn delete_profile(
+    name: String,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<(), String> {
+    state
+        .profile_manager
+        .delete_profile(&name)
+        .map_err(|e| e.to_string())?;
     update_tray_menu(&app)?;
     Ok(())
 }
@@ -109,7 +128,10 @@ async fn clone_profile(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<(), String> {
-    state.profile_manager.clone_profile(&source, &target).map_err(|e| e.to_string())?;
+    state
+        .profile_manager
+        .clone_profile(&source, &target)
+        .map_err(|e| e.to_string())?;
     update_tray_menu(&app)?;
     Ok(())
 }
@@ -123,12 +145,15 @@ async fn switch_profile(
 ) -> Result<(), String> {
     let switcher = ContextSwitcher::new(state.provider.clone(), state.profile_manager.clone());
     switcher.switch_to(&name).map_err(|e| e.to_string())?;
-    
+
     // Update system tray menu
     update_tray_menu(&app)?;
 
     if !no_launch && name != "default" {
-        let profile = state.profile_manager.get_profile(&name).map_err(|e| e.to_string())?;
+        let profile = state
+            .profile_manager
+            .get_profile(&name)
+            .map_err(|e| e.to_string())?;
         let _ = csw_core::switcher::desktop::launch_desktop(&profile, state.provider.as_ref());
     }
 
@@ -137,21 +162,34 @@ async fn switch_profile(
 
 #[tauri::command]
 async fn get_desktop_running_status(state: State<'_, AppState>) -> Result<bool, String> {
-    state.provider.is_claude_desktop_running().map_err(|e| e.to_string())
+    state
+        .provider
+        .is_claude_desktop_running()
+        .map_err(|e| e.to_string())
 }
 
 // Function to update the system tray menu dynamically
 fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let state = app.state::<AppState>();
-    let profiles = state.profile_manager.list_profiles().map_err(|e| e.to_string())?;
+    let profiles = state
+        .profile_manager
+        .list_profiles()
+        .map_err(|e| e.to_string())?;
     let active_name = state.profile_manager.active_profile_name();
 
     let mut menu_items = Vec::new();
-    
+
     // 1. Title Item
-    let title_item = MenuItem::with_id(app, "title", "🔵 Claude Desktop Switcher", false, None::<&str>).map_err(|e| e.to_string())?;
+    let title_item = MenuItem::with_id(
+        app,
+        "title",
+        "🔵 Claude Desktop Switcher",
+        false,
+        None::<&str>,
+    )
+    .map_err(|e| e.to_string())?;
     menu_items.push(Box::new(title_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
-    
+
     let sep1 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(sep1) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
@@ -162,15 +200,16 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
         } else {
             format!("○ {}", p_name)
         };
-        
+
         let p_item = MenuItem::with_id(
             app,
             format!("profile_{}", p_name),
             label,
             true,
-            None::<&str>
-        ).map_err(|e| e.to_string())?;
-        
+            None::<&str>,
+        )
+        .map_err(|e| e.to_string())?;
+
         menu_items.push(Box::new(p_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
     }
 
@@ -178,14 +217,23 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let sep2 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(sep2) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
-    let settings_item = MenuItem::with_id(app, "settings", "⚙ 設定...", true, None::<&str>).map_err(|e| e.to_string())?;
+    let settings_item = MenuItem::with_id(app, "settings", "⚙ 設定...", true, None::<&str>)
+        .map_err(|e| e.to_string())?;
     menu_items.push(Box::new(settings_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
-    let quit_item = MenuItem::with_id(app, "quit", "終了", true, None::<&str>).map_err(|e| e.to_string())?;
+    let quit_item =
+        MenuItem::with_id(app, "quit", "終了", true, None::<&str>).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(quit_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
     // Reconstruct the menu
-    let menu = Menu::with_items(app, &menu_items.iter().map(|item| item.as_ref()).collect::<Vec<_>>()).map_err(|e| e.to_string())?;
+    let menu = Menu::with_items(
+        app,
+        &menu_items
+            .iter()
+            .map(|item| item.as_ref())
+            .collect::<Vec<_>>(),
+    )
+    .map_err(|e| e.to_string())?;
 
     if let Some(tray) = app.tray_by_id("main_tray") {
         tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
@@ -195,8 +243,11 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
 }
 
 fn main() {
-    let provider: Arc<dyn csw_core::platform::PlatformProvider> = Arc::from(create_provider().expect("Failed to initialize platform provider"));
-    let profile_manager = Arc::new(ProfileManager::new(provider.clone()).expect("Failed to initialize profile manager"));
+    let provider: Arc<dyn csw_core::platform::PlatformProvider> =
+        Arc::from(create_provider().expect("Failed to initialize platform provider"));
+    let profile_manager = Arc::new(
+        ProfileManager::new(provider.clone()).expect("Failed to initialize profile manager"),
+    );
 
     let app_state = AppState {
         provider,
@@ -222,20 +273,25 @@ fn main() {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }
-                    } else if id.starts_with("profile_") {
-                        let profile_name = &id[8..];
+                    } else if let Some(profile_name) = id.strip_prefix("profile_") {
                         let state = app.state::<AppState>();
-                        let switcher = ContextSwitcher::new(state.provider.clone(), state.profile_manager.clone());
-                        
+                        let switcher = ContextSwitcher::new(
+                            state.provider.clone(),
+                            state.profile_manager.clone(),
+                        );
+
                         if let Err(e) = switcher.switch_to(profile_name) {
                             eprintln!("Failed to switch profile: {}", e);
                         } else {
                             let _ = update_tray_menu(app);
                             // Auto-launch if switched (except to default)
-                            if profile_name != "default" {
-                                if let Ok(profile) = state.profile_manager.get_profile(profile_name) {
-                                    let _ = csw_core::switcher::desktop::launch_desktop(&profile, state.provider.as_ref());
-                                }
+                            if profile_name != "default"
+                                && let Ok(profile) = state.profile_manager.get_profile(profile_name)
+                            {
+                                let _ = csw_core::switcher::desktop::launch_desktop(
+                                    &profile,
+                                    state.provider.as_ref(),
+                                );
                             }
                         }
                     }

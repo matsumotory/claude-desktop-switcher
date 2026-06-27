@@ -1,9 +1,6 @@
 #[cfg(target_os = "macos")]
 pub mod macos;
 
-#[cfg(target_os = "windows")]
-pub mod windows;
-
 use std::path::PathBuf;
 
 use crate::error::Result;
@@ -33,8 +30,11 @@ pub trait PlatformProvider: Send + Sync {
     /// Create a symbolic link from `link_path` pointing to `target_path`.
     /// The link_path is in the NEW profile directory.
     /// The target_path is the EXISTING file/directory to share.
-    fn create_symlink(&self, target_path: &std::path::Path, link_path: &std::path::Path)
-        -> Result<()>;
+    fn create_symlink(
+        &self,
+        target_path: &std::path::Path,
+        link_path: &std::path::Path,
+    ) -> Result<()>;
 
     /// Remove a symbolic link. Errors if the path is not a symlink.
     fn remove_symlink(&self, link_path: &std::path::Path) -> Result<()>;
@@ -45,7 +45,11 @@ pub trait PlatformProvider: Send + Sync {
     // --- Process control ---
 
     /// Launch Claude Desktop with a specific user-data-dir.
-    fn launch_claude_desktop(&self, user_data_dir: &std::path::Path, cli_config_dir: Option<&std::path::Path>) -> Result<()>;
+    fn launch_claude_desktop(
+        &self,
+        user_data_dir: &std::path::Path,
+        cli_config_dir: Option<&std::path::Path>,
+    ) -> Result<()>;
 
     /// Check if Claude Desktop is currently running.
     fn is_claude_desktop_running(&self) -> Result<bool>;
@@ -61,12 +65,7 @@ pub fn create_provider() -> Result<Box<dyn PlatformProvider>> {
         Ok(Box::new(macos::MacOsProvider::new()))
     }
 
-    #[cfg(target_os = "windows")]
-    {
-        Ok(Box::new(windows::WindowsProvider::new()))
-    }
-
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    #[cfg(not(target_os = "macos"))]
     {
         Err(crate::error::CswError::UnsupportedPlatform(
             std::env::consts::OS.to_string(),

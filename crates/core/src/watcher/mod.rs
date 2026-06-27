@@ -1,8 +1,8 @@
-use std::path::Path;
-use std::sync::Arc;
-use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use crate::error::Result;
 use crate::profile::{ProfileManager, SharingMode};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
+use std::path::Path;
+use std::sync::Arc;
 
 pub struct FileWatcher {
     profile_manager: Arc<ProfileManager>,
@@ -50,15 +50,16 @@ impl FileWatcher {
 
         let (tx, rx) = std::sync::mpsc::channel();
 
-        let mut watcher = notify::recommended_watcher(move |res: std::result::Result<Event, notify::Error>| {
-            if let Ok(event) = res {
-                if event.kind.is_modify() {
+        let mut watcher =
+            notify::recommended_watcher(move |res: std::result::Result<Event, notify::Error>| {
+                if let Ok(event) = res
+                    && event.kind.is_modify()
+                {
                     for path in event.paths {
                         let _ = tx.send(path);
                     }
                 }
-            }
-        })?;
+            })?;
 
         for path in &paths_to_watch {
             if path.exists() {
@@ -78,7 +79,11 @@ impl FileWatcher {
         Ok(())
     }
 
-    fn sync_file(modified_path: &Path, active_name: &str, profile_manager: &ProfileManager) -> Result<()> {
+    fn sync_file(
+        modified_path: &Path,
+        active_name: &str,
+        profile_manager: &ProfileManager,
+    ) -> Result<()> {
         let file_name = match modified_path.file_name().and_then(|n| n.to_str()) {
             Some(name) => name,
             None => return Ok(()),
@@ -90,7 +95,7 @@ impl FileWatcher {
                 continue;
             }
 
-            let other_profile = profile_manager.get_profile(&p_name)?;
+            let other_profile = profile_manager.get_profile(p_name)?;
             // Check if this other profile shares the same source and has this component as Copy
             let is_match = match file_name {
                 "settings.json" => {
@@ -117,9 +122,10 @@ impl FileWatcher {
                     "settings.json" | "CLAUDE.md" => {
                         other_profile.isolation.cli_config_dir.join(file_name)
                     }
-                    "claude_desktop_config.json" | "git-worktrees.json" => {
-                        other_profile.isolation.desktop_user_data_dir.join(file_name)
-                    }
+                    "claude_desktop_config.json" | "git-worktrees.json" => other_profile
+                        .isolation
+                        .desktop_user_data_dir
+                        .join(file_name),
                     _ => continue,
                 };
 

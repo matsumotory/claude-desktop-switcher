@@ -1,5 +1,5 @@
-use csw_core::platform::mock::MockPlatformProvider;
 use csw_core::platform::PlatformProvider;
+use csw_core::platform::mock::MockPlatformProvider;
 use csw_core::profile::{ProfileManager, SharingConfig, SharingMode, SharingSource};
 use csw_core::switcher::ContextSwitcher;
 use std::fs;
@@ -16,7 +16,8 @@ fn setup_dummy_claude_data(desktop_path: &Path, cli_path: &Path) {
     fs::write(
         &config_path,
         "{\"mcpServers\":{\"dummy\":{\"command\":\"dummy-cmd\"}},\"theme\":\"dark\"}",
-    ).unwrap();
+    )
+    .unwrap();
 
     let app_config_path = desktop_path.join("config.json");
     fs::write(&app_config_path, "{\"device_id\":\"dummy-device-id-1234\"}").unwrap();
@@ -37,27 +38,34 @@ fn setup_dummy_claude_data(desktop_path: &Path, cli_path: &Path) {
 
     let plugins_path = cli_path.join("plugins");
     fs::create_dir_all(&plugins_path).unwrap();
-    fs::write(plugins_path.join("dummy_plugin.js"), "console.log('dummy');").unwrap();
+    fs::write(
+        plugins_path.join("dummy_plugin.js"),
+        "console.log('dummy');",
+    )
+    .unwrap();
 
     let skills_path = cli_path.join("skills");
     fs::create_dir_all(&skills_path).unwrap();
     fs::write(
         skills_path.join("git_helper.json"),
         "{\"name\":\"git master assistant\",\"description\":\"helper for git commands\"}",
-    ).unwrap();
+    )
+    .unwrap();
 
     let sessions_path = cli_path.join("sessions");
     fs::create_dir_all(&sessions_path).unwrap();
     fs::write(
         sessions_path.join("session_99.json"),
         "{\"session_id\":\"99\",\"chat_history\":[]}",
-    ).unwrap();
+    )
+    .unwrap();
 
     let history_path = cli_path.join("history.jsonl");
     fs::write(
         &history_path,
         "{\"timestamp\":\"2026-06-27T00:00:00Z\",\"command\":\"claude test\"}\n",
-    ).unwrap();
+    )
+    .unwrap();
 }
 
 // Account/session isolation is achieved purely via per-profile directories
@@ -119,21 +127,23 @@ fn test_profile_sharing_and_isolation_matrix() {
 
     // Configure a matrix of Share, Copy, and Isolate components
     let matrix_sharing = SharingConfig {
-        desktop_config: SharingMode::Share,       // MCP server config -> Shared (symlink)
-        desktop_app_config: SharingMode::Copy,    // App preferences -> Copied
-        cli_settings: SharingMode::Isolate,       // CLI settings -> Isolated (none initially)
-        cli_claude_md: SharingMode::Share,        // CLAUDE.md -> Shared (symlink)
-        cli_project_memory: SharingMode::Share,   // Project memory -> Shared (symlink)
-        cli_plugins: SharingMode::Isolate,        // Plugins -> Isolated (empty dir)
-        cli_skills: SharingMode::Copy,            // Skills -> Copied (physical copy)
-        cli_sessions: SharingMode::Isolate,       // Sessions -> Isolated (empty dir)
-        cli_history: SharingMode::Isolate,        // History -> Isolated (none)
-        desktop_worktrees: SharingMode::Copy,     // Worktrees -> Copied
-        desktop_device_id: SharingMode::Share,     // Device ID -> Shared
+        desktop_config: SharingMode::Share, // MCP server config -> Shared (symlink)
+        desktop_app_config: SharingMode::Copy, // App preferences -> Copied
+        cli_settings: SharingMode::Isolate, // CLI settings -> Isolated (none initially)
+        cli_claude_md: SharingMode::Share,  // CLAUDE.md -> Shared (symlink)
+        cli_project_memory: SharingMode::Share, // Project memory -> Shared (symlink)
+        cli_plugins: SharingMode::Isolate,  // Plugins -> Isolated (empty dir)
+        cli_skills: SharingMode::Copy,      // Skills -> Copied (physical copy)
+        cli_sessions: SharingMode::Isolate, // Sessions -> Isolated (empty dir)
+        cli_history: SharingMode::Isolate,  // History -> Isolated (none)
+        desktop_worktrees: SharingMode::Copy, // Worktrees -> Copied
+        desktop_device_id: SharingMode::Share, // Device ID -> Shared
         source: SharingSource::default(),
     };
 
-    let profile = profile_manager.create_profile("CustomMatrix", matrix_sharing, None).unwrap();
+    let profile = profile_manager
+        .create_profile("CustomMatrix", matrix_sharing, None)
+        .unwrap();
     let target_desktop = &profile.isolation.desktop_user_data_dir;
     let target_cli = &profile.isolation.cli_config_dir;
 
@@ -159,7 +169,11 @@ fn test_profile_sharing_and_isolation_matrix() {
     assert!(!platform.is_symlink(&target_skills_dir));
     let target_skill_file = target_skills_dir.join("git_helper.json");
     assert!(target_skill_file.exists());
-    assert!(fs::read_to_string(target_skill_file).unwrap().contains("git master assistant"));
+    assert!(
+        fs::read_to_string(target_skill_file)
+            .unwrap()
+            .contains("git master assistant")
+    );
 
     // --- ASSERTIONS FOR ISOLATE MODE ---
     let target_settings = target_cli.join("settings.json");
@@ -196,9 +210,11 @@ fn test_profile_cloning_with_data() {
     let profile_manager = Arc::new(ProfileManager::new(platform.clone()).unwrap());
 
     // Create OriginalWork that copies skills from the default environment.
-    let mut sharing = SharingConfig::default();
-    sharing.cli_skills = SharingMode::Copy;
-    sharing.cli_sessions = SharingMode::Isolate;
+    let sharing = SharingConfig {
+        cli_skills: SharingMode::Copy,
+        cli_sessions: SharingMode::Isolate,
+        ..Default::default()
+    };
     profile_manager
         .create_profile("OriginalWork", sharing, None)
         .unwrap();

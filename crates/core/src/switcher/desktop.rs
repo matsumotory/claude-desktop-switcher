@@ -1,6 +1,6 @@
 use crate::error::Result;
-use crate::profile::Profile;
 use crate::platform::PlatformProvider;
+use crate::profile::Profile;
 
 /// Launch Claude Desktop for the given profile using --user-data-dir
 pub fn launch_desktop(profile: &Profile, provider: &dyn PlatformProvider) -> Result<()> {

@@ -64,10 +64,10 @@ pub fn list_profile_names(profiles_dir: &Path) -> Result<Vec<String>> {
         let entry = entry?;
         if entry.file_type()?.is_dir() {
             let profile_toml = entry.path().join("profile.toml");
-            if profile_toml.exists() {
-                if let Some(name) = entry.file_name().to_str() {
-                    names.push(name.to_string());
-                }
+            if profile_toml.exists()
+                && let Some(name) = entry.file_name().to_str()
+            {
+                names.push(name.to_string());
             }
         }
     }

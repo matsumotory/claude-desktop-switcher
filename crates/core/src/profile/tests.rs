@@ -1,7 +1,7 @@
+use super::*;
+use crate::platform::mock::MockPlatformProvider;
 use std::sync::Arc;
 use tempfile::tempdir;
-use crate::platform::mock::MockPlatformProvider;
-use super::*;
 
 fn setup_test_manager() -> (Arc<MockPlatformProvider>, ProfileManager, tempfile::TempDir) {
     let tmp_dir = tempdir().unwrap();
@@ -27,24 +27,27 @@ fn setup_test_manager() -> (Arc<MockPlatformProvider>, ProfileManager, tempfile:
 #[test]
 fn test_default_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
-    
-    let default_profile = manager.get_profile("default").expect("Failed to get default profile");
+
+    let default_profile = manager
+        .get_profile("default")
+        .expect("Failed to get default profile");
     assert_eq!(default_profile.profile.name, "default");
     assert!(default_profile.profile.is_default);
-    
+
     assert_eq!(manager.active_profile_name(), "default");
 }
 
 #[test]
 fn test_create_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
-    
-    let profile = manager.create_profile("test_profile", SharingConfig::default(), None)
+
+    let profile = manager
+        .create_profile("test_profile", SharingConfig::default(), None)
         .expect("Failed to create profile");
-        
+
     assert_eq!(profile.profile.name, "test_profile");
-    assert_eq!(profile.profile.is_default, false);
-    
+    assert!(!profile.profile.is_default);
+
     // Verify it shows up in list
     let list = manager.list_profiles().unwrap();
     assert!(list.contains(&"test_profile".to_string()));
@@ -54,15 +57,18 @@ fn test_create_profile() {
 #[test]
 fn test_delete_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
-    
-    manager.create_profile("to_delete", SharingConfig::default(), None)
+
+    manager
+        .create_profile("to_delete", SharingConfig::default(), None)
         .expect("Failed to create profile");
-        
+
     let list = manager.list_profiles().unwrap();
     assert!(list.contains(&"to_delete".to_string()));
-    
-    manager.delete_profile("to_delete").expect("Failed to delete profile");
-    
+
+    manager
+        .delete_profile("to_delete")
+        .expect("Failed to delete profile");
+
     let list_after = manager.list_profiles().unwrap();
     assert!(!list_after.contains(&"to_delete".to_string()));
 }
@@ -70,15 +76,17 @@ fn test_delete_profile() {
 #[test]
 fn test_delete_default_or_active_fails() {
     let (_, manager, _tmp_dir) = setup_test_manager();
-    
+
     // Deleting default fails
     let res = manager.delete_profile("default");
     assert!(res.is_err());
-    
+
     // Deleting active fails
-    manager.create_profile("active_prof", SharingConfig::default(), None).unwrap();
+    manager
+        .create_profile("active_prof", SharingConfig::default(), None)
+        .unwrap();
     manager.switch_to("active_prof").unwrap();
-    
+
     let res2 = manager.delete_profile("active_prof");
     assert!(res2.is_err());
 }
@@ -86,23 +94,24 @@ fn test_delete_default_or_active_fails() {
 #[test]
 fn test_clone_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
-    
+
     // Create an original profile to clone from
-    let original = manager.create_profile("original", SharingConfig::default(), None)
+    let original = manager
+        .create_profile("original", SharingConfig::default(), None)
         .expect("Failed to create original profile");
 
     // Clone it
-    let cloned = manager.clone_profile("original", "cloned")
+    let cloned = manager
+        .clone_profile("original", "cloned")
         .expect("Failed to clone profile");
 
     assert_eq!(cloned.profile.name, "cloned");
     assert_eq!(cloned.profile.icon, original.profile.icon);
     assert_eq!(cloned.profile.color, original.profile.color);
-    assert_eq!(cloned.profile.is_default, false);
+    assert!(!cloned.profile.is_default);
 
     // Verify it exists in profiles list
     let list = manager.list_profiles().unwrap();
     assert!(list.contains(&"original".to_string()));
     assert!(list.contains(&"cloned".to_string()));
 }
-

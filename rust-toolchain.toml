@@ -1,0 +1,7 @@
+# Pin the Rust toolchain so local, CI, and release builds all use the same
+# compiler and lint set (matches the committed Cargo.lock philosophy). Bump
+# this deliberately when adopting a newer toolchain.
+[toolchain]
+channel = "1.96.0"
+components = ["clippy", "rustfmt"]
+profile = "minimal"
