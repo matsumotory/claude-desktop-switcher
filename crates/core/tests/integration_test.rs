@@ -1,6 +1,7 @@
 use csw_core::keychain::mock::MockKeychainProvider;
 use csw_core::keychain::KeychainProvider;
 use csw_core::platform::mock::MockPlatformProvider;
+use csw_core::platform::PlatformProvider;
 use csw_core::profile::{ProfileManager, SharingConfig, SharingMode, SharingSource};
 use csw_core::switcher::ContextSwitcher;
 use std::fs;
