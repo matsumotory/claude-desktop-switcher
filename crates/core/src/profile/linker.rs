@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::Path;
 
-use crate::error::Result;
+use crate::error::{CswError, Result};
 use crate::platform::PlatformProvider;
 use crate::profile::{Profile, SharingMode};
 
@@ -142,13 +142,38 @@ impl<'a> Linker<'a> {
                 if self.provider.is_symlink(&path) {
                     self.provider.remove_symlink(&path)?;
                 } else if path.is_file() {
+                    self.assert_safe_to_delete(&path)?;
                     fs::remove_file(&path)?;
                 } else if path.is_dir() {
+                    self.assert_safe_to_delete(&path)?;
                     fs::remove_dir_all(&path)?;
                 }
             }
         }
 
+        Ok(())
+    }
+
+    /// Refuse destructive operations on the user's real default Claude data.
+    ///
+    /// Profiles other than "default" always live under their own per-profile
+    /// directories, so the linker should never delete anything inside the real
+    /// default Desktop/CLI dirs. This guard is defense-in-depth: if a profile is
+    /// ever misconfigured (or a future change resolves a target into the default
+    /// dir), refuse rather than wipe the user's environment.
+    fn assert_safe_to_delete(&self, path: &Path) -> Result<()> {
+        let defaults = [
+            self.provider.claude_desktop_default_dir(),
+            self.provider.claude_cli_default_dir(),
+        ];
+        if defaults
+            .iter()
+            .any(|root| path == root.as_path() || path.starts_with(root))
+        {
+            return Err(CswError::RefusedDefaultDataDeletion(
+                path.display().to_string(),
+            ));
+        }
         Ok(())
     }
 
@@ -166,6 +191,7 @@ impl<'a> Linker<'a> {
             // Keep existing files if they were manually created or copies,
             // but if we are switching to Share, we must clear them.
             if mode == SharingMode::Share {
+                self.assert_safe_to_delete(target)?;
                 if target.is_file() {
                     fs::remove_file(target)?;
                 } else {
@@ -224,5 +250,133 @@ impl<'a> Linker<'a> {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::platform::mock::MockPlatformProvider;
+    use crate::profile::{IsolationConfig, ProfileMeta, SharingConfig};
+    use std::fs;
+    use tempfile::tempdir;
+
+    /// The linker must never destroy the user's real default Claude data.
+    /// Even if a profile is (mis)configured so its isolation directories point
+    /// straight at the real default dirs, `unlink_profile` must refuse to delete
+    /// anything inside them rather than wiping the user's environment.
+    #[test]
+    fn unlink_profile_refuses_to_delete_real_default_data() {
+        let desktop_dir = tempdir().unwrap();
+        let cli_dir = tempdir().unwrap();
+        let app_dir = tempdir().unwrap();
+
+        // Real user memory living in the default CLI dir.
+        let projects = cli_dir.path().join("projects");
+        fs::create_dir_all(&projects).unwrap();
+        let memory = projects.join("important.md");
+        fs::write(&memory, "real user memory").unwrap();
+
+        let provider = MockPlatformProvider::new(
+            desktop_dir.path().to_path_buf(),
+            cli_dir.path().to_path_buf(),
+            app_dir.path().to_path_buf(),
+        );
+
+        // Profile whose isolation dirs ARE the real default dirs.
+        let profile = Profile {
+            profile: ProfileMeta {
+                name: "danger".to_string(),
+                icon: String::new(),
+                color: String::new(),
+                is_default: false,
+            },
+            isolation: IsolationConfig {
+                desktop_user_data_dir: desktop_dir.path().to_path_buf(),
+                cli_config_dir: cli_dir.path().to_path_buf(),
+            },
+            sharing: SharingConfig::default(),
+        };
+
+        let linker = Linker::new(&provider);
+        let result = linker.unlink_profile(&profile);
+
+        assert!(
+            result.is_err(),
+            "unlink_profile must refuse to operate on the real default data dirs"
+        );
+        assert!(
+            memory.exists(),
+            "real user data inside the default dir must never be deleted"
+        );
+    }
+
+    /// `apply_link` in Share mode clears a pre-existing non-symlink target
+    /// before linking. That clear must also refuse to touch the real default
+    /// dirs (the most dangerous remove_dir_all path).
+    #[test]
+    fn apply_link_share_refuses_to_clear_real_default_dir() {
+        let desktop_dir = tempdir().unwrap();
+        let cli_dir = tempdir().unwrap();
+        let app_dir = tempdir().unwrap();
+
+        // Real user plugins dir in the default CLI location.
+        let plugins = cli_dir.path().join("plugins");
+        fs::create_dir_all(&plugins).unwrap();
+        let plugin = plugins.join("real_plugin.js");
+        fs::write(&plugin, "// real").unwrap();
+
+        // A source elsewhere to share from.
+        let source_dir = tempdir().unwrap();
+        let source_plugins = source_dir.path().join("plugins");
+        fs::create_dir_all(&source_plugins).unwrap();
+
+        let provider = MockPlatformProvider::new(
+            desktop_dir.path().to_path_buf(),
+            cli_dir.path().to_path_buf(),
+            app_dir.path().to_path_buf(),
+        );
+
+        let linker = Linker::new(&provider);
+        let result = linker.apply_link(&source_plugins, &plugins, SharingMode::Share, true);
+
+        assert!(
+            result.is_err(),
+            "apply_link must refuse to clear a real default directory"
+        );
+        assert!(plugin.exists(), "real user plugin must survive");
+    }
+
+    /// The guard must not break the normal case: deleting a genuine per-profile
+    /// directory (outside the default dirs) still works.
+    #[test]
+    fn apply_link_share_clears_non_default_target() {
+        let desktop_dir = tempdir().unwrap();
+        let cli_dir = tempdir().unwrap();
+        let app_dir = tempdir().unwrap();
+        let profile_dir = tempdir().unwrap();
+
+        // A per-profile target dir (NOT under the default dirs).
+        let target = profile_dir.path().join("plugins");
+        fs::create_dir_all(&target).unwrap();
+        fs::write(target.join("old.js"), "// stale").unwrap();
+
+        let source_dir = tempdir().unwrap();
+        let source_plugins = source_dir.path().join("plugins");
+        fs::create_dir_all(&source_plugins).unwrap();
+
+        let provider = MockPlatformProvider::new(
+            desktop_dir.path().to_path_buf(),
+            cli_dir.path().to_path_buf(),
+            app_dir.path().to_path_buf(),
+        );
+
+        let linker = Linker::new(&provider);
+        linker
+            .apply_link(&source_plugins, &target, SharingMode::Share, true)
+            .expect("clearing a non-default profile dir must succeed");
+
+        // After Share, the target becomes a symlink to the source.
+        assert!(provider.is_symlink(&target));
     }
 }
