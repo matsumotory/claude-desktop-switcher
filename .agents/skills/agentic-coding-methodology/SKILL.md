@@ -27,7 +27,7 @@ This skill defines the engineering discipline required for AI agents (and human 
 * If context becomes overloaded or the agent begins to hallucinate, STOP. Request a context reset and focus on a narrower sub-task.
 
 ### 4. Autonomous Feedback Loops & Self-Correction
-* **Self-Healing Execution:** The agent MUST autonomously run verification steps (e.g., `cargo test`, `cargo check`, `npm run lint`) after writing code.
+* **Self-Healing Execution:** The agent MUST autonomously run verification steps (e.g., `cargo test`, `cargo check`, `cargo clippy`) after writing code.
 * **Read, Diagnose, Fix:** If a test or build fails, do NOT immediately stop and ask the human what to do. Read the error log, diagnose the root cause, apply a fix, and verify again. Repeat this feedback loop autonomously until the code is green.
 * **Escalate on Dead-Ends:** Only escalate to the human if you are trapped in an infinite loop of errors or if fixing the error requires changing a fundamental requirement.
 

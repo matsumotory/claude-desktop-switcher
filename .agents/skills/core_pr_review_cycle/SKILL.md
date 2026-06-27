@@ -1,84 +1,42 @@
 ---
 name: pr_review_cycle
-description: PR完成時にGemini Code Assistでレビューし、指摘修正→再レビューのサイクルを回すプロトコル。
+description: PR 完成時にコードレビューを行い、指摘修正→再レビューのサイクルを回すプロトコル (Claude Code)。
 ---
 
-# PR Geminiレビューサイクル
+# PR レビューサイクル
 
 ## 発動条件
 
-- 実装が完了し、lint/typecheck/test全パス後のPRプッシュ時
+- 実装が完了し、lint / test 全パス後の PR プッシュ時。
 
-## コマンド判断フロー（最重要）
+## レビュー手段 (Claude Code)
 
-```
-コード変更をプッシュした？
-├─ Yes → 修正報告 + `/gemini review` を1コメントで投稿
-└─ No（指摘への返答・棄却理由の説明のみ）
-       → `/gemini [説明内容]` で投稿（review は絶対に付けない）
-```
+| 手段 | 用途 |
+|---|---|
+| `/code-review` スラッシュコマンド | 現在の差分 (作業ブランチ) を Claude が観点別にレビュー。`--comment` で PR にインラインコメント投稿、`--fix` で修正適用も可 |
+| レビュー用サブエージェント (`Task`/`Agent`) | 独立した観点 (correctness / security / 可読性) で並列にレビューさせ、結論を統合 |
+| GitHub の PR レビュー | リポジトリに設定された自動レビューア (例: GitHub Actions / 外部ボット) があればそれも併用。`gh pr view --comments` で取得 |
 
-| コマンド | 用途 | いつ使う |
-|---|---|---|
-| `/gemini review` | コードレビュー依頼 | **コード変更をプッシュした後だけ** |
-| `/gemini [内容]` | 質問・返答・棄却理由の説明 | レビュー指摘に対する議論時 |
-
-❌ **アンチパターン**: レビュー指摘の棄却理由を説明するだけなのに `/gemini review` を送る → 不要なレビューが走り、同じ指摘が繰り返される
+> [!WARNING]
+> **多重レビューの防止**: 同じ差分に重複してレビューを走らせない。再レビュー前に必ず `gh pr view <PR番号> --comments` で未対応の指摘が残っていないか確認する。
 
 ## プロトコル
 
-### 1. 既存レビューの確認と初回レビュー依頼
+### 1. 初回レビュー
+- 作業ブランチで `/code-review` を実行する (またはレビュー用サブエージェントを起動)。
+- GitHub 側に自動レビューアがいれば、PR 作成後にその指摘も `gh pr view <PR番号> --comments` で回収する。
 
-> [!WARNING]
-> **多重レビューの防止**
-> レビュー依頼を連続して投げると重複してレビューが実行されるため、依頼前に必ず `gh pr view --comments` や `gh api .../comments` などですでに未対応のレビューが存在しないか確認すること。未対応のレビューがあるまま追加で依頼することは厳禁。
+### 2. 指摘への対応
+1. 各指摘を分析し、正当なものは修正する。
+2. **仕様を変えずにテストだけを変えてはならない** (テスト失敗→実装で対応する)。
+3. 修正後は `cargo fmt` → `cargo clippy --workspace --all-targets -- -D warnings` → `cargo test --workspace` を全実行する。
+4. 棄却する指摘は、PR コメントで理由を明記する (`gh pr comment <PR番号> --body "..."`)。
 
-```bash
-gh pr comment <PR番号> --body "/gemini review"
-```
+### 3. 再レビュー (コード修正した場合)
+- 修正をプッシュし、再度 `/code-review` を実行する (または GitHub 側に再レビューを依頼)。
+- 返答・棄却理由の説明と、新たなレビュー依頼は別アクションとして扱い、混同しない。
 
-### 2. レビュー結果の確認
-
-```bash
-gh api repos/<owner>/<repo>/pulls/<PR番号>/reviews \
-  --jq '.[] | select(.submitted_at > "TIMESTAMP") | .body'
-gh api repos/<owner>/<repo>/pulls/<PR番号>/comments \
-  --jq '.[] | select(.created_at > "TIMESTAMP") | {path, line, body}'
-```
-
-### 3. 指摘への対応
-
-1. 各指摘を分析し、正当な指摘は修正する
-2. **仕様を変えずにテストを変えてはならない**（テスト失敗→実装で対応）
-3. 修正後は `lint → typecheck → test` を全実行
-4. `Co-authored-by: gemini-code-assist` を付与
-
-### 4. 再レビュー依頼（コード修正した場合）
-
-> [!IMPORTANT]
-> **レスポンスコメントとレビュー依頼は必ず別コメントにすること。** 1つにまとめるとGeminiはレスポンス内容を無視してレビューのみ実行してしまう。
-
-**Step 1: 修正内容の報告（@メンション付き）**
-
-```bash
-gh pr comment <PR番号> --body "@gemini-code-assist レビュー指摘を修正しました。
-- [修正内容の説明]
-- [棄却した指摘とその理由]"
-```
-
-**Step 2: レビュー依頼（別コメント）**
-
-```bash
-gh pr comment <PR番号> --body "/gemini review"
-```
-
-### 5. 指摘への返答・棄却（コード修正なし）
-
-```bash
-gh pr comment <PR番号> --body "/gemini [棄却理由や質問内容]"
-```
-
-### 6. サイクルの終了とマージ基準
+### 4. サイクルの終了とマージ基準
 
 **指摘レベル別の対応ルール:**
 
@@ -87,9 +45,9 @@ gh pr comment <PR番号> --body "/gemini [棄却理由や質問内容]"
 | **Critical** | 必ず修正。修正後に再レビュー必須 |
 | **High** | 必ず修正。修正後に再レビュー必須 |
 | **Medium** | 内容が妥当であれば修正する |
-| **Low** | 判断して対応 or `/gemini` で棄却理由を報告 |
+| **Low** | 判断して対応。棄却する場合は PR コメントで理由を残す |
 
 **マージ判定フロー:**
-1. Critical/High指摘が0件になるまでサイクルを繰り返す
-2. Medium指摘を対応し、CI（lint/typecheck/test）がパスしたら**マージ可能**
-3. マージ前に必ず**ユーザーの承認**を得る（`main` への直接マージ禁止ルール）
+1. Critical / High 指摘が 0 件になるまでサイクルを繰り返す。
+2. Medium 指摘を対応し、CI (Test ワークフロー) がパスしたら**マージ可能**。
+3. `main` への直接 push / 直接マージは禁止。必ず PR 経由でマージする。
