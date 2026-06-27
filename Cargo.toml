@@ -15,7 +15,7 @@ repository = "https://github.com/matsumotory/claude-desktop-switcher"
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-toml = "0.8"
+toml = "1.1"
 anyhow = "1"
 thiserror = "2"
 dirs = "6"
