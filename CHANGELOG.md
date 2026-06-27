@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.3...v0.6.0) (2026-06-27)
+
+
+### Features
+
+* **website,docs,desktop:** 実スクショで LP/ガイドを強化し AI 図スロップを撤去 ([#43](https://github.com/matsumotory/claude-desktop-switcher/issues/43)) ([c0baa24](https://github.com/matsumotory/claude-desktop-switcher/commit/c0baa24e8d0373f4807ad8b0e8b4766430d894a0))
+
 ## [0.5.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.2...v0.5.3) (2026-06-27)
 
 
