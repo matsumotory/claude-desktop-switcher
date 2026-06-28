@@ -622,7 +622,31 @@ function checkFirstRun() {
   el.firstRunExtra.hidden = !show;
 }
 
+// --- Accent theme (user-selectable, persisted) ------------------------------
+const ACCENTS = ['blue', 'teal', 'indigo', 'claude'];
+function applyAccent(name) {
+  const a = ACCENTS.includes(name) ? name : 'blue';
+  document.documentElement.dataset.accent = a;
+  try { localStorage.setItem('csw_accent', a); } catch (e) {}
+  document.querySelectorAll('.theme-dot').forEach((d) => {
+    const on = d.dataset.accent === a;
+    d.classList.toggle('active', on);
+    if (on) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current');
+  });
+}
+function initAccent() {
+  let saved = 'blue';
+  try { saved = localStorage.getItem('csw_accent') || 'blue'; } catch (e) {}
+  applyAccent(saved);
+  const picker = document.getElementById('themePicker');
+  if (picker) picker.addEventListener('click', (e) => {
+    const dot = e.target.closest('.theme-dot');
+    if (dot) applyAccent(dot.dataset.accent);
+  });
+}
+
 async function init() {
+  initAccent();
   wireEvents();
   await refreshProfiles();
   checkFirstRun();

@@ -12,9 +12,9 @@
   --border-strong: rgba(0, 0, 0, 0.14);
   --ink:           #1F1D1A;   /* body text (never pure black) */
   --ink-muted:     #6E6B66;
-  --accent:        #C25B3A;   /* single terracotta accent, saturation < 80% */
-  --accent-soft:   #F6EAE4;
-  --accent-ink:    #9F3D22;
+  --accent:        #2D6CDF;   /* default accent = blue; user-switchable via [data-accent] */
+  --accent-soft:   #E6EEFC;
+  --accent-ink:    #1A4E9E;
   --ok:            #3F6E4B;   /* "shared" — always paired with icon + word */
   --ok-soft:       #EDF3EC;
   --neutral-soft:  #ECEAE4;   /* "isolated" — neutral, not alarming */
@@ -40,9 +40,9 @@
     --border-strong: rgba(255, 255, 255, 0.16);
     --ink:           #EDE9E3;
     --ink-muted:     #9C948A;
-    --accent:        #E0825E;
-    --accent-soft:   rgba(224, 130, 94, 0.14);
-    --accent-ink:    #E89B79;
+    --accent:        #6AA0F0;
+    --accent-soft:   rgba(106, 160, 240, 0.16);
+    --accent-ink:    #93BBF6;
     --ok:            #7FB089;
     --ok-soft:       rgba(127, 176, 137, 0.14);
     --neutral-soft:  rgba(255, 255, 255, 0.07);
@@ -50,6 +50,20 @@
     --danger-soft:   rgba(224, 128, 126, 0.14);
     --shadow-soft:   0 1px 2px rgba(0, 0, 0, 0.20), 0 8px 24px rgba(0, 0, 0, 0.28);
   }
+}
+
+/* User-selectable accent themes. Base :root above is blue (default). Each theme
+   keeps a single accent across the whole UI; only the accent triple changes, so
+   the semantic colors (shared/green, isolated/neutral, danger/red) are untouched.
+   Light values first, dark overrides below. Contrast of accent-ink on accent-soft
+   meets WCAG AA in both modes. */
+html[data-accent="claude"] { --accent: #C25B3A; --accent-soft: #F6EAE4; --accent-ink: #9F3D22; }
+html[data-accent="teal"]   { --accent: #0E8A86; --accent-soft: #DCF0EE; --accent-ink: #0A5F5B; }
+html[data-accent="indigo"] { --accent: #5457D6; --accent-soft: #EAEAFB; --accent-ink: #3A3CA3; }
+@media (prefers-color-scheme: dark) {
+  html[data-accent="claude"] { --accent: #E0825E; --accent-soft: rgba(224, 130, 94, 0.14); --accent-ink: #E89B79; }
+  html[data-accent="teal"]   { --accent: #4FB8B2; --accent-soft: rgba(79, 184, 178, 0.16); --accent-ink: #79CBC6; }
+  html[data-accent="indigo"] { --accent: #8A8DEA; --accent-soft: rgba(138, 141, 234, 0.16); --accent-ink: #ABADF2; }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -184,6 +198,27 @@ code, .code-line { font-family: var(--font-mono); }
 
 .sidebar-spacer { flex: 1; min-height: 12px; }
 .sidebar-create { width: 100%; margin-top: 10px; }
+
+/* Accent theme picker: a quiet row of swatches. Each dot shows its own fixed
+   accent so all four options are always recognizable; the active one is ringed. */
+.theme-picker { display: flex; align-items: center; gap: 8px; padding: 12px 6px 2px; }
+.theme-picker-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-muted); margin-right: 2px;
+}
+.theme-dot {
+  width: 18px; height: 18px; border-radius: 50%; padding: 0; cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  transition: transform 0.12s var(--ease);
+}
+.theme-dot:hover { transform: scale(1.12); }
+.theme-dot:active { transform: scale(0.94); }
+.theme-dot[data-accent="blue"]   { background: #2D6CDF; }
+.theme-dot[data-accent="claude"] { background: #C25B3A; }
+.theme-dot[data-accent="teal"]   { background: #0E8A86; }
+.theme-dot[data-accent="indigo"] { background: #5457D6; }
+.theme-dot.active { box-shadow: 0 0 0 2px var(--canvas), 0 0 0 3px var(--ink-muted); }
+.theme-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* --------------------------------------------------------------------- Pane */
 .pane {
