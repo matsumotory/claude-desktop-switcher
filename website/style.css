@@ -775,8 +775,12 @@ html[lang="ja"] .faq-header h2 {
    is intentionally left unchanged; these rules only fix overflow/oversized
    typography and the header/hero/button arrangement on narrow viewports. */
 @media (max-width: 768px) {
+    /* Horizontal-only: the `padding` shorthand here previously zeroed each
+       section's vertical padding on mobile, collapsing the spacing between
+       sections (e.g. the hero image and the heading below it). */
     .container {
-        padding: 0 20px;
+        padding-left: 20px;
+        padding-right: 20px;
     }
 
     /* Header: there is no room for in-page anchors without a menu, so drop
@@ -853,7 +857,8 @@ html[lang="ja"] .faq-header h2 {
 
 @media (max-width: 480px) {
     .container {
-        padding: 0 16px;
+        padding-left: 16px;
+        padding-right: 16px;
     }
     .headline {
         font-size: 2.25rem;
