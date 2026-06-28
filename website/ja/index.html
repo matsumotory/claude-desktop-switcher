@@ -238,6 +238,20 @@
                 </div>
             </div>
         </section>
+
+        <!-- 技術メモ -->
+        <section id="tech-note" class="tech-note container fade-in">
+            <div class="faq-header">
+                <h2>技術メモ: なぜ Rust と Tauri なのか</h2>
+                <p>CSW の核は、CLI と GUI が共用する Rust のライブラリです。設計の理由を、開発と検証の観点から残しておきます。</p>
+            </div>
+            <div class="tech-note-body">
+                <p>CSW の中核は、環境の隔離・パス解決・データ保護を担う共有の Rust ライブラリです。コマンドライン（<code>csw</code>）とメニューバー GUI は、どちらもこの同じコアの上に薄く乗っています。ユーザーの既存データを壊さないことが最優先のツールなので、不変条件をコンパイル時に固められる Rust を中核に選びました。</p>
+                <p>GUI は Tauri v2 で作っています。Tauri は macOS 標準の WebView（WebKit）を使い、ブラウザエンジンを同梱しません。そのため配布物は小さく、universal の DMG で約 7MB に収まります。コードの署名と公証も、Tauri の標準的な配布フローでそのまま行えます。</p>
+                <p>この構成は、開発と検証のループを自動で回しやすいという利点もあります。中核のロジックは Rust のコンパイラ・clippy・テストで継続的に検証でき、画面は標準的なヘッドレスブラウザで実際にレンダリングして確認できます。CI 上で機械的に回る検証の土台を重視しました。</p>
+                <p>macOS ネイティブ UI の第一候補は Apple の Swift と SwiftUI で、深いシステム統合や作り込んだネイティブ体験が必要なアプリには優れた選択肢です。CSW は価値の中心がシステム寄りのロジックにあり UI が薄いため、コアの正しさと自動検証を優先して Rust と Tauri を選びました。用途が変われば、最適な選択も変わります。</p>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer container">
