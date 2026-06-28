@@ -4,7 +4,7 @@ Claude Desktop Switcher is a macOS menu bar utility for safely isolating and man
 
 ### Why do you need this tool?
 The official Claude Desktop App lacks multi-account switching. To work around this, users have historically relied on messy hacks—like forcing separate instances via terminal `--user-data-dir` arguments or using CLI-only switchers like `direnv`. 
-However, these methods fail to bridge the gap between "safe desktop app isolation (a dedicated data directory per profile)" and "CLI context syncing."
+However, these methods fail to bridge the gap between "safe desktop app isolation (a dedicated data directory per environment)" and "CLI context syncing."
 
 This tool eliminates the need for complex shell scripts. It achieves **"Desktop App Isolation"** with a single click from the menu bar, and allows **"Linked CLI Launching"** via simple terminal commands. It is based on a "Zero-Impact Principle" that never destroys or mutates your system's global environment variables.
 
@@ -31,11 +31,11 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 1. Download the latest `.dmg` file from the [Releases](https://github.com/matsumotory/claude-desktop-switcher/releases/latest) page.
 2. Drag and drop the downloaded `ClaudeDesktopSwitcher.app` into your macOS `Applications` folder.
 3. Launch the app. A blue icon will appear in your macOS menu bar.
-4. On first launch only, the settings window shows a short 3-step onboarding tour (Welcome / How to use / Terminal integration). Once you read and close it, it will not appear again.
+4. On first launch only, the settings window shows a short 3-step onboarding tour (Welcome / How to use / External terminal integration). Once you read and close it, it will not appear again.
 
 ![First-run onboarding](../website/assets/screen_onboarding.png)
 
-### Step 2: Create and Customize a New Profile
+### Step 2: Create and Customize a New Environment
 Create a new isolated environment for work or research.
 
 ![Claude Desktop Switcher Settings UI](../website/assets/hero.png)
@@ -46,7 +46,7 @@ For advanced use cases—such as "I want to share my personal MCP settings and r
 
 1. Click the Claude Desktop Switcher icon in the menu bar and select **"Settings..."**.
 2. In the settings window, click **"New environment"**.
-3. Enter the profile information.
+3. Enter the environment information.
    * **Name**: (e.g., `Work`, `Research`)
    * **Icon (optional)**: an emoji or a single character
 4. **Choose how it should be separated (pick one of two modes first)**
@@ -59,14 +59,14 @@ For advanced use cases—such as "I want to share my personal MCP settings and r
    * **Case A (Completely separate project)**:
      Pick **"Start fresh"**. You get a pristine environment cleanly detached from your personal one.
    * **Case B (Switching accounts while keeping personal environment config)**:
-     Pick **"Reuse settings"** to bring your familiar environment (MCP settings, CLAUDE.md rules) into the new profile.
+     Pick **"Reuse settings"** to bring your familiar environment (MCP settings, CLAUDE.md rules) into the new environment.
 
-5. Click **"Create this profile"** to save.
+5. Click **"Create this environment"** to save.
 
-![Create-profile dialog](../website/assets/screen_create.png)
+![Create-environment dialog](../website/assets/screen_create.png)
 
-> **Duplicating an existing profile**
-> Select a profile in the settings window and click the **複製 (Duplicate)** button to create a new profile that inherits its sharing configuration and layout. Login state follows each component's sharing mode—isolated components are not carried over, so you may need to sign in again in the new profile.
+> **Duplicating an existing environment**
+> Select an environment in the settings window and click the **複製 (Duplicate)** button to create a new environment that inherits its sharing configuration and layout. Login state follows each component's sharing mode—isolated components are not carried over, so you may need to sign in again in the new environment.
 
 ---
 
@@ -76,23 +76,28 @@ Here is the daily usage flow after setup. No manual configuration is required.
 
 ### Scenario A: Starting work with your Work account
 1. Click the Claude Desktop Switcher icon in the menu bar.
-2. Select the "Work" profile you created.
+2. Select the "Work" environment you created.
 3. **A new Claude Desktop window will launch automatically.**
    （This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.）
 
 > **Tip: You can run multiple apps simultaneously**
 > Your original personal (Default) Claude window remains active. You can run your personal window alongside your work window to review code or multitask.
 
-### Scenario B: Safely launching the Terminal (Claude Code)
-This is the safest method to ensure your desktop app and terminal (CLI) accounts are perfectly synchronized.
+### Scenario B: Using the Terminal (Claude Code)
+There are two kinds of terminal, and they need different steps.
 
-1. Open your terminal (iTerm2, standard Terminal, etc.).
-2. Run the sync command `eval $(csw env <Profile Name>)` (e.g., `eval $(csw env Work)`).
-3. This safely switches your terminal's environment variables to the "Work" environment. Type `claude` to start working.
-   （Tokens consumed or history generated in this terminal will never interfere with your personal environment.）
+**1. The terminal inside the Claude Desktop App you launched from CSW (built-in)**
+When you switch to an environment and launch it from CSW, any terminal you open inside that app is already in that environment. No extra command is needed—just type `claude` and start working.
+
+**2. A separate terminal you open yourself (external, e.g. iTerm2 or the standard Terminal)**
+A terminal you open on your own stays in your usual environment. To use a specific environment, run the sync command.
+
+1. Open your terminal (iTerm2, the standard Terminal, etc.).
+2. Run `eval $(csw env <name>)` (e.g., `eval $(csw env Work)`).
+3. That tab's environment variables switch to the target environment. Type `claude` to start (it applies to that tab only and never affects your usual environment).
 
 ### Scenario C: Returning to your usual (Personal) environment
-* **Desktop**: Select the "default" profile from the menu bar, or simply launch `Claude.app` normally via Spotlight. It will always open your standard personal environment.
+* **Desktop**: Select the "default" environment from the menu bar, or simply launch `Claude.app` normally via Spotlight. It will always open your standard personal environment.
 * **CLI**: If you open a standard terminal and type `claude`, it will always operate as your default (personal) environment.
 
 ---
@@ -102,7 +107,7 @@ This is the safest method to ensure your desktop app and terminal (CLI) accounts
 * **It's safe even if you forget to launch the app (Zero-Impact)**
   Claude Desktop Switcher never silently alters system environment variables. If you launch Claude normally without using this app, it will act as your default environment 100% of the time. Your existing setup cannot be broken.
 * **How to prevent accidental token consumption**
-  If you are unsure which account your terminal is using, simply run the `csw status` command. This will safely display the active profile currently applied to your terminal session.
+  If you are unsure which account your terminal is using, simply run the `csw status` command. This will safely display the active environment currently applied to your terminal session.
 
 ---
 
@@ -118,13 +123,13 @@ It is your existing Claude Desktop and Claude Code setup. CSW only displays it a
 No. If you only want to keep using the same account, you do not need a new environment—launch Claude as usual and "The Claude you use now" is used directly. CSW helps when you want additional, independent environments for different accounts or projects.
 
 **Q. Will creating a new environment break my original Claude?**
-No. Each new environment is created in its own per-profile directory, physically separate from the original. Deleting a profile does not affect your original Claude.
+No. Each new environment is created in its own dedicated directory, physically separate from the original. Deleting an environment does not affect your original Claude.
 
 **Q. Do I have to sign in again every time I switch?**
 No. Each environment keeps its login inside its own directory. Sign in once and it persists across switches (items set to "isolate" start empty in the new environment).
 
 **Q. Does switching the desktop app also switch the terminal (Claude Code)?**
-No. The GUI and CLI contexts are independent. In the terminal, run `eval $(csw env <profile>)` to sync explicitly (it applies to that tab only and never affects your usual setup).
+The terminal you open inside the app launched from CSW (built-in) is already in the same environment as that app—no command needed. A terminal you open separately (external) stays in your usual environment, so run `eval $(csw env <name>)` to sync it explicitly (it applies to that tab only and never affects your usual environment).
 
 **Q. What exactly is shared by "Reuse settings"?**
 Your MCP server config, global rules (CLAUDE.md), permissions/hooks, plugins, skills, app settings, and worktrees (your config assets) are shared with "The Claude you use now". Login, conversation history, command history, and project memory are kept separate for safety. To fine-tune, use "Configure in detail (11 items)" on the create screen.

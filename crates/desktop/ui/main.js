@@ -199,7 +199,7 @@ async function showDetail(name) {
   try {
     d = await invoke('get_profile_details', { name });
   } catch (err) {
-    showToast('プロファイルを読み込めませんでした。', true);
+    showToast('環境を読み込めませんでした。', true);
     return;
   }
   renderSidebar();
@@ -242,7 +242,7 @@ function section(label, children) {
 }
 
 function pathsSection(d, isDefault) {
-  return section(isDefault ? '場所（本物の Claude フォルダ）' : '場所（このプロファイル）', [
+  return section(isDefault ? '場所（本物の Claude フォルダ）' : '場所（この環境）', [
     pathRow('Claudeデスクトップアプリ', d.desktop_path),
     pathRow('Claude Code', d.cli_path),
     isDefault ? h('p', { class: 'path-caption', text: 'これは CSW が作った場所ではなく、あなたの本物の Claude フォルダです。' }) : null,
@@ -266,8 +266,11 @@ function copyButton(value, title) {
 
 function terminalSection(name) {
   const cmd = `eval $(csw env "${name}")`;
-  return section('ターミナルで使う', [
-    h('div', { class: 'note-card', text: 'Claude Code でこの環境を使うには、ターミナルで次を実行します。このタブだけに適用され、普段の環境には影響しません。' }),
+  return section('ターミナル（Claude Code）で使う', [
+    h('div', { class: 'note-card', text:
+      'CSW からこの環境を開くと、その Claudeデスクトップアプリの中のターミナルは最初からこの環境です。そのまま claude で始められます。' }),
+    h('div', { class: 'note-card', style: 'margin-top:8px', text:
+      '別に開く iTerm2 などのターミナルでこの環境を使うときは、次を実行します。そのタブだけに適用され、普段の環境には影響しません。' }),
     h('div', { class: 'path-row', style: 'margin-top:8px' },
       h('div', { class: 'path-meta' }, h('code', { class: 'path-code', text: cmd })),
       copyButton(cmd, 'コマンドをコピー')),
@@ -393,7 +396,7 @@ async function doDelete(name) {
     withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
     showToast(`${name}を削除しました`);
   } catch (err) {
-    showToast('削除できませんでした。使用中のプロファイルは切り替えてから削除してください。', true);
+    showToast('削除できませんでした。使用中の環境は切り替えてから削除してください。', true);
   }
 }
 

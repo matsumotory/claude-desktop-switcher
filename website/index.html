@@ -33,8 +33,8 @@
         <section class="hero container">
             <div class="hero-text fade-in">
                 <span class="eyebrow">Zero-Impact Isolation</span>
-                <h1 class="headline">Isolate Claude Desktop Environments.</h1>
-                <p class="subtext">Customize the separation level of your profiles. This macOS utility unifies the management of both your Claude Desktop App and Claude Code (CLI) environments.</p>
+                <h1 class="headline">Separate your Claude Desktop App by use case.</h1>
+                <p class="subtext">Keep chat, Projects, Cowork, Artifacts, and Claude Design apart by account and use case—with Claude Code linked when you want it. A macOS utility for the whole Claude Desktop App suite.</p>
                 <div class="button-group">
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest" class="btn btn-primary">Download for macOS (.dmg) <div class="btn-icon-wrap">↗</div></a>
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE_EN.md" class="btn btn-secondary">Read Documentation</a>
@@ -61,22 +61,22 @@
         <section id="features" class="features container">
             <div class="features-grid">
                 <div class="feature-intro fade-in">
-                    <h2>Unified Control of<br>GUI and CLI</h2>
-                    <p>While Claude Desktop and Claude Code are separate tools, this utility manages their backend profiles as one. Switch GUI environments via the menu bar, and sync your external terminal to the exact same isolated environment with a single command.</p>
+                    <h2>Separate the whole<br>Desktop App suite</h2>
+                    <p>Switching CLI profiles is already well handled by existing tools like direnv and claude-swap. CSW is for the rest of your Claude work: keep chat, Projects, Cowork, Artifacts, and Claude Design separated by account and use case—whether you live entirely in the desktop app, pair Cowork with Claude Code and Claude Design, or mainly use Cowork and chat. Claude Code links to the same environment when you want it: switch the GUI from the menu bar, and sync a separate terminal with one command.</p>
                 </div>
                 
                 <div class="feature-cards-stack">
                     <div class="feature-cell cell-small fade-in delay-1">
                         <div class="cell-content">
                             <h2>Customizable Separation</h2>
-                            <p>Define exactly what to share and what to isolate. For example, you can completely separate your login sessions and past chat histories between 'Work' and 'Personal' profiles, ensuring your data never crosses over.</p>
+                            <p>Define exactly what to share and what to isolate. For example, you can completely separate your login sessions and past chat histories between 'Work' and 'Personal' environments, ensuring your data never crosses over.</p>
                         </div>
                     </div>
 
                     <div class="feature-cell cell-small dark-accent fade-in delay-2">
                         <div class="cell-content">
-                            <h2>Localized Profile Application</h2>
-                            <p>Your Mac's global system settings remain untouched. Active profiles are applied strictly locally—only to the Claude Desktop app launched via this tool or your specific terminal tab. This prevents unexpected bleeding into your usual development environment, with the actual isolation level depending on your sharing configuration.</p>
+                            <h2>Localized Application</h2>
+                            <p>Your Mac's global system settings remain untouched. The active environment applies strictly locally—only to the Claude Desktop App launched via this tool or your specific terminal tab. This prevents unexpected bleeding into your usual environment, with the actual isolation level depending on your sharing configuration.</p>
                         </div>
                     </div>
                 </div>
@@ -87,16 +87,16 @@
         <section id="screens" class="screens container fade-in">
             <div class="screens-header">
                 <h2>See it in action.</h2>
-                <p>The whole profile system lives in one settings window. Create isolated or shared environments, inspect exactly what each profile shares, and switch from the menu bar.</p>
+                <p>The whole environment system lives in one settings window. Create isolated or shared environments, inspect exactly what each environment shares, and switch from the menu bar.</p>
             </div>
             <div class="screens-bento">
                 <figure class="screen-card screen-wide fade-in delay-1">
-                    <img src="assets/screen_overview.png" alt="CSW settings window showing a profile's paths and a per-component Share / Isolate matrix" loading="lazy">
-                    <figcaption>Every profile gets its own data directories, with a Share or Isolate setting for each component: MCP config, CLAUDE.md, plugins, sessions, history, and more.</figcaption>
+                    <img src="assets/screen_overview.png" alt="CSW settings window showing an environment's paths and a per-component Share / Isolate matrix" loading="lazy">
+                    <figcaption>Every environment gets its own data directories, with a Share or Isolate setting for each component: MCP config, CLAUDE.md, plugins, sessions, history, and more.</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
                     <img src="assets/screen_create.png" alt="New-environment screen offering Start fresh or Reuse settings" loading="lazy">
-                    <figcaption>Create a profile in seconds. Pick “Start fresh” for a clean slate, or “Reuse settings” to keep your existing setup.</figcaption>
+                    <figcaption>Create an environment in seconds. Pick “Start fresh” for a clean slate, or “Reuse settings” to keep your existing setup.</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
                     <img src="assets/screen_onboarding.png" alt="First-run onboarding explaining that the existing setup is preserved" loading="lazy">
@@ -115,25 +115,33 @@
                 <div class="feature-cell bento-wide fade-in delay-1">
                     <div class="cell-content">
                         <span class="usecase-num">01</span>
-                        <h3 class="usecase-title">Strict Project / Client Separation</h3>
-                        <p class="usecase-text">You're managing multiple clients or navigating vastly different technical projects, and you need an absolute guarantee that chat histories and project contexts never intersect.</p>
-                        <p class="usecase-solution">Selecting "Complete Isolation" assigns a physically independent data directory to each profile, each keeping its own login session. Source code and conversations from one client will never structurally leak into another.</p>
+                        <h3 class="usecase-title">Separate the whole suite per project/client</h3>
+                        <p class="usecase-text">When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts.</p>
+                        <p class="usecase-solution">Selecting the "Isolated" configuration allocates a separate data directory for each environment, each keeping its own login. Information from one client never structurally leaks across the desktop suite into another.</p>
                     </div>
                 </div>
                 <div class="feature-cell dark-accent fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">02</span>
-                        <h3 class="usecase-title">Dev / Research Sharing</h3>
-                        <p class="usecase-text">You want separate billing accounts, but wish to share global rules and plugin setups.</p>
-                        <p class="usecase-solution">Use "Flexible Sharing" to seamlessly sync specific configuration files across profiles while preventing redundant management.</p>
+                        <h3 class="usecase-title">Work and personal on one Mac (no terminal)</h3>
+                        <p class="usecase-text">You want to keep your business and personal accounts apart without touching the terminal.</p>
+                        <p class="usecase-solution">Pick an environment from the menu bar and the Claude Desktop App switches without signing in again. It is complete in the GUI.</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">03</span>
-                        <h3 class="usecase-title">Multi-Account Scaling</h3>
-                        <p class="usecase-text">You need to seamlessly juggle secondary or alternative accounts as your usage grows.</p>
-                        <p class="usecase-solution">Switch profiles right from the menu bar to instantly access alternative environments.</p>
+                        <h3 class="usecase-title">Share common rules across environments</h3>
+                        <p class="usecase-text">You want separate accounts but want to reuse common rules and settings.</p>
+                        <p class="usecase-solution">A "Shared" configuration synchronizes specific files (such as CLAUDE.md) across environments while keeping history and logins separate.</p>
+                    </div>
+                </div>
+                <div class="feature-cell fade-in delay-2">
+                    <div class="cell-content">
+                        <span class="usecase-num">04</span>
+                        <h3 class="usecase-title">Link the CLI to your GUI separation</h3>
+                        <p class="usecase-text">You want to use the environment you chose in the GUI from the CLI as well (for developers).</p>
+                        <p class="usecase-solution">Link the chosen environment to the CLI's <code>CLAUDE_CONFIG_DIR</code>. Run <code>eval $(csw env &lt;name&gt;)</code> in a separate terminal to use the CLI in the same isolated environment. This adds GUI consistency on top of what existing CLI-only switchers already solve.</p>
                     </div>
                 </div>
             </div>
@@ -142,8 +150,8 @@
         <!-- Vertical Stack: How it Works -->
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
-                <h2>Seamless GUI Workflow.</h2>
-                <p>No complex setup for the Desktop app. Operate entirely from your menu bar.</p>
+                <h2>GUI Workflow.</h2>
+                <p>Manage Desktop environments from the menu bar. Link CLI environments via terminal commands.</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
@@ -156,42 +164,42 @@
                 <div class="step-item border-top">
                     <div class="step-num">02</div>
                     <div class="step-body">
-                        <h3>Create Profiles</h3>
-                        <p>Generate isolated "Work" or "Research" profiles with single clicks.</p>
+                        <h3>Create Environments</h3>
+                        <p>Generate isolated "Work" or "Research" environments with single clicks.</p>
                     </div>
                 </div>
                 <div class="step-item border-top">
                     <div class="step-num">03</div>
                     <div class="step-body">
-                        <h3>Switch Seamlessly</h3>
-                        <p>Select your active profile. Claude Desktop instantly launches in the new profile.</p>
+                        <h3>Switch from the Menu Bar</h3>
+                        <p>Select your active environment. The Claude Desktop App launches in the new environment.</p>
                     </div>
                 </div>
             </div>
         </section>
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>Advanced External Terminal Integration</h2>
-                <p>Leverage your profiles not just in the built-in terminal, but directly within your preferred external terminal apps (like iTerm).</p>
+                <h2>Terminal (Claude Code) Integration</h2>
+                <p>The built-in terminal inside the app inherits its environment automatically. For a separate external terminal (like iTerm), one command switches it.</p>
             </div>
             
             <div class="guide-grid">
                 <div class="guide-card">
                     <div class="guide-icon">01</div>
-                    <h3>Unified Profile Management</h3>
-                    <p>GUI data and CLI configs are unified and managed under a single, cohesive profile.</p>
+                    <h3>Unified Environment Management</h3>
+                    <p>GUI data and CLI configs are unified and managed under a single, cohesive environment.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
                     <h3>Flexible Sharing</h3>
-                    <p>Choose between complete isolation (default) or syncing specific settings seamlessly.</p>
+                    <p>Choose between complete isolation (default) or syncing specific settings across environments.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
                     <h3>Terminal<span class="text-nowrap"> Integration</span></h3>
-                    <p>Instantly drop into isolated environments using external terminal emulators.</p>
+                    <p>The built-in terminal inherits its environment automatically. For an external terminal (iTerm2, etc.), one command switches it.</p>
                     <div class="code-snippet">
-                        <code>eval $(csw env &lt;profile_name&gt;)</code>
+                        <code>eval $(csw env &lt;name&gt;)</code>
                     </div>
                 </div>
             </div>
@@ -218,7 +226,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Will a new environment break my original Claude?</p>
-                    <p class="faq-a">No. Each environment lives in its own per-profile directory, physically separate from the original. Deleting a profile never affects your original setup.</p>
+                    <p class="faq-a">No. Each environment lives in its own dedicated directory, physically separate from the original. Deleting an environment never affects your original setup.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Do I have to sign in again on every switch?</p>
@@ -226,7 +234,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
-                    <p class="faq-a">No. The GUI and CLI contexts are independent. Run <code>eval $(csw env &lt;profile&gt;)</code> in the terminal to sync explicitly (it applies to that tab only).</p>
+                    <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment—no command needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env &lt;name&gt;)</code> to sync it (it applies to that tab only).</p>
                 </div>
             </div>
         </section>
