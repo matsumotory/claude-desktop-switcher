@@ -5,6 +5,7 @@
 
 ### Bug Fixes
 
+* **desktop,website:** 日本語の孤立文字・nowrapハックを解消しLPをダークスクショ化 ([#63](https://github.com/matsumotory/claude-desktop-switcher/issues/63)) ([cab5cad](https://github.com/matsumotory/claude-desktop-switcher/commit/cab5cad1b5640b85509dd130f77605194af8ce38))
 * **website:** JAセクション見出しの折り返しを balance で統一 ([#64](https://github.com/matsumotory/claude-desktop-switcher/issues/64)) ([27b4103](https://github.com/matsumotory/claude-desktop-switcher/commit/27b4103d37b22729c31eef51612008d999f5a7c7))
 
 ## [0.8.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.0...v0.8.1) (2026-06-28)
