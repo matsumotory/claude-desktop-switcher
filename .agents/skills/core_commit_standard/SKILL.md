@@ -86,4 +86,4 @@ When you are asked to commit changes, ALWAYS reference this skill and follow the
 ### 運用ルール
 1. **すべての変更**（コード・ドキュメント・plan ファイル含む）は必ず feature ブランチで作業する
 2. PR を作成し、CI（`cargo fmt` / `cargo clippy` / `cargo test`）が全てパスしてからマージする
-3. `main` への直接 push は禁止（GitHub branch protection rule で物理的に阻止されており例外はない）。ドキュメントのみの変更も feature ブランチ + PR 経由でマージする。詳細は [AGENTS.md](../../AGENTS.md) の Branch Strategy Enforcement
+3. `main` への直接 push は禁止（GitHub branch protection rule で物理的に阻止されており例外はない）。ドキュメントのみの変更も feature ブランチ + PR 経由でマージする。詳細は [CLAUDE.md](../../../CLAUDE.md) の Branch Strategy Enforcement

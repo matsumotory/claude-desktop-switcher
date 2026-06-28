@@ -20,7 +20,7 @@ This skill defines the workflow and coding standards for developing Rust applica
 
 ### 4. Semantic Commits & Trunk-Based Development
 * **Semantic Pull Requests:** All commit messages must follow conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`). This is critical for automated versioning tools like `Release Please`.
-* **Short-Lived Feature Branches:** Work on short-lived topic branches that merge quickly via PR — never push directly to `main` (branch protection forbids it; see AGENTS.md Branch Strategy Enforcement). Avoid long-running divergence. Hide unfinished features behind feature flags (`#[cfg(feature = "unstable")]`).
+* **Short-Lived Feature Branches:** Work on short-lived topic branches that merge quickly via PR — never push directly to `main` (branch protection forbids it; see CLAUDE.md Branch Strategy Enforcement). Avoid long-running divergence. Hide unfinished features behind feature flags (`#[cfg(feature = "unstable")]`).
 
 ## Anti-Patterns
 * **God Objects:** Creating massive structs with dozens of fields. Break them down into smaller, composable traits and structs.

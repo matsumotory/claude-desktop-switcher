@@ -72,7 +72,7 @@ related_issues: []         # 関連 Issue 番号（任意）
 
 1. **背景・本セッションの完了事項**: コンテキスト復元用の最小限の要約
 2. **ゴール**: ユーザ方針と完了条件
-3. **設計原則**: `.agents/AGENTS.md` および既存スキルから適用するルール（特にセキュリティ・プライバシー・倫理を利便性と引き換えにしない、を明記）
+3. **設計原則**: `CLAUDE.md` および既存スキルから適用するルール（特にセキュリティ・プライバシー・倫理を利便性と引き換えにしない、を明記）
 4. **タスク詳細**:
    - 変更ファイル一覧（テーブル形式。`crates/core` (csw-core / ロジック + テスト) / `crates/cli` (csw-cli) / `crates/desktop` (csw-desktop / Tauri v2) のどこを触るか）
    - 実装ステップ（番号付きの手順）
@@ -115,7 +115,7 @@ PR 本文の冒頭に必ず plan へのリンクを記載する：
 1. **`git fetch origin main`** を最初に必ず実行（ローカル checkout は信用しない）。作業は `.claude/worktrees/<name>` の隔離 worktree で行い、`/tmp` には作らない
 2. `docs/SPECIFICATION.md` — 仕様の現在地・全体コンテキスト
 3. `docs/proposals/` 配下の `status: in-progress` または `status: approved` の plan — 具体的な着手ポイント
-4. `.agents/AGENTS.md` と該当ドメインの `.agents/skills/`（`modern-rust-workflow` / `tauri-v2-best-practices` 等）
+4. `CLAUDE.md` と該当ドメインの `.agents/skills/`（`modern-rust-workflow` / `tauri-v2-best-practices` 等）
 5. セキュリティ確認: `cargo audit`（導入済みなら）または `.github/workflows/security.yml` の結果を確認。脆弱性があればセキュリティ対応を優先する
 
 ## セッション終了時のチェックリスト
@@ -137,4 +137,4 @@ PR 本文の冒頭に必ず plan へのリンクを記載する：
 - ❌ `--admin` / `--no-verify` で CI を飛ばしてマージする（軽微な plan 単体 PR でも禁止）
 - ❌ status を更新せず古い状態で放置 / frontmatter を省略する（plan の信頼性低下・status 集計不能）
 - ❌ 1 plan に複数の独立タスクを詰め込む（PR 1 つにつき plan 1 つを基本とする）
-- ❌ AI 生成の引き継ぎメモ・スクラッチを repo に commit する（scratchpad に留める。`.agents/AGENTS.md` §7 違反）
+- ❌ AI 生成の引き継ぎメモ・スクラッチを repo に commit する（scratchpad に留める。`CLAUDE.md` §7 違反）
