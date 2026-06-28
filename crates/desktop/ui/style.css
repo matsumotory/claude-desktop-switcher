@@ -199,15 +199,16 @@ code, .code-line { font-family: var(--font-mono); }
 .sidebar-spacer { flex: 1; min-height: 12px; }
 .sidebar-create { width: 100%; margin-top: 10px; }
 
-/* Accent theme picker: a quiet row of swatches. Each dot shows its own fixed
-   accent so all four options are always recognizable; the active one is ringed. */
+/* Accent theme picker: a quiet row of color tiles (rounded squares matching the
+   6px avatar shape, so they read as selectable options rather than decorative
+   status dots). Each tile shows its own fixed accent; the chosen one is ringed. */
 .theme-picker { display: flex; align-items: center; gap: 8px; padding: 12px 6px 2px; }
 .theme-picker-label {
   font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--ink-muted); margin-right: 2px;
 }
 .theme-dot {
-  width: 18px; height: 18px; border-radius: 50%; padding: 0; cursor: pointer;
+  width: 18px; height: 18px; border-radius: 5px; padding: 0; cursor: pointer;
   border: 1px solid rgba(0, 0, 0, 0.12);
   transition: transform 0.12s var(--ease);
 }

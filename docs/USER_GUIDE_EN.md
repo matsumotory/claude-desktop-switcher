@@ -108,6 +108,8 @@ A terminal you open on your own stays in your usual environment. To use a specif
   Claude Desktop Switcher never silently alters system environment variables. If you launch Claude normally without using this app, it acts as your Existing Claude 100% of the time. Your existing setup cannot be broken.
 * **How to prevent accidental token consumption**
   If you are unsure which account your terminal is using, simply run the `csw status` command. This safely shows the environment in use for that terminal session.
+* **Pick the accent color**
+  Use the swatches at the bottom of the sidebar to choose the accent: blue (default), teal, indigo, or terracotta. Your choice is saved and applied next time (the semantic colors for shared, isolated, and delete stay the same).
 
 ---
 
