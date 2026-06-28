@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.2...v0.7.3) (2026-06-28)
+
+
+### Bug Fixes
+
+* **desktop:** インタラクティブ要素に押下(:active)フィードバックを追加 ([#54](https://github.com/matsumotory/claude-desktop-switcher/issues/54)) ([7437eb1](https://github.com/matsumotory/claude-desktop-switcher/commit/7437eb1331074d43b82bccb4c2475adbd6bcdcef))
+
 ## [0.7.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.1...v0.7.2) (2026-06-28)
 
 
