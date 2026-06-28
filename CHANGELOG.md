@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.4...v0.8.0) (2026-06-28)
+
+
+### Features
+
+* **website,docs,desktop:** ポジショニング再設計+ターミナル内蔵/外部の区別+用語統一 ([#58](https://github.com/matsumotory/claude-desktop-switcher/issues/58)) ([e3fc3e2](https://github.com/matsumotory/claude-desktop-switcher/commit/e3fc3e22251a5e393578b08fb517ac51daa7cc5e))
+
 ## [0.7.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.3...v0.7.4) (2026-06-28)
 
 
