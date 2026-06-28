@@ -618,6 +618,64 @@ html[lang="ja"] .usecases-header h2 {
     font-size: 1.125rem; /* Increased */
 }
 
+/* FAQ */
+.faq {
+    padding-bottom: 120px;
+}
+
+.faq-header {
+    margin-bottom: 48px;
+}
+
+.faq-header h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    margin-bottom: 16px;
+}
+
+html[lang="ja"] .faq-header h2 {
+    font-size: 2.25rem;
+}
+
+.faq-header p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 680px;
+    line-height: 1.6;
+}
+
+.faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 64px;
+}
+
+@media (max-width: 900px) {
+    .faq-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.faq-item {
+    padding: 28px 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.faq-q {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    line-height: 1.45;
+    color: var(--text-primary);
+}
+
+.faq-a {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 1.0625rem;
+}
+
 /* Footer */
 .site-footer {
     border-top: 1px solid rgba(255, 255, 255, 0.08);

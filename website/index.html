@@ -196,6 +196,40 @@
                 </div>
             </div>
         </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="faq container fade-in">
+            <div class="faq-header">
+                <h2>FAQ</h2>
+                <p>Share and isolate are always relative to "The Claude you use now". You build a new environment by choosing what to inherit from it and what to keep separate.</p>
+            </div>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <p class="faq-q">Share / isolate — relative to what?</p>
+                    <p class="faq-a">Always relative to "The Claude you use now" (your existing setup). For each item, you choose whether to use the same thing as your current Claude (share) or keep a new one just for this environment (isolate).</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">What is "The Claude you use now"?</p>
+                    <p class="faq-a">Your existing Claude Desktop and Claude Code setup. CSW only uses it as the reference point and never changes or deletes your settings, history, or login.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">Do I need a new environment just to use the same account?</p>
+                    <p class="faq-a">No. If you only want to keep using the same setup, just launch Claude as usual and "The Claude you use now" is used directly. CSW helps when you want independent environments for other accounts or projects.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">Will a new environment break my original Claude?</p>
+                    <p class="faq-a">No. Each environment lives in its own per-profile directory, physically separate from the original. Deleting a profile never affects your original setup.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">Do I have to sign in again on every switch?</p>
+                    <p class="faq-a">No. Each environment keeps its login inside its own directory. Sign in once and it persists across switches (items set to isolate start empty in the new environment).</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
+                    <p class="faq-a">No. The GUI and CLI contexts are independent. Run <code>eval $(csw env &lt;profile&gt;)</code> in the terminal to sync explicitly (it applies to that tab only).</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer container">
