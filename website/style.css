@@ -278,8 +278,11 @@ html[lang="ja"] .subtext {
 @supports (text-wrap: balance) {
     .headline,
     .feature-intro h2,
+    .screens-header h2,
+    .usecases-header h2,
     .workflow-header h2,
     .guide-header h2,
+    .faq-header h2,
     .guide-card h3,
     .step-body h3 {
         text-wrap: balance;
