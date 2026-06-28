@@ -76,6 +76,22 @@ svg.icon {
   stroke: none;
 }
 
+/* Focus: the UA default is a generic blue "auto" ring (the AI-default selection
+   look). Suppress it on pointer interaction so a tap shows only the element's own
+   selected/active styling, and give keyboard users an intentional ring in the
+   warm accent instead of the blue one. */
+:focus:not(:focus-visible) { outline: none; }
+.profile-item:focus-visible,
+.now-claude:focus-visible,
+.sharing-summary:focus-visible,
+.advanced-toggle:focus-visible,
+.icon-btn:focus-visible,
+.link-reset:focus-visible,
+.disclosure-inner [data-disclosure-toggle]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 code, .code-line { font-family: var(--font-mono); }
 
 /* ---------------------------------------------------------------- App shell */
