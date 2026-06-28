@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.6.0...v0.7.0) (2026-06-28)
+
+
+### Features
+
+* **desktop,docs,website:** 共有/分離の基準「いま使っているClaude」を全面で明示 ([#48](https://github.com/matsumotory/claude-desktop-switcher/issues/48)) ([7c87f4f](https://github.com/matsumotory/claude-desktop-switcher/commit/7c87f4f861f28c51840c170af2b97d0df3c56fdd))
+
 ## [0.6.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.5.3...v0.6.0) (2026-06-27)
 
 
