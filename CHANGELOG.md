@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.4...v0.9.0) (2026-06-28)
+
+
+### Features
+
+* **desktop,website:** アクセントのテーマ切替を追加(4セット・既定ブルー) ([#70](https://github.com/matsumotory/claude-desktop-switcher/issues/70)) ([b2a790e](https://github.com/matsumotory/claude-desktop-switcher/commit/b2a790e492e190793833850183243eb3e54f730a))
+
+
+### Bug Fixes
+
+* **desktop,docs:** テーマスウォッチをカラータイル化しドキュメントへ反映 ([#72](https://github.com/matsumotory/claude-desktop-switcher/issues/72)) ([11882f6](https://github.com/matsumotory/claude-desktop-switcher/commit/11882f6617f16cd6131c7fbc9a9dcfaf46c8363b))
+
 ## [0.8.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.3...v0.8.4) (2026-06-28)
 
 
