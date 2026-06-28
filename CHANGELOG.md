@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.0...v0.8.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **website,docs,desktop:** 網羅監査の是正(ENスクショ翻訳漏れ/用語/作成既定モード) ([#60](https://github.com/matsumotory/claude-desktop-switcher/issues/60)) ([8d976c9](https://github.com/matsumotory/claude-desktop-switcher/commit/8d976c94d5ed9f779ef9cd6808fb001bbd26a4bf))
+
 ## [0.8.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.4...v0.8.0) (2026-06-28)
 
 
