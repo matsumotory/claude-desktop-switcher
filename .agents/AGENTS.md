@@ -10,6 +10,7 @@ You are a Senior Agentic Engineer operating in 2026. You strictly follow structu
 |---|---|
 | 派生サブタスク (spawn_task / Agent 委譲 / 別 PR 化 / CI 待ち中の並行作業 / 割り込み) を始めるとき | `core_worktree_for_derived_tasks` |
 | 新規実装・大幅修正の着手前、セッション開始/終了時 (Plan を `docs/proposals/` でバトンパス) | `core_session_handoff` |
+| 日本語 UI / LP / ドキュメントのコピー・フォントサイズ・折り返し・行間・見出しスケールに触れるとき | `japanese-typography-qa` |
 | 「完了/PASS」と報告する前・PR 提出前・リファクタ/名称変更後 (検証順序とエビデンス強制) | `core_qa_process` |
 | PR をマージする / マージ可否を判断するとき | `core_pr_merge_checklist` |
 | CI (GitHub Actions) が 10 分以上ハングしている疑いのとき | `core_ci_hang_recovery` |

@@ -34,7 +34,7 @@ html[lang="ja"] body {
     word-break: auto-phrase;
     word-break: normal;
     overflow-wrap: break-word;
-    font-size: 1.125rem; /* Increased base size for JP */
+    font-size: 1rem; /* Match the EN base (16px) so JA/EN read at the same scale */
     letter-spacing: 0.03em;
 }
 
@@ -125,6 +125,11 @@ html[lang="ja"] body {
                 color 0.2s ease;
     cursor: pointer;
     gap: 8px;
+    /* CTA labels must never wrap mid-word (design-taste-frontend: CTA Button Wrap Ban).
+       flex-shrink:0 keeps each pill at its intrinsic width instead of being squeezed
+       by the hero text column; the group wraps to a second row if both don't fit. */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn:active {
@@ -167,7 +172,10 @@ html[lang="ja"] body {
 .hero {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 48px;
+    /* Central breathing room between the text column and the visual. Scales with
+       the viewport so the split never reads cramped (design-taste-frontend L210
+       asymmetric white-space / L612 clean margins). */
+    gap: clamp(48px, 5.5vw, 88px);
     align-items: center;
     padding-top: 96px;
     padding-bottom: 96px;
@@ -191,9 +199,68 @@ html[lang="ja"] body {
 }
 
 html[lang="ja"] .headline {
-    font-size: 3.75rem; /* Prevent massive wrapping in JP while increasing size */
-    word-break: keep-all;
-    line-height: 1.25;
+    /* JP hero headline. The single 文節 boundary is broken by a static <wbr> in the
+       markup (deterministic 2 lines in every browser). word-break:auto-phrase adds a
+       native 文節-aware break on Chromium; line-break:strict enforces kinsoku so 。
+       never starts a line; overflow-wrap guards ultra-narrow widths. Sized smaller
+       than the EN hero because CJK glyphs are denser — that, with the forced 文節
+       break, yields a clean 2 lines instead of an over-wrapped 3. No comma: the line
+       break itself supplies the pause. See skill japanese-typography-qa. */
+    font-size: clamp(1.625rem, 1.1rem + 2vw, 2.375rem); /* 26 -> 38px */
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    word-break: auto-phrase;
+    line-break: strict;
+    overflow-wrap: anywhere;
+    font-feature-settings: "palt" 1;
+    text-wrap: wrap; /* not balance — balance splits JP mid-文節 (survey) */
+}
+
+/* ── Japanese type scale ────────────────────────────────────────────────
+   One modular scale (1.2 minor third) anchored at the 38px hero; every JA
+   heading steps DOWN from it so none can out-shout the hero (the earlier bug:
+   a 52px section h2 above a 38px hero h1). Tiers: statement 32 / section 26 /
+   card 22 / lead 18 / body-lg 17. JA headings break at 文節 (word-break:
+   auto-phrase) with kinsoku (line-break:strict) and never use text-wrap:balance.
+   See skill japanese-typography-qa. */
+html[lang="ja"] .feature-intro p,
+html[lang="ja"] .usecases-header p,
+html[lang="ja"] .faq-header p,
+html[lang="ja"] .screens-header p {
+    font-size: 1.125rem; /* lead — 18px */
+    line-height: 1.8;
+}
+html[lang="ja"] .cell-content h2,
+html[lang="ja"] .usecase-title,
+html[lang="ja"] .step-body h3,
+html[lang="ja"] .guide-card h3 {
+    font-size: 1.375rem; /* card title — 22px */
+    line-height: 1.5;
+}
+html[lang="ja"] .workflow-header h2,
+html[lang="ja"] .guide-header h2 {
+    font-size: 1.625rem; /* section header — 26px */
+    line-height: 1.4;
+}
+html[lang="ja"] .cell-content p,
+html[lang="ja"] .step-body p {
+    font-size: 1.0625rem; /* dense body — 17px */
+    line-height: 1.8;
+}
+/* JA heading wrapping: 文節-aware, kinsoku on, balance off */
+html[lang="ja"] .feature-intro h2,
+html[lang="ja"] .usecases-header h2,
+html[lang="ja"] .screens-header h2,
+html[lang="ja"] .workflow-header h2,
+html[lang="ja"] .guide-header h2,
+html[lang="ja"] .faq-header h2,
+html[lang="ja"] .cell-content h2,
+html[lang="ja"] .usecase-title,
+html[lang="ja"] .step-body h3,
+html[lang="ja"] .guide-card h3 {
+    word-break: auto-phrase;
+    line-break: strict;
+    text-wrap: wrap;
 }
 
 .subtext {
@@ -205,12 +272,17 @@ html[lang="ja"] .headline {
 }
 
 html[lang="ja"] .subtext {
-    font-size: 1.5rem; /* Increased subtext */
+    font-size: 1.125rem; /* lead — 18px; supports the hero, doesn't compete */
+    line-height: 1.8;
 }
 
 .button-group {
     display: flex;
     gap: 16px;
+    /* If both CTAs can't sit beside the hero text column, wrap the second pill
+       to a new row instead of letting a label break mid-word (design-taste-
+       frontend: CTA Button Wrap Ban). Pairs with .btn { white-space:nowrap }. */
+    flex-wrap: wrap;
 }
 
 .visual-frame {
@@ -352,9 +424,9 @@ code {
 }
 
 html[lang="ja"] .feature-intro h2 {
-    font-size: 3.25rem; /* Increased */
-    line-height: 1.3;
-    word-break: keep-all;
+    font-size: 2rem; /* section statement — 32px, one rung below the 38px hero */
+    line-height: 1.4;
+    letter-spacing: -0.01em;
 }
 
 .feature-intro p {
@@ -436,7 +508,8 @@ html[lang="ja"] .feature-intro h2 {
 }
 
 html[lang="ja"] .usecases-header h2 {
-    font-size: 2.25rem;
+    font-size: 1.625rem; /* section header — 26px */
+    line-height: 1.4;
 }
 
 .usecases-header p {
@@ -653,7 +726,8 @@ html[lang="ja"] .usecases-header h2 {
 }
 
 html[lang="ja"] .faq-header h2 {
-    font-size: 2.25rem;
+    font-size: 1.625rem; /* section header — 26px */
+    line-height: 1.4;
 }
 
 .faq-header p {
@@ -819,15 +893,14 @@ html[lang="ja"] .faq-header h2 {
         font-size: 2.75rem;
         margin-bottom: 20px;
     }
-    html[lang="ja"] .headline {
-        font-size: 2.25rem;
-    }
+    /* JA hero headline inherits the base clamp (lower band) at <=768; the <wbr>
+       still pins the 文節 break. No separate font-size needed here. */
     .subtext {
         font-size: 1.1rem;
         margin-bottom: 32px;
     }
     html[lang="ja"] .subtext {
-        font-size: 1.15rem;
+        font-size: 1.0625rem; /* lead — 17px */
     }
 
     /* Hero call-to-action buttons stack full-width instead of overflowing */
@@ -844,7 +917,7 @@ html[lang="ja"] .faq-header h2 {
         font-size: 2.25rem;
     }
     html[lang="ja"] .feature-intro h2 {
-        font-size: 2rem;
+        font-size: 1.625rem; /* section statement — 26px */
     }
     .feature-intro p {
         font-size: 1.15rem;
@@ -853,7 +926,7 @@ html[lang="ja"] .faq-header h2 {
         font-size: 2rem;
     }
     html[lang="ja"] .usecases-header h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem; /* section header — 24px */
     }
     .usecase-title {
         font-size: 1.4rem;
@@ -872,6 +945,29 @@ html[lang="ja"] .faq-header h2 {
         gap: 20px;
         padding: 24px 0;
     }
+
+    /* JA type scale at <=768 (steps down from the ~32px hero) */
+    html[lang="ja"] .workflow-header h2,
+    html[lang="ja"] .guide-header h2,
+    html[lang="ja"] .faq-header h2 {
+        font-size: 1.5rem; /* section header — 24px */
+    }
+    html[lang="ja"] .cell-content h2,
+    html[lang="ja"] .usecase-title,
+    html[lang="ja"] .step-body h3,
+    html[lang="ja"] .guide-card h3 {
+        font-size: 1.25rem; /* card title — 20px */
+    }
+    html[lang="ja"] .feature-intro p,
+    html[lang="ja"] .usecases-header p,
+    html[lang="ja"] .faq-header p,
+    html[lang="ja"] .screens-header p {
+        font-size: 1.0625rem; /* lead — 17px */
+    }
+    html[lang="ja"] .cell-content p,
+    html[lang="ja"] .step-body p {
+        font-size: 1rem; /* dense body — 16px */
+    }
 }
 
 @media (max-width: 480px) {
@@ -883,13 +979,14 @@ html[lang="ja"] .faq-header h2 {
         font-size: 2.25rem;
     }
     html[lang="ja"] .headline {
-        font-size: 1.9rem;
+        font-size: clamp(1.625rem, 5.2vw, 1.875rem); /* 26 -> 30px */
+        letter-spacing: 0.03em;
     }
     .feature-intro h2 {
         font-size: 1.9rem;
     }
     html[lang="ja"] .feature-intro h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem; /* section statement — 24px */
     }
     .cell-content h2 {
         font-size: 1.4rem;
@@ -897,6 +994,31 @@ html[lang="ja"] .faq-header h2 {
     /* Keep the command example from forcing horizontal scroll */
     .code-snippet code {
         font-size: 0.78rem;
+    }
+
+    /* JA type scale at <=480 */
+    html[lang="ja"] .usecases-header h2,
+    html[lang="ja"] .workflow-header h2,
+    html[lang="ja"] .guide-header h2,
+    html[lang="ja"] .faq-header h2 {
+        font-size: 1.375rem; /* section header — 22px */
+    }
+    html[lang="ja"] .cell-content h2,
+    html[lang="ja"] .usecase-title,
+    html[lang="ja"] .step-body h3,
+    html[lang="ja"] .guide-card h3 {
+        font-size: 1.1875rem; /* card title — 19px */
+    }
+    html[lang="ja"] .subtext,
+    html[lang="ja"] .feature-intro p,
+    html[lang="ja"] .usecases-header p,
+    html[lang="ja"] .faq-header p,
+    html[lang="ja"] .screens-header p {
+        font-size: 1rem; /* lead — 16px */
+    }
+    html[lang="ja"] .cell-content p,
+    html[lang="ja"] .step-body p {
+        font-size: 0.9375rem; /* dense body — 15px */
     }
 }
 
@@ -914,7 +1036,8 @@ html[lang="ja"] .faq-header h2 {
     margin-bottom: 16px;
 }
 html[lang="ja"] .screens-header h2 {
-    font-size: 2.25rem;
+    font-size: 1.625rem; /* section header — 26px */
+    line-height: 1.4;
 }
 .screens-header p {
     font-size: 1.25rem;
@@ -958,7 +1081,7 @@ html[lang="ja"] .screens-header h2 {
         font-size: 2rem;
     }
     html[lang="ja"] .screens-header h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem; /* section header — 24px */
     }
 }
 
