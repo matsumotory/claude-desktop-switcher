@@ -198,6 +198,40 @@
                 </div>
             </div>
         </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="faq container fade-in">
+            <div class="faq-header">
+                <h2>よくある質問</h2>
+                <p>共有・分離の基準は常に「いま使っている Claude」。新しい環境は、そこから何を引き継ぎ何を分けるかを選んで作ります。</p>
+            </div>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <p class="faq-q">「共有」「分離」は何に対してですか？</p>
+                    <p class="faq-a">常に「いま使っている Claude」（あなたの既存環境）に対してです。各項目を、いまの環境と同じものを使う（共有）か、この環境専用に新しく持つ（分離）かを選びます。</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">「いま使っている Claude」とは？</p>
+                    <p class="faq-a">普段お使いの既存の Claudeデスクトップアプリと Claude Code の環境です。CSW はこれを基準にするだけで、設定・履歴・ログインを変更も削除もしません。</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">同じアカウントでも環境を作る必要がありますか？</p>
+                    <p class="faq-a">いいえ。同じ環境を使い続けたいだけなら不要です。いつもどおり起動すれば「いま使っている Claude」が使われます。CSW は別アカウントや別案件の独立環境を増やすときに役立ちます。</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">新しい環境を作ると元の Claude は壊れますか？</p>
+                    <p class="faq-a">壊れません。各環境はプロファイルごとの専用ディレクトリに分かれており、プロファイルを削除しても元の環境には影響しません。</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">切り替えるたびに再ログインが必要ですか？</p>
+                    <p class="faq-a">いいえ。各環境はログイン状態を自分のディレクトリ内に保持します。初回だけログインすれば、以後は切り替えても保たれます（分離した項目は新しい環境では空から始まります）。</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">デスクトップを切り替えるとターミナルも揃いますか？</p>
+                    <p class="faq-a">いいえ。GUI と CLI は独立しています。ターミナルで <code>eval $(csw env &lt;プロファイル名&gt;)</code> を実行して明示的に揃えてください（そのタブだけに適用されます）。</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer container">

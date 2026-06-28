@@ -283,6 +283,8 @@ function sharingDisclosure(sharing) {
       ...g.items.map((it) => sharingReadRow(it, sharing[it.key]))));
   }
   inner.push(h('div', { class: 'share-group' }, sharingReadRow(DEVICE_ID, sharing[DEVICE_ID.key])));
+  // Name the reference point so "shared/isolated" is never ambiguous.
+  inner.unshift(h('p', { class: 'share-basis', text: '「共有」はいま使っている Claude と同じもの、「分離」はこの環境だけのものです。' }));
 
   const wrap = h('div', { class: 'disclosure' });
   const toggle = h('button', {
@@ -435,7 +437,11 @@ function setMode(mode) {
 }
 
 function renderAdvancedRows() {
-  const nodes = [];
+  // Name the reference point + define the words once, so all 11 rows read clearly.
+  const nodes = [
+    h('p', { class: 'share-basis', text: '各項目を、いま使っている Claude と「共有」するか「分離」するか選びます。' }),
+    h('p', { class: 'share-legend', text: '共有 = いまのを使う ／ 分離 = この環境だけ ／ コピー = 最初だけ写す' }),
+  ];
   for (const g of SHARE_GROUPS) {
     nodes.push(h('div', { class: 'share-group' },
       h('div', { class: 'share-group-label', text: g.label }),
@@ -458,7 +464,7 @@ function segRow(item, value, fixed) {
     h('div', { class: 'share-line-meta' },
       h('div', { class: 'share-line-name', text: item.name }),
       h('div', { class: 'share-line-desc', text: item.desc })),
-    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': item.name },
+    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': item.name + '：いま使っている Claude と共有・分離・コピーのどれにするか' },
       opt('share', 'i-link', '共有'), opt('isolate', 'i-lock', '分離'), opt('copy', 'i-copy', 'コピー')));
 }
 

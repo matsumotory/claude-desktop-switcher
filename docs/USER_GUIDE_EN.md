@@ -10,6 +10,19 @@ This tool eliminates the need for complex shell scripts. It achieves **"Desktop 
 
 ---
 
+## 0. The mental model: separate from "The Claude you use now"
+
+Understand this one thing and nothing else is confusing.
+
+- **"The Claude you use now" = your existing setup** (the Claude Desktop and Claude Code you already use). It is the reference point, and CSW never changes it.
+- **Creating a new environment = deciding, item by item, what to inherit from "The Claude you use now" and what to keep separate.** The counterpart of share / isolate / copy is always "The Claude you use now".
+  - **Share**: use the same thing as your current Claude (changes apply to both)
+  - **Isolate**: keep a new thing just for this environment (independent, empty at first)
+  - **Copy**: duplicate once at creation, then they diverge
+- **If you only want to keep using the same account, you do not need a new environment.** Just use "The Claude you use now" as usual—you do not even need to open CSW. CSW is for when you want a *separate environment for a different account or project*.
+
+---
+
 ## 1. Installation & Initial Setup
 
 Your existing Claude environment (e.g., your default personal environment) is preserved as-is.
@@ -90,4 +103,29 @@ This is the safest method to ensure your desktop app and terminal (CLI) accounts
   Claude Desktop Switcher never silently alters system environment variables. If you launch Claude normally without using this app, it will act as your default environment 100% of the time. Your existing setup cannot be broken.
 * **How to prevent accidental token consumption**
   If you are unsure which account your terminal is using, simply run the `csw status` command. This will safely display the active profile currently applied to your terminal session.
+
+---
+
+## 4. FAQ
+
+**Q. Share / isolate — relative to what?**
+Always relative to "The Claude you use now" (your existing setup). For each item in a new environment, you choose whether to use the same thing as your current Claude (share) or keep a new one just for this environment (isolate).
+
+**Q. What is "The Claude you use now"?**
+It is your existing Claude Desktop and Claude Code setup. CSW only displays it and uses it as the reference; it never changes or deletes your settings, history, or login. It is pinned at the top of the sidebar in the app.
+
+**Q. Do I need to create a new environment just to use the same account?**
+No. If you only want to keep using the same account, you do not need a new environment—launch Claude as usual and "The Claude you use now" is used directly. CSW helps when you want additional, independent environments for different accounts or projects.
+
+**Q. Will creating a new environment break my original Claude?**
+No. Each new environment is created in its own per-profile directory, physically separate from the original. Deleting a profile does not affect your original Claude.
+
+**Q. Do I have to sign in again every time I switch?**
+No. Each environment keeps its login inside its own directory. Sign in once and it persists across switches (items set to "isolate" start empty in the new environment).
+
+**Q. Does switching the desktop app also switch the terminal (Claude Code)?**
+No. The GUI and CLI contexts are independent. In the terminal, run `eval $(csw env <profile>)` to sync explicitly (it applies to that tab only and never affects your usual setup).
+
+**Q. What exactly is shared by "Reuse settings"?**
+Your MCP server config, global rules (CLAUDE.md), permissions/hooks, plugins, skills, app settings, and worktrees (your config assets) are shared with "The Claude you use now". Login, conversation history, command history, and project memory are kept separate for safety. To fine-tune, use "Configure in detail (11 items)" on the create screen.
 
