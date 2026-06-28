@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.3...v0.8.4) (2026-06-28)
+
+
+### Bug Fixes
+
+* **docs,website,desktop:** 全ドキュメント・LPの用語/UIモデル/トーンを正典に整合 ([#68](https://github.com/matsumotory/claude-desktop-switcher/issues/68)) ([a6ae2e3](https://github.com/matsumotory/claude-desktop-switcher/commit/a6ae2e37a986402f7e1f236e21826d10defd97c4))
+
 ## [0.8.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.2...v0.8.3) (2026-06-28)
 
 
