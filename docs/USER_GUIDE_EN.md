@@ -31,7 +31,7 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 1. Download the latest `.dmg` file from the [Releases](https://github.com/matsumotory/claude-desktop-switcher/releases/latest) page.
 2. Drag and drop the downloaded `Claude-Desktop-Switcher.app` into your macOS `Applications` folder.
 3. Launch the app. A blue icon will appear in your macOS menu bar.
-4. On first launch only, the welcome screen shows a few helper cards (your Existing Claude is protected, you can use several environments at once, and the terminal (Claude Code) shares the same environment). They appear once and then go away.
+4. On first launch only, the welcome screen shows a few helper cards (your Existing Claude is protected, you can switch between environments, and the terminal (Claude Code) shares the same environment). They appear once and then go away.
 
 ![First-run onboarding](../website/assets/screen_onboarding.png)
 
@@ -45,7 +45,7 @@ Create a new isolated environment for work or research.
 For advanced use cases (such as "I want to share my personal MCP settings and rules, but route token usage to my Work account"), we provide flexible customization options.
 
 1. Click the Claude Desktop Switcher icon in the menu bar and select **"Settings..."**.
-2. In the settings window, click **"New environment"**.
+2. In the settings window, click **"環境を作る" (Create environment)**.
 3. Enter the environment information.
    * **Name**: (e.g., `Work`, `Research`)
    * **Icon (optional)**: an emoji or a single character
@@ -75,13 +75,13 @@ For advanced use cases (such as "I want to share my personal MCP settings and ru
 Here is the daily usage flow after setup. No manual configuration is required.
 
 ### Scenario A: Starting work with your Work account
-1. Click the Claude Desktop Switcher icon in the menu bar.
-2. Select the "Work" environment you created.
-3. **A new Claude Desktop window will launch automatically.**
+1. If another Claude Desktop app is running, quit it first. (To avoid configuration conflicts, you cannot run more than one environment's Claude at once.)
+2. Click the Claude Desktop Switcher icon in the menu bar and select the "Work" environment you created.
+3. **Press "Launch Claude for this environment", and that environment's dedicated Claude Desktop app launches.**
    （This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.）
 
-> **Tip: You can run multiple apps simultaneously**
-> Your original personal (Default) Claude window remains active. You can run your personal window alongside your work window to review code or multitask.
+> **Note: one environment at a time**
+> To avoid configuration conflicts, you cannot run more than one environment's Claude simultaneously. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual.
 
 ### Scenario B: Using the Terminal (Claude Code)
 There are two kinds of terminal, and they need different steps.

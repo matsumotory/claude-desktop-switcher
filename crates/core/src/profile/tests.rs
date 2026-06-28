@@ -115,3 +115,45 @@ fn test_clone_profile() {
     assert!(list.contains(&"original".to_string()));
     assert!(list.contains(&"cloned".to_string()));
 }
+
+#[test]
+fn validate_profile_name_accepts_japanese_and_safe_ascii() {
+    for ok in [
+        "研究用",
+        "仕事用",
+        "検証用",
+        "Work",
+        "test-1",
+        "a_b",
+        "プロジェクトA",
+    ] {
+        assert!(validate_profile_name(ok).is_ok(), "should accept {ok:?}");
+    }
+}
+
+#[test]
+fn validate_profile_name_rejects_traversal_and_shell_metacharacters() {
+    for bad in [
+        "", "../evil", "a/b", "a\\b", "a b", "a.b", "a$b", "a;b", "a`b`", "a|b", "..",
+    ] {
+        assert!(
+            matches!(
+                validate_profile_name(bad),
+                Err(crate::error::CswError::InvalidProfileName(_))
+            ),
+            "should reject {bad:?}"
+        );
+    }
+    // Over the length cap.
+    let too_long = "a".repeat(65);
+    assert!(validate_profile_name(&too_long).is_err());
+}
+
+#[test]
+fn create_profile_rejects_path_traversal_name() {
+    let (_provider, manager, _tmp) = setup_test_manager();
+    let err = manager
+        .create_profile("../escape", SharingConfig::default(), None)
+        .unwrap_err();
+    assert!(matches!(err, crate::error::CswError::InvalidProfileName(_)));
+}

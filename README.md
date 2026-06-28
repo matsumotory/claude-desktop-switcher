@@ -50,7 +50,7 @@ Managing the desktop app requires no complex configuration. Everything can be op
 
 1. **Install & Launch**: Place `Claude-Desktop-Switcher.app` in your Applications folder and launch it. It will reside in the menu bar.
 2. **Create Environments**: From `Settings...` in the menu, create independent environments such as "Work" or "Research" with a single click.
-3. **Launch in Isolated Environment**: When you select an environment, the Claude desktop app launches referencing its dedicated, isolated directory.
+3. **Launch in Isolated Environment**: Select an environment and press "Launch Claude for this environment" (`この環境で Claude を起動`); that environment's Claude Desktop App launches against its own isolated directory. Quit any running Claude first — one environment runs at a time.
 
 ### Terminal (Claude Code) Integration
 
@@ -154,7 +154,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 
 1. **インストール＆起動**: `Claude-Desktop-Switcher.app` をアプリケーションフォルダに入れて起動。メニューバーに常駐します。
 2. **環境の作成**: メニューの `Settings...` から、ワンクリックで「業務」「研究」など、独立した環境を作成。
-3. **分離環境での起動**: 環境を選択すると、Claudeデスクトップアプリが隔離された専用ディレクトリを参照して起動します。
+3. **分離環境での起動**: 環境を選んで「この環境で Claude を起動」を押すと、その環境専用の隔離ディレクトリで Claudeデスクトップアプリが起動します。起動中の Claude は先に終了してください（同時に開けるのは1環境）。
 
 #### ターミナル（Claude Code）連携
 

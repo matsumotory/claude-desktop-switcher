@@ -239,7 +239,7 @@ async function showDetail(name) {
     nodes.push(terminalSection(name));
     if (!isActive) {
       nodes.push(h('p', { class: 'detail-switch-hint', text:
-        '切り替えると、この環境のウィンドウが開きます。' }));
+        '先に起動中の Claude を終了してから押すと、この環境の Claude が開きます。' }));
     }
   }
 
@@ -355,7 +355,7 @@ function renderDetailFooter(name, isDefault, isActive) {
   const switchBtn = h('button', {
     type: 'button', class: 'btn btn-primary', disabled: isActive,
     onclick: () => { if (!isActive) doSwitch(name); },
-  }, icon('i-switch'), h('span', { text: isActive ? '利用中の環境' : 'この環境に切り替える' }));
+  }, icon('i-switch'), h('span', { text: isActive ? '利用中の環境' : (isDefault ? '既存の Claude に切り替える' : 'この環境で Claude を起動') }));
 
   if (isDefault) {
     el.detailFooter.replaceChildren(
@@ -399,13 +399,28 @@ function showCloneRow(name) {
 }
 
 // --- Backend operations -----------------------------------------------------
+// Switching relinks shared/isolated config and launches that environment's
+// Claude. The core refuses to switch while Claude Desktop is running (to avoid
+// config write-back races), so only one environment's Claude runs at a time.
+// Guide the user to quit the running one first instead of showing a dead end.
+function showSwitchBlocked(name) {
+  el.detailFooter.className = 'view-footer split';
+  el.detailFooter.replaceChildren(
+    h('span', { class: 'confirm-text', text: '起動中の Claude を終了してから、もう一度押してください。設定の衝突を防ぐため、複数の環境の Claude は同時に開けません。' }),
+    h('div', { class: 'footer-group' },
+      h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, '閉じる'),
+      h('button', { type: 'button', class: 'btn btn-primary', onclick: () => doSwitch(name) }, 'もう一度試す')));
+}
+
 async function doSwitch(name) {
   try {
+    if (await invoke('get_desktop_running_status')) { showSwitchBlocked(name); return; }
     await invoke('switch_profile', { name, noLaunch: false });
     await refreshProfiles();
     withTransition(() => showDetail(name));
-    showToast(`${name === 'default' ? '既存の Claude' : name}に切り替えました`);
+    showToast(name === 'default' ? '既存の Claude に切り替えました' : `${name} の Claude を起動しました`);
   } catch (err) {
+    if (String(err || '').includes('Claude Desktop is running')) { showSwitchBlocked(name); return; }
     showToast('切り替えできませんでした。もう一度お試しください。', true);
   }
 }
@@ -520,7 +535,12 @@ function closeAdvanced() {
 function validateName(name) {
   if (!name) return '名前を入力してください。';
   if (name.toLowerCase() === 'default') return '"default" は使えません。いまの環境を指す予約名です。';
-  if (!/^[a-zA-Z0-9_-]+$/.test(name)) return '英数字とハイフン、アンダースコアだけ使えます。';
+  if ([...name].length > 64) return '名前は64文字までにしてください。';
+  // Allow Unicode letters/numbers (including Japanese) plus hyphen/underscore.
+  // Spaces, slashes, dots and symbols are rejected (the name becomes a folder
+  // name and is passed to the shell in `csw env <name>`). Mirrors the core
+  // validate_profile_name guard.
+  if (!/^[\p{L}\p{N}_-]+$/u.test(name)) return '文字・数字・ハイフン・アンダースコアだけ使えます（空白や記号は使えません）。';
   return null;
 }
 
@@ -676,6 +696,8 @@ function devInvoke(cmd, args) {
       return Promise.resolve('default');
     case 'get_profile_details':
       return Promise.resolve(sample[args.name] || sample['検証用']);
+    case 'get_desktop_running_status':
+      return Promise.resolve(false);
     default:
       return Promise.resolve(null);
   }
