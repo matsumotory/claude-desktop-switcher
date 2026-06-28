@@ -610,15 +610,15 @@ document.addEventListener('DOMContentLoaded', init);
 function devInvoke(cmd, args) {
   const sample = {
     default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
-    仕事用: { name: '仕事用', icon: '💼', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', sharing: { ...PRESETS.share_settings } },
-    検証用: { name: '検証用', icon: '🧪', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', sharing: { ...PRESETS.isolate } },
+    仕事用: { name: '仕事用', icon: '', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', sharing: { ...PRESETS.share_settings } },
+    検証用: { name: '検証用', icon: '', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', sharing: { ...PRESETS.isolate } },
   };
   switch (cmd) {
     case 'list_profiles':
       return Promise.resolve([
         { name: 'default', icon: '', is_default: true },
-        { name: '仕事用', icon: '💼', is_default: false },
-        { name: '検証用', icon: '🧪', is_default: false },
+        { name: '仕事用', icon: '', is_default: false },
+        { name: '検証用', icon: '', is_default: false },
       ]);
     case 'get_active_profile':
       return Promise.resolve('default');
