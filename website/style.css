@@ -783,8 +783,9 @@ html[lang="ja"] .faq-header h2 {
     }
     .site-footer {
         flex-direction: column;
-        text-align: center;
-        gap: 16px;
+        align-items: flex-start;
+        text-align: left;
+        gap: 20px;
     }
 }
 

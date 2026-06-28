@@ -279,7 +279,7 @@ function copyButton(value, title) {
 }
 
 function terminalSection(name) {
-  const cmd = `eval $(csw env "${name}")`;
+  const cmd = `eval $(csw env ${name})`;
   // Collapsed by default: most users drive everything from the GUI; the CLI
   // command is only needed when opening a separate terminal yourself.
   const inner = [
