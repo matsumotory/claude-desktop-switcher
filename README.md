@@ -34,7 +34,7 @@ How should you partition your environments on a single PC? You can flexibly adju
   When you want separate accounts but want to reuse common rules and settings. A "Shared" configuration synchronizes specific files (such as `CLAUDE.md`) across environments while keeping history and logins separate.
 
 - **04. Link the CLI to your GUI separation (for developers)**
-  Link the environment you chose in the GUI to the CLI's `CLAUDE_CONFIG_DIR`. Run `eval $(csw env Work)` in a separate terminal to use the CLI in the same isolated environment. This adds GUI consistency on top of what existing CLI-only switchers already solve.
+  Link the environment you chose in the GUI to the CLI's `CLAUDE_CONFIG_DIR`. Run `eval $(csw env <env-name>)` (replace `<env-name>` with your environment's name) in a separate terminal to use the CLI in the same isolated environment. This adds GUI consistency on top of what existing CLI-only switchers already solve.
 
 ## Features
 
@@ -48,7 +48,7 @@ How should you partition your environments on a single PC? You can flexibly adju
 
 Managing the desktop app requires no complex configuration. Everything can be operated intuitively from the menu bar.
 
-1. **Install & Launch**: Place `ClaudeDesktopSwitcher.app` in your Applications folder and launch it. It will reside in the menu bar.
+1. **Install & Launch**: Place `Claude-Desktop-Switcher.app` in your Applications folder and launch it. It will reside in the menu bar.
 2. **Create Environments**: From `Settings...` in the menu, create independent environments such as "Work" or "Research" with a single click.
 3. **Launch in Isolated Environment**: When you select an environment, the Claude desktop app launches referencing its dedicated, isolated directory.
 
@@ -63,7 +63,7 @@ When you switch to an environment and launch it from CSW, any terminal you open 
 A terminal you open on your own stays in your usual environment. To use a specific environment, run the sync command below (it points the CLI's `CLAUDE_CONFIG_DIR` at that environment's directory, applies to that tab only, and never affects your usual environment):
 
 ```bash
-eval $(csw env Work)
+eval $(csw env <env-name>)
 ```
 
 ## Build from Source (.dmg)
@@ -77,7 +77,7 @@ npm run tauri build
 # Or, if you use Cargo
 cargo tauri build
 ```
-Once the build is complete, `Claude Desktop Switcher.dmg` will be generated in `crates/desktop/src-tauri/target/release/bundle/dmg/`.
+Once the build is complete, the disk image (`Claude-Desktop-Switcher_<version>_<arch>.dmg`) is generated in `target/release/bundle/dmg/`.
 
 ## Project Structure (For Developers)
 
@@ -128,7 +128,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
   アカウントは用途別に分けたいが、共通の運用ルールや設定は使い回したい場合に。特定の設定ファイル（CLAUDE.md 等）だけを全環境で共有する構成に対応し、履歴やログインは分離したまま設定の二重管理を防ぎます。
 
 - **04. GUI の分離に CLI を連動させる（開発者向け）**
-  GUI で分けた環境を Claude Code（CLI）側でも同じ環境で使いたい場合に。GUI で選んだ環境に `CLAUDE_CONFIG_DIR` を連動させ、別に開いたターミナルで `eval $(csw env Work)` を実行すれば、CLI もその隔離環境で動きます。CLI 単体スイッチャーが既に解決している領域に、GUI 分離との一貫性を足します。
+  GUI で分けた環境を Claude Code（CLI）側でも同じ環境で使いたい場合に。GUI で選んだ環境に `CLAUDE_CONFIG_DIR` を連動させ、別に開いたターミナルで `eval $(csw env <環境名>)`（`<環境名>` は対象の環境名に置き換え）を実行すれば、CLI もその隔離環境で動きます。CLI 単体スイッチャーが既に解決している領域に、GUI 分離との一貫性を足します。
 
 ### アプリの特徴
 
@@ -142,7 +142,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 
 デスクトップアプリの管理に複雑な設定は不要です。すべてメニューバーから直感的に操作できます。
 
-1. **インストール＆起動**: `ClaudeDesktopSwitcher.app` をアプリケーションフォルダに入れて起動。メニューバーに常駐します。
+1. **インストール＆起動**: `Claude-Desktop-Switcher.app` をアプリケーションフォルダに入れて起動。メニューバーに常駐します。
 2. **環境の作成**: メニューの `Settings...` から、ワンクリックで「業務」「研究」など、独立した環境を作成。
 3. **分離環境での起動**: 環境を選択すると、Claudeデスクトップアプリが隔離された専用ディレクトリを参照して起動します。
 
@@ -157,7 +157,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 ご自身で新しく開いたターミナルは、普段の環境のままです。対象の環境を使うときは、次の連携コマンドを実行します（CLI の `CLAUDE_CONFIG_DIR` を対象環境のディレクトリに向けます。そのタブだけに適用され、普段の環境には影響しません）。
 
 ```bash
-eval $(csw env Work)
+eval $(csw env <環境名>)
 ```
 
 ### 配布用ビルド（DMGファイルの作成）
@@ -171,7 +171,7 @@ npm run tauri build
 # または、Cargo を使う場合
 cargo tauri build
 ```
-ビルドが完了すると、`crates/desktop/src-tauri/target/release/bundle/dmg/` に `Claude Desktop Switcher.dmg` が生成されます。
+ビルドが完了すると、`target/release/bundle/dmg/` に `.dmg`（`Claude-Desktop-Switcher_<version>_<arch>.dmg`）が生成されます。
 
 ### プロジェクト構成（開発者向け）
 

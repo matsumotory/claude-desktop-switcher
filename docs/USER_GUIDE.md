@@ -29,7 +29,7 @@ CSW はこの一点だけ理解すれば迷いません。
 
 ### ステップ 1: アプリケーションのインストール
 1. GitHub の [Releases ページ](https://github.com/matsumotory/claude-desktop-switcher/releases/latest) から最新の `.dmg` ファイルをダウンロードします。
-2. ダウンロードした `ClaudeDesktopSwitcher.app` を、macOSの「アプリケーション」フォルダにドラッグ＆ドロップします。
+2. ダウンロードした `Claude-Desktop-Switcher.app` を、macOSの「アプリケーション」フォルダにドラッグ＆ドロップします。
 3. アプリを起動すると、画面右上のメニューバーに青いアイコンが常駐します。
 4. 初回起動時のみ、ようこそ画面の下に補足カードが表示されます（既存の Claude が保護されること、複数の環境を同時に使えること、ターミナル（Claude Code）も同じ環境で使えること）。一度表示すれば以後は出ません。
 

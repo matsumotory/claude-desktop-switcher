@@ -188,7 +188,10 @@ impl ProfileManager {
             return Ok(Profile {
                 profile: ProfileMeta {
                     name: "default".to_string(),
-                    icon: "💻".to_string(),
+                    // No hardcoded glyph: each surface picks its own (the GUI renders
+                    // an SVG monitor icon); a decorative emoji here would surface raw
+                    // in `csw profile show default` (AGENTS.md: no emoji for decoration).
+                    icon: String::new(),
                     color: "#9E9E9E".to_string(),
                     is_default: true,
                 },

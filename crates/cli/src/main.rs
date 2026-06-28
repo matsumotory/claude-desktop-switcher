@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 #[derive(Parser)]
 #[command(name = "csw")]
-#[command(about = "Claude Desktop Switcher — Synchronize Desktop & CLI environments")]
+#[command(about = "Claude Desktop Switcher: synchronize Desktop & CLI environments")]
 #[command(version)]
 struct Cli {
     #[command(subcommand)]
@@ -79,15 +79,15 @@ fn main() -> anyhow::Result<()> {
         Commands::Init => {
             println!("{}", "Initializing Claude Desktop Switcher...".bold());
             let manager = ProfileManager::new(provider.clone())?;
-            println!("{} Base configuration created.", "✔".green());
+            println!("{} Base configuration created.", "OK".green());
             println!(
                 "{} Profiles directory: {:?}",
-                "✔".green(),
+                "OK".green(),
                 provider.app_data_dir().join("profiles")
             );
             println!(
                 "{} Active profile is: {}",
-                "✔".green(),
+                "OK".green(),
                 manager.active_profile_name().cyan()
             );
             println!(
@@ -118,7 +118,7 @@ fn main() -> anyhow::Result<()> {
                         Ok(_) => {
                             println!(
                                 "{} Profile '{}' created successfully!",
-                                "✔".green(),
+                                "OK".green(),
                                 name.cyan()
                             );
                             println!(
@@ -139,7 +139,7 @@ fn main() -> anyhow::Result<()> {
                             );
                         }
                         Err(e) => {
-                            eprintln!("{} Failed to create profile: {}", "✘".red(), e);
+                            eprintln!("{} Failed to create profile: {}", "Error:".red(), e);
                             std::process::exit(1);
                         }
                     }
@@ -179,7 +179,12 @@ fn main() -> anyhow::Result<()> {
                         println!("    Desktop Device ID: {:?}", p.sharing.desktop_device_id);
                     }
                     Err(e) => {
-                        eprintln!("{} Failed to find profile '{}': {}", "✘".red(), name, e);
+                        eprintln!(
+                            "{} Failed to find profile '{}': {}",
+                            "Error:".red(),
+                            name,
+                            e
+                        );
                         std::process::exit(1);
                     }
                 },
@@ -188,11 +193,11 @@ fn main() -> anyhow::Result<()> {
                     match manager.delete_profile(&name) {
                         Ok(_) => println!(
                             "{} Profile '{}' deleted successfully.",
-                            "✔".green(),
+                            "OK".green(),
                             name.cyan()
                         ),
                         Err(e) => {
-                            eprintln!("{} Failed to delete profile: {}", "✘".red(), e);
+                            eprintln!("{} Failed to delete profile: {}", "Error:".red(), e);
                             std::process::exit(1);
                         }
                     }
@@ -206,7 +211,7 @@ fn main() -> anyhow::Result<()> {
             println!("Switching to profile '{}'...", name.cyan());
             match switcher.switch_to(&name) {
                 Ok(_) => {
-                    println!("{} Switched successfully.", "✔".green());
+                    println!("{} Switched successfully.", "OK".green());
 
                     let profile = manager.get_profile(&name)?;
 
@@ -220,14 +225,18 @@ fn main() -> anyhow::Result<()> {
                         if let Err(e) =
                             csw_core::switcher::desktop::launch_desktop(&profile, provider.as_ref())
                         {
-                            eprintln!("{} Failed to launch Claude Desktop: {}", "⚠".yellow(), e);
+                            eprintln!(
+                                "{} Failed to launch Claude Desktop: {}",
+                                "Warning:".yellow(),
+                                e
+                            );
                         } else {
-                            println!("{} Claude Desktop launched.", "✔".green());
+                            println!("{} Claude Desktop launched.", "OK".green());
                         }
                     }
                 }
                 Err(e) => {
-                    eprintln!("{} Switch failed: {}", "✘".red(), e);
+                    eprintln!("{} Switch failed: {}", "Error:".red(), e);
                     std::process::exit(1);
                 }
             }
