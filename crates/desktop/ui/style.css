@@ -7,7 +7,7 @@
 :root {
   --canvas:        #F7F6F3;   /* app background — tracks the OS title bar tone */
   --surface:       #FFFFFF;   /* cards */
-  --surface-alt:   #F2EFE8;   /* inset / the "current Claude" block */
+  --surface-alt:   #F2EFE8;   /* inset / selected-row + muted fills */
   --border:        rgba(0, 0, 0, 0.08);
   --border-strong: rgba(0, 0, 0, 0.14);
   --ink:           #1F1D1A;   /* body text (never pure black) */

@@ -64,7 +64,7 @@
             <div class="features-grid">
                 <div class="feature-intro fade-in">
                     <h2>デスクトップアプリの<br>スイートを分ける</h2>
-                    <p>CLI のプロファイル切り替えは direnv や claude-swap など既存ツールが既によく解決しています。CSW が担うのはその先 — チャット・Projects・Cowork・Artifacts・Claude Design といったデスクトップアプリの作業全体を、アカウント／用途ごとに分けることです。デスクトップで全部こなす方も、Cowork に Claude Code と Claude Design を組み合わせる方も、Cowork とチャットを主に使う方も、文脈ごとにまるごと分けられます。必要なら Claude Code も同じ環境に連動。GUI はメニューバーから、別に開いたターミナルは 1 コマンドで揃います。</p>
+                    <p>CLI のプロファイル切り替えは direnv や claude-swap など既存ツールが既によく解決しています。CSW が担うのはその先、チャット・Projects・Cowork・Artifacts・Claude Design といったデスクトップアプリの作業全体を、アカウント／用途ごとに分けることです。デスクトップで全部こなす方も、Cowork に Claude Code と Claude Design を組み合わせる方も、Cowork とチャットを主に使う方も、用途ごとにまるごと分けられます。必要なら Claude Code も同じ環境に連動。GUI はメニューバーから、別に開いたターミナルは 1 コマンドで揃います。</p>
                 </div>
                 
                 <div class="feature-cards-stack">
@@ -102,7 +102,7 @@
                 </figure>
                 <figure class="screen-card fade-in delay-2">
                     <img src="../assets/ja_screen_onboarding.png" alt="既存環境が保持されることを説明する初回オンボーディング" loading="lazy">
-                    <figcaption>初回だけ表示される簡単な案内。現在の環境は「いま使っている Claude」として保持され、一切変更されません。</figcaption>
+                    <figcaption>初回だけ表示される簡単な案内。現在の環境は「既存の Claude」として保持され、一切変更されません。</figcaption>
                 </figure>
             </div>
         </section>
@@ -111,7 +111,7 @@
         <section id="use-cases" class="usecases container fade-in">
             <div class="usecases-header">
                 <h2>利用シーンと解決する課題</h2>
-                <p>1つのPCの中でコンテキストをどう分けるか。あなたのワークスタイルに合わせて柔軟に分離度を調整できます。</p>
+                <p>1つのPCの中で環境をどう分けるか。あなたのワークスタイルに合わせて柔軟に分離度を調整できます。</p>
             </div>
             <div class="usecases-bento">
                 <div class="feature-cell bento-wide fade-in delay-1">
@@ -201,7 +201,7 @@
                     <h3>ターミナル連携</h3>
                     <p>アプリ内蔵のターミナルは環境を自動で引き継ぎます。別に開く外部ターミナル（iTerm2 等）は、次の 1 コマンドで切り替えます。</p>
                     <div class="code-snippet">
-                        <code>eval $(csw env &lt;名前&gt;)</code>
+                        <code>eval $(csw env Work)</code>
                     </div>
                 </div>
             </div>
@@ -211,24 +211,24 @@
         <section id="faq" class="faq container fade-in">
             <div class="faq-header">
                 <h2>よくある質問</h2>
-                <p>共有・分離の基準は常に「いま使っている Claude」。新しい環境は、そこから何を引き継ぎ何を分けるかを選んで作ります。</p>
+                <p>共有・分離の基準は常に「既存の Claude」。新しい環境は、そこから何を引き継ぎ何を分けるかを選んで作ります。</p>
             </div>
             <div class="faq-grid">
                 <div class="faq-item">
                     <p class="faq-q">「共有」「分離」は何に対してですか？</p>
-                    <p class="faq-a">常に「いま使っている Claude」（あなたの既存環境）に対してです。各項目を、いまの環境と同じものを使う（共有）か、この環境専用に新しく持つ（分離）かを選びます。</p>
+                    <p class="faq-a">常に「既存の Claude」（あなたの既存環境）に対してです。各項目を、いまの環境と同じものを使う（共有）か、この環境専用に新しく持つ（分離）かを選びます。</p>
                 </div>
                 <div class="faq-item">
-                    <p class="faq-q">「いま使っている Claude」とは？</p>
+                    <p class="faq-q">「既存の Claude」とは？</p>
                     <p class="faq-a">普段お使いの既存の Claudeデスクトップアプリと Claude Code の環境です。CSW はこれを基準にするだけで、設定・履歴・ログインを変更も削除もしません。</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">同じアカウントでも環境を作る必要がありますか？</p>
-                    <p class="faq-a">いいえ。同じ環境を使い続けたいだけなら不要です。いつもどおり起動すれば「いま使っている Claude」が使われます。CSW は別アカウントや別案件の独立環境を増やすときに役立ちます。</p>
+                    <p class="faq-a">いいえ。同じ環境を使い続けたいだけなら不要です。いつもどおり起動すれば「既存の Claude」が使われます。CSW は別アカウントや別案件の独立環境を増やすときに役立ちます。</p>
                 </div>
                 <div class="faq-item">
-                    <p class="faq-q">新しい環境を作ると元の Claude は壊れますか？</p>
-                    <p class="faq-a">壊れません。各環境は専用ディレクトリに分かれており、環境を削除しても元の環境には影響しません。</p>
+                    <p class="faq-q">新しい環境を作ると既存の Claude は壊れますか？</p>
+                    <p class="faq-a">壊れません。各環境は専用ディレクトリに分かれており、環境を削除しても既存の Claude には影響しません。</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">切り替えるたびに再ログインが必要ですか？</p>
@@ -236,7 +236,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">デスクトップを切り替えるとターミナルも揃いますか？</p>
-                    <p class="faq-a">CSW から開いたアプリの中のターミナル（内蔵）は、最初からそのアプリと同じ環境です。コマンドは不要です。別に開いたターミナル（外部）は普段の環境のままなので、<code>eval $(csw env &lt;名前&gt;)</code> を実行して揃えてください（そのタブだけに適用されます）。</p>
+                    <p class="faq-a">CSW から開いたアプリの中のターミナル（内蔵）は、最初からそのアプリと同じ環境です。コマンドは不要です。別に開いたターミナル（外部）は普段の環境のままなので、<code>eval $(csw env Work)</code> を実行して揃えてください（そのタブだけに適用されます）。</p>
                 </div>
             </div>
         </section>

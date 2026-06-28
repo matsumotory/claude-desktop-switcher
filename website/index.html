@@ -34,7 +34,7 @@
             <div class="hero-text fade-in">
                 <span class="eyebrow">Zero-Impact Isolation</span>
                 <h1 class="headline">Separate your Claude Desktop App by use case.</h1>
-                <p class="subtext">Keep chat, Projects, Claude Cowork, Artifacts, and Claude Design apart by account and use case—with Claude Code linked when you want it. A macOS utility for the whole Claude Desktop App suite.</p>
+                <p class="subtext">Keep chat, Projects, Claude Cowork, Artifacts, and Claude Design apart by account and use case, with Claude Code linked when you want it. A macOS utility for the whole Claude Desktop App suite.</p>
                 <div class="button-group">
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest" class="btn btn-primary">Download for macOS (.dmg) <div class="btn-icon-wrap">↗</div></a>
                     <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE_EN.md" class="btn btn-secondary">Read Documentation</a>
@@ -62,7 +62,7 @@
             <div class="features-grid">
                 <div class="feature-intro fade-in">
                     <h2>Separate the whole<br>Desktop App suite</h2>
-                    <p>Switching CLI profiles is already well handled by existing tools like direnv and claude-swap. CSW is for the rest of your Claude work: keep chat, Projects, Cowork, Artifacts, and Claude Design separated by account and use case—whether you live entirely in the desktop app, pair Cowork with Claude Code and Claude Design, or mainly use Cowork and chat. Claude Code links to the same environment when you want it: switch the GUI from the menu bar, and sync a separate terminal with one command.</p>
+                    <p>Switching CLI profiles is already well handled by existing tools like direnv and claude-swap. CSW is for the rest of your Claude work: keep chat, Projects, Cowork, Artifacts, and Claude Design separated by account and use case, whether you live entirely in the desktop app, pair Cowork with Claude Code and Claude Design, or mainly use Cowork and chat. Claude Code links to the same environment when you want it: switch the GUI from the menu bar, and sync a separate terminal with one command.</p>
                 </div>
                 
                 <div class="feature-cards-stack">
@@ -76,7 +76,7 @@
                     <div class="feature-cell cell-small dark-accent fade-in delay-2">
                         <div class="cell-content">
                             <h2>Localized Application</h2>
-                            <p>Your Mac's global system settings remain untouched. The active environment applies strictly locally—only to the Claude Desktop App launched via this tool or your specific terminal tab. This prevents unexpected bleeding into your usual environment, with the actual isolation level depending on your sharing configuration.</p>
+                            <p>Your Mac's global system settings remain untouched. The active environment applies strictly locally, only to the Claude Desktop App launched via this tool or your specific terminal tab. This prevents unexpected bleeding into your usual environment, with the actual isolation level depending on your sharing configuration.</p>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                 </figure>
                 <figure class="screen-card fade-in delay-2">
                     <img src="assets/screen_onboarding.png" alt="First-run onboarding explaining that the existing setup is preserved" loading="lazy">
-                    <figcaption>A short first-run tour. Your current environment is preserved as “The Claude you use now” and never modified.</figcaption>
+                    <figcaption>A short first-run tour. Your current environment is preserved as “Existing Claude” and never modified.</figcaption>
                 </figure>
             </div>
         </section>
@@ -199,7 +199,7 @@
                     <h3>Terminal Integration</h3>
                     <p>The built-in terminal inherits its environment automatically. For an external terminal (iTerm2, etc.), one command switches it.</p>
                     <div class="code-snippet">
-                        <code>eval $(csw env &lt;name&gt;)</code>
+                        <code>eval $(csw env Work)</code>
                     </div>
                 </div>
             </div>
@@ -209,20 +209,20 @@
         <section id="faq" class="faq container fade-in">
             <div class="faq-header">
                 <h2>FAQ</h2>
-                <p>Share and isolate are always relative to "The Claude you use now". You build a new environment by choosing what to inherit from it and what to keep separate.</p>
+                <p>Share and isolate are always relative to "Existing Claude". You build a new environment by choosing what to inherit from it and what to keep separate.</p>
             </div>
             <div class="faq-grid">
                 <div class="faq-item">
-                    <p class="faq-q">Share / isolate — relative to what?</p>
-                    <p class="faq-a">Always relative to "The Claude you use now" (your existing setup). For each item, you choose whether to use the same thing as your current Claude (share) or keep a new one just for this environment (isolate).</p>
+                    <p class="faq-q">Share / isolate: relative to what?</p>
+                    <p class="faq-a">Always relative to "Existing Claude" (your existing setup). For each item, you choose whether to use the same thing as your existing Claude (share) or keep a new one just for this environment (isolate).</p>
                 </div>
                 <div class="faq-item">
-                    <p class="faq-q">What is "The Claude you use now"?</p>
+                    <p class="faq-q">What is "Existing Claude"?</p>
                     <p class="faq-a">Your existing Claude Desktop and Claude Code setup. CSW only uses it as the reference point and never changes or deletes your settings, history, or login.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Do I need a new environment just to use the same account?</p>
-                    <p class="faq-a">No. If you only want to keep using the same setup, just launch Claude as usual and "The Claude you use now" is used directly. CSW helps when you want independent environments for other accounts or projects.</p>
+                    <p class="faq-a">No. If you only want to keep using the same setup, just launch Claude as usual and "Existing Claude" is used directly. CSW helps when you want independent environments for other accounts or projects.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Will a new environment break my original Claude?</p>
@@ -234,7 +234,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
-                    <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment—no command needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env &lt;name&gt;)</code> to sync it (it applies to that tab only).</p>
+                    <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env Work)</code> to sync it (it applies to that tab only).</p>
                 </div>
             </div>
         </section>
