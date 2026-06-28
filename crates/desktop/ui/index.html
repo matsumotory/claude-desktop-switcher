@@ -35,22 +35,10 @@
         <span class="wordmark-text">Claude Desktop Switcher</span>
       </div>
 
-      <!-- "The Claude you use now" = the user's real, untouched environment (default) -->
-      <button type="button" class="now-claude" id="nowClaude">
-        <span class="now-claude-bezel">
-          <span class="now-claude-icon"><svg class="icon"><use href="#i-monitor"/></svg></span>
-        </span>
-        <span class="now-claude-text">
-          <span class="now-claude-title">いま使っている Claude</span>
-          <span class="now-claude-sub">ふだんの環境。変更しません</span>
-        </span>
-        <span class="pill pill-active" id="nowClaudeActive" hidden>使用中</span>
-      </button>
-
-      <div class="sidebar-divider"></div>
-
-      <nav class="sidebar-section" id="createdSection" hidden aria-label="作った環境">
-        <h2 class="sidebar-label">作った環境</h2>
+      <!-- One environment rail. "既存の Claude" (the untouched baseline / default)
+           is rendered by renderSidebar() as the pinned first row, selectable like
+           any other environment — not a separate card. -->
+      <nav class="sidebar-section" aria-label="環境一覧">
         <ul class="profile-list" id="profileList"></ul>
       </nav>
 
@@ -73,7 +61,7 @@
                 <p class="empty-eyebrow">はじめまして</p>
               </div>
               <h1 class="empty-title">環境を分けて、混ぜない。</h1>
-              <p class="empty-lead">いま使っている Claude はそのまま。そこを基準に、何を引き継ぎ何を分けるかを決めて、新しい環境を作ります。</p>
+              <p class="empty-lead">既存の Claude はそのまま。そこを基準に、何を引き継ぎ何を分けるかを決めて、新しい環境を作ります。</p>
 
               <ol class="steps">
                 <li class="step"><span class="step-num">1</span><span class="step-text"><strong>環境を作る</strong> を押す</span></li>
@@ -92,7 +80,14 @@
                     <span class="firstrun-icon"><svg class="icon"><use href="#i-monitor"/></svg></span>
                     <div>
                       <p class="firstrun-head">いまの環境はそのまま残ります</p>
-                      <p class="firstrun-body">あなたが普段使っている Claudeデスクトップアプリと Claude Code の環境は「いま使っている Claude」として保護され、設定・履歴・ログインは変更されません。</p>
+                      <p class="firstrun-body">あなたが普段使っている Claudeデスクトップアプリと Claude Code の環境は「既存の Claude」として保護され、設定・履歴・ログインは変更されません。</p>
+                    </div>
+                  </div>
+                  <div class="firstrun-row">
+                    <span class="firstrun-icon"><svg class="icon"><use href="#i-switch"/></svg></span>
+                    <div>
+                      <p class="firstrun-head">複数の環境を同時に使えます</p>
+                      <p class="firstrun-body">「利用中」はメニューバーがいま対象にしている環境です。切り替えると、その環境のウィンドウが開きます。すでに開いている他のウィンドウは、それぞれの環境のまま使えます。</p>
                     </div>
                   </div>
                   <div class="firstrun-row">
@@ -141,7 +136,7 @@
               </div>
 
               <div class="field">
-                <span class="field-label">いま使っている Claude から、どう分けますか?</span>
+                <span class="field-label">既存の Claude から、どう分けますか?</span>
                 <div class="mode-cards" role="radiogroup" aria-label="分け方">
                   <label class="mode-card">
                     <input type="radio" name="mode" value="isolate" checked>
@@ -149,7 +144,7 @@
                       <span class="mode-card-icon"><svg class="icon"><use href="#i-lock"/></svg></span>
                       <span class="mode-card-main">
                         <span class="mode-card-head">まっさらに分ける <span class="tag-recommend">推奨</span></span>
-                        <span class="mode-card-desc">ログインも設定も履歴も、ぜんぶゼロから。いま使っている Claude には一切触れません。</span>
+                        <span class="mode-card-desc">ログインも設定も履歴も、ぜんぶゼロから。既存の Claude には一切触れません。</span>
                         <span class="mode-card-preview">
                           <span class="prev"><span class="prev-k">ログイン</span><span class="prev-v">新規</span></span>
                           <span class="prev"><span class="prev-k">設定・履歴</span><span class="prev-v">空</span></span>
@@ -165,7 +160,7 @@
                       <span class="mode-card-icon"><svg class="icon"><use href="#i-link"/></svg></span>
                       <span class="mode-card-main">
                         <span class="mode-card-head">設定だけ引き継ぐ</span>
-                        <span class="mode-card-desc">いま使っている Claude の MCP・ルール・スキルはそのまま使い、ログインと履歴だけこの環境専用にします。</span>
+                        <span class="mode-card-desc">既存の Claude の MCP・ルール・スキルはそのまま使い、ログインと履歴だけこの環境専用にします。</span>
                         <span class="mode-card-preview">
                           <span class="prev"><span class="prev-k">ログイン・履歴</span><span class="prev-v">別</span></span>
                           <span class="prev"><span class="prev-k">MCP・ルール・スキル</span><span class="prev-v">共有</span></span>

@@ -244,10 +244,17 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
 
     // 2. Add profile switchers
     for p_name in profiles {
-        let label = if p_name == active_name {
-            format!("● {} (使用中)", p_name)
+        // The settings UI shows the default profile as "既存の Claude" and marks the
+        // active one as "利用中"; mirror both here so the menu-bar wording matches.
+        let display: &str = if p_name == "default" {
+            "既存の Claude"
         } else {
-            format!("○ {}", p_name)
+            p_name.as_str()
+        };
+        let label = if p_name == active_name {
+            format!("● {} (利用中)", display)
+        } else {
+            format!("○ {}", display)
         };
 
         let p_item = MenuItem::with_id(

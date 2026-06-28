@@ -173,6 +173,15 @@ html[lang="ja"] body {
     padding-bottom: 96px;
 }
 
+/* Grid items default to min-width:auto, which refuses to shrink below the hero
+   image's intrinsic width and overflows narrow viewports (the image then drags
+   the whole layout wider than the screen, so headline/subtext stop aligning).
+   min-width:0 lets the 1fr tracks shrink; the image is capped to its frame. */
+.hero-text,
+.hero-visual {
+    min-width: 0;
+}
+
 .headline {
     font-size: 4.5rem; /* Increased */
     line-height: 1.05;
