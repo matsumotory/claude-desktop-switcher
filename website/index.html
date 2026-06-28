@@ -197,9 +197,9 @@
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
                     <h3>Terminal Integration</h3>
-                    <p>The built-in terminal inherits its environment automatically. For an external terminal (iTerm2, etc.), one command switches it.</p>
+                    <p>The built-in terminal inherits its environment automatically. For an external terminal (iTerm2, etc.), one command switches it. Replace the last argument with the name of the environment you want.</p>
                     <div class="code-snippet">
-                        <code>eval $(csw env Work)</code>
+                        <code>eval $(csw env &lt;env-name&gt;)</code>
                     </div>
                 </div>
             </div>
@@ -234,7 +234,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
-                    <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env Work)</code> to sync it (it applies to that tab only).</p>
+                    <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env &lt;env-name&gt;)</code> (the name of the environment you want) to sync it (it applies to that tab only).</p>
                 </div>
             </div>
         </section>

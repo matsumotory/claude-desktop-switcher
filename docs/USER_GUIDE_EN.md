@@ -2,7 +2,7 @@
 
 Claude Desktop Switcher is a macOS menu bar utility for safely isolating and managing account environments for the Claude Desktop App and Claude Code (CLI).
 
-### Why do you need this tool?
+### Why do you need this tool? (vs. existing workarounds)
 The official Claude Desktop App lacks multi-account switching. To work around this, users have historically relied on messy hacks, such as forcing separate instances via terminal `--user-data-dir` arguments or using CLI-only switchers like `direnv`. 
 However, these methods fail to bridge the gap between "safe desktop app isolation (a dedicated data directory per environment)" and "CLI environment syncing."
 
@@ -29,7 +29,7 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 
 ### Step 1: Install the Application
 1. Download the latest `.dmg` file from the [Releases](https://github.com/matsumotory/claude-desktop-switcher/releases/latest) page.
-2. Drag and drop the downloaded `ClaudeDesktopSwitcher.app` into your macOS `Applications` folder.
+2. Drag and drop the downloaded `Claude-Desktop-Switcher.app` into your macOS `Applications` folder.
 3. Launch the app. A blue icon will appear in your macOS menu bar.
 4. On first launch only, the welcome screen shows a few helper cards (your Existing Claude is protected, you can use several environments at once, and the terminal (Claude Code) shares the same environment). They appear once and then go away.
 
