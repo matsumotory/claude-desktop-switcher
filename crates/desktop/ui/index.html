@@ -48,6 +48,15 @@
         <svg class="icon"><use href="#i-plus"/></svg>
         <span>環境を作る</span>
       </button>
+
+      <!-- Accent theme picker (persisted in localStorage; default blue) -->
+      <div class="theme-picker" id="themePicker" role="group" aria-label="テーマカラー">
+        <span class="theme-picker-label">テーマ</span>
+        <button type="button" class="theme-dot" data-accent="blue" aria-label="ブルー"></button>
+        <button type="button" class="theme-dot" data-accent="teal" aria-label="ティール"></button>
+        <button type="button" class="theme-dot" data-accent="indigo" aria-label="インディゴ"></button>
+        <button type="button" class="theme-dot" data-accent="claude" aria-label="テラコッタ"></button>
+      </div>
     </aside>
 
     <!-- Right pane: one of empty / detail / create is visible -->
