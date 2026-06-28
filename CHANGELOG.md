@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.9.0...v0.9.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **desktop,docs,website:** 環境切替の導線・名前検証・余白とアプリ↔ドキュメント整合を是正 ([#79](https://github.com/matsumotory/claude-desktop-switcher/issues/79)) ([80a190b](https://github.com/matsumotory/claude-desktop-switcher/commit/80a190bd8caf680ef426a661f18169cfa72f6d1b))
+* **website,docs,cli:** サンプルコマンド・アプリ名・CLI表記を実装と整合 ([#76](https://github.com/matsumotory/claude-desktop-switcher/issues/76)) ([eb2c11d](https://github.com/matsumotory/claude-desktop-switcher/commit/eb2c11d21eb36952a03b4189ea88ab6617b81f43))
+* **website,docs:** 日本語LPの折り返しと見出しスケールを整え日本語タイポ監査スキルを追加 ([#73](https://github.com/matsumotory/claude-desktop-switcher/issues/73)) ([151c98c](https://github.com/matsumotory/claude-desktop-switcher/commit/151c98c7d0091134dcd1fbb128859831fde8f3e2))
+
 ## [0.9.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.4...v0.9.0) (2026-06-28)
 
 
