@@ -205,7 +205,9 @@ code, .code-line { font-family: var(--font-mono); }
 .profile-item:hover { background: var(--surface-alt); }
 .profile-item:active { transform: scale(0.99); }
 /* Selected (viewing) = fill is the primary signal; the left rule is a neutral
-   outline, not accent. accent means focus only. */
+   outline, not accent. On these sidebar lists accent is the focus-ring color only;
+   form controls (mode cards, segmented control) do use accent to mark the chosen
+   option, which is the conventional pattern for a radio/segment choice. */
 .profile-item.selected {
   background: var(--surface-alt);
   box-shadow: inset 2px 0 0 var(--border-strong);
