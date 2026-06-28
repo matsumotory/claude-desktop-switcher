@@ -242,14 +242,30 @@
         <!-- Engineering note -->
         <section id="tech-note" class="tech-note container fade-in">
             <div class="faq-header">
-                <h2>Engineering note: why Rust and Tauri</h2>
-                <p>CSW is built around a Rust library shared by both the CLI and the GUI. Here is the reasoning behind that choice, from a development and verification standpoint.</p>
+                <h2>Why we chose Rust and Tauri</h2>
+                <p>CSW is built around a Rust library shared by the CLI and the GUI. Here is the reasoning, from development, verification, and autonomous AI development.</p>
             </div>
-            <div class="tech-note-body">
-                <p>At the core of CSW is a shared Rust library that handles environment isolation, path resolution, and data safety. The command line (<code>csw</code>) and the menu-bar GUI are both thin layers over this same core. Because not destroying your existing data is the top priority, we chose Rust at the center, where invariants can be enforced at compile time.</p>
-                <p>The GUI is built with Tauri v2. Tauri renders through the operating system's WebView (WebKit on macOS) instead of bundling a browser engine, so the download stays small: the universal DMG is around 7 MB. Code signing and notarization are handled through Tauri's standard distribution flow.</p>
-                <p>This setup also keeps the development and verification loop easy to automate. The core logic is continuously checked by the Rust compiler, clippy, and tests, and the interface can be rendered and inspected with a standard headless browser. We prioritized a verification loop that runs mechanically in CI.</p>
-                <p>For native macOS UI, Apple's Swift and SwiftUI are the first choice, and an excellent one for apps that need deep system integration or a richly crafted native experience. Because CSW's value centers on systems-level logic with a thin UI, we prioritized core correctness and automated verification by choosing Rust and Tauri. A different kind of app would call for a different choice.</p>
+            <div class="tech-note-grid">
+                <div class="tech-note-item">
+                    <h3>A shared Rust core</h3>
+                    <p>A library that handles environment isolation, path resolution, and data safety is shared by the command line (<code>csw</code>) and the menu-bar GUI. Because not destroying your existing data is the top priority, the core lives in Rust, where invariants are enforced at compile time.</p>
+                </div>
+                <div class="tech-note-item">
+                    <h3>Tauri v2 and a small binary</h3>
+                    <p>The GUI uses Tauri v2. It renders through the operating system's WebView (WebKit on macOS) instead of bundling a browser engine, so the universal DMG is around 7 MB. Code signing and notarization run through Tauri's standard flow.</p>
+                </div>
+                <div class="tech-note-item">
+                    <h3>A verification loop that automates</h3>
+                    <p>The core logic is checked continuously by the Rust compiler, clippy, and tests, and the interface is rendered and inspected with a headless browser. We prioritized a verification loop that runs mechanically in CI.</p>
+                </div>
+                <div class="tech-note-item">
+                    <h3>Respect for Swift and SwiftUI</h3>
+                    <p>Apple's Swift and SwiftUI are the first choice for native macOS UI. Because CSW's value centers on systems-level logic with a thin UI, we prioritized core correctness and automated verification by choosing Rust and Tauri. A different kind of app would call for a different choice.</p>
+                </div>
+                <div class="tech-note-item span-full">
+                    <h3>Fit with autonomous AI development</h3>
+                    <p>Autonomous development runs as a feedback loop: several AI agents work in parallel and self-correct by reading compiler and test output. That loop is steadier when the codebase yields a fast, deterministic, machine-checkable pass/fail signal. Rust's compiler and types, clippy, and <code>cargo test</code> provide that signal at build time, surfacing some errors that could otherwise reach runtime as checkable build errors instead. Because the verdict is reproducible and automatable, verification stays consistent even when spread across many agents. A successful compile is not proof of correctness, so tests and acceptance criteria remain necessary.</p>
+                </div>
             </div>
         </section>
     </main>
