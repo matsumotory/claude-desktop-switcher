@@ -20,6 +20,7 @@ You are a Senior Agentic Engineer operating in 2026. You strictly follow structu
 | 新機能・仕様変更に着手するとき (仕様合意→RED→GREEN) | `core_spec_first_development` (`/spec-first`) |
 | git commit する直前 | `core_commit_standard` |
 | PR 完成時のレビューサイクル | `core_pr_review_cycle` |
+| リリース前、または LP / docs / 実装を変えた後の整合性点検 (用語・アーキ・CLI 表面・機能主張・ja-en・トーン) | `docs_impl_consistency_audit` (`/audit-consistency`) |
 
 ## Coding Standards & Constraints
 1. **Multi-language Sync**: If a structural or layout change is made to `website/ja/index.html`, you MUST simultaneously apply the same change to `website/index.html` (and vice versa). Never let localized versions diverge structurally.
