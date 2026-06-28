@@ -91,6 +91,9 @@ svg.icon {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
+@media (forced-colors: active) {
+  :focus-visible { outline-color: Highlight; }
+}
 
 code, .code-line { font-family: var(--font-mono); }
 
@@ -139,7 +142,6 @@ code, .code-line { font-family: var(--font-mono); }
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-alt);
-  box-shadow: inset 2px 0 0 var(--accent);
   cursor: pointer;
   font-family: var(--font-ui);
   color: var(--ink);
@@ -147,7 +149,9 @@ code, .code-line { font-family: var(--font-mono); }
 }
 .now-claude:hover { border-color: var(--border-strong); }
 .now-claude:active { transform: scale(0.99); }
-.now-claude.selected { border-color: var(--accent); }
+/* "Selected" (viewing) is shown by the fill + a stronger neutral border — never
+   the accent. accent is reserved for the keyboard focus ring only. */
+.now-claude.selected { border-color: var(--border-strong); }
 .now-claude-bezel {
   flex: none;
   background: var(--surface-alt);
@@ -195,13 +199,16 @@ code, .code-line { font-family: var(--font-mono); }
   border-radius: 8px;
   cursor: pointer;
   box-shadow: inset 2px 0 0 transparent;
+  scroll-margin: 8px; /* WCAG 2.4.11: keep focused row clear of the scroll edge */
   transition: background 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .profile-item:hover { background: var(--surface-alt); }
 .profile-item:active { transform: scale(0.99); }
+/* Selected (viewing) = fill is the primary signal; the left rule is a neutral
+   outline, not accent. accent means focus only. */
 .profile-item.selected {
   background: var(--surface-alt);
-  box-shadow: inset 2px 0 0 var(--accent);
+  box-shadow: inset 2px 0 0 var(--border-strong);
 }
 .profile-avatar {
   flex: none;
@@ -526,9 +533,10 @@ code, .code-line { font-family: var(--font-mono); }
 }
 .input::placeholder { color: var(--ink-muted); }
 .input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--border-strong);
+  box-shadow: none;
 }
 .input-icon { width: 96px; text-align: center; }
 .field-error { font-size: 11.5px; color: var(--danger); margin-top: 6px; }
@@ -557,7 +565,8 @@ code, .code-line { font-family: var(--font-mono); }
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 .mode-card:has(input:focus-visible) .mode-card-body {
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .mode-card-icon {
   flex: none;
@@ -654,7 +663,7 @@ code, .code-line { font-family: var(--font-mono); }
 .seg-opt .icon { width: 12px; height: 12px; }
 .seg-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
 .seg-opt:has(input:checked) { background: var(--accent-soft); color: var(--accent-ink); }
-.seg-opt:has(input:focus-visible) { box-shadow: inset 0 0 0 2px var(--accent-soft); }
+.seg-opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
 .share-line.fixed .seg-opt { cursor: default; }
 
 /* -------------------------------------------------------------------- Buttons */
@@ -677,7 +686,7 @@ code, .code-line { font-family: var(--font-mono); }
 }
 .btn .icon { width: 16px; height: 16px; }
 .btn:active { transform: scale(0.98); }
-.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btn[disabled] { opacity: 0.5; cursor: default; }
 .btn[disabled]:active { transform: none; }
 
