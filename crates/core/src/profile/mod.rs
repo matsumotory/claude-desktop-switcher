@@ -8,6 +8,37 @@ use std::sync::Arc;
 use crate::error::{CswError, Result};
 use serde::{Deserialize, Serialize};
 
+/// Validate a user-supplied environment (profile) name.
+///
+/// The name becomes a directory under `profiles/`, so it must not enable path
+/// traversal, and it is passed to a shell in `eval $(csw env <name>)`, so it must
+/// carry no shell metacharacters or whitespace. Unicode letters and digits
+/// (including Japanese) plus `-` and `_` are allowed; everything else (path
+/// separators, dots, spaces, symbols, control characters) is rejected. The
+/// reserved name `default` is handled by the callers, not here.
+pub fn validate_profile_name(name: &str) -> Result<()> {
+    if name.is_empty() {
+        return Err(CswError::InvalidProfileName(
+            "name must not be empty".to_string(),
+        ));
+    }
+    if name.chars().count() > 64 {
+        return Err(CswError::InvalidProfileName(
+            "name must be 64 characters or fewer".to_string(),
+        ));
+    }
+    if !name
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(CswError::InvalidProfileName(
+            "use letters, digits, '-' and '_' only (no spaces, slashes, dots or symbols)"
+                .to_string(),
+        ));
+    }
+    Ok(())
+}
+
 /// Sharing mode for a configuration component.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -233,6 +264,7 @@ impl ProfileManager {
         sharing: SharingConfig,
         icon: Option<String>,
     ) -> Result<Profile> {
+        validate_profile_name(name)?;
         if name == "default" {
             return Err(CswError::ProfileAlreadyExists("default".to_string()));
         }
@@ -270,6 +302,7 @@ impl ProfileManager {
     }
 
     pub fn clone_profile(&self, source_name: &str, target_name: &str) -> Result<Profile> {
+        validate_profile_name(target_name)?;
         if target_name == "default" {
             return Err(CswError::ProfileAlreadyExists("default".to_string()));
         }

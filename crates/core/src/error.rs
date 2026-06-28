@@ -8,6 +8,9 @@ pub enum CswError {
     #[error("Profile '{0}' already exists")]
     ProfileAlreadyExists(String),
 
+    #[error("Invalid environment name: {0}")]
+    InvalidProfileName(String),
+
     #[error("Default profile cannot be modified")]
     DefaultProfileImmutable,
 

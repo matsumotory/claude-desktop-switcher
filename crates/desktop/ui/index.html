@@ -44,7 +44,7 @@
 
       <div class="sidebar-spacer"></div>
 
-      <button type="button" class="btn btn-primary sidebar-create" id="btnCreate">
+      <button type="button" class="btn btn-ghost sidebar-create" id="btnCreate">
         <svg class="icon"><use href="#i-plus"/></svg>
         <span>環境を作る</span>
       </button>
@@ -95,8 +95,8 @@
                   <div class="firstrun-row">
                     <span class="firstrun-icon"><svg class="icon"><use href="#i-switch"/></svg></span>
                     <div>
-                      <p class="firstrun-head">複数の環境を同時に使えます</p>
-                      <p class="firstrun-body">「利用中」はメニューバーがいま対象にしている環境です。切り替えると、その環境のウィンドウが開きます。すでに開いている他のウィンドウは、それぞれの環境のまま使えます。</p>
+                      <p class="firstrun-head">環境を切り替えて使えます</p>
+                      <p class="firstrun-body">「利用中」はメニューバーがいま対象にしている環境です。別の環境に切り替えるには、先に起動中の Claude を終了してから「この環境で Claude を起動」を押します。設定の衝突を防ぐため、複数の環境の Claude を同時には開けません。</p>
                     </div>
                   </div>
                   <div class="firstrun-row">
@@ -104,7 +104,7 @@
                     <div>
                       <p class="firstrun-head">ターミナル（Claude Code）も同じ環境で使えます</p>
                       <p class="firstrun-body">CSW から開いた Claudeデスクトップアプリの中で開くターミナルは、最初からこの環境です。そのまま <code>claude</code> で始められます。別に開く iTerm2 などのターミナルでこの環境を使うときだけ、次のコマンドを実行します（そのタブだけに適用され、普段の環境には影響しません）。</p>
-                      <code class="code-line">eval $(csw env Work)</code>
+                      <code class="code-line">eval $(csw env &lt;環境名&gt;)</code>
                     </div>
                   </div>
                 </div>
