@@ -143,9 +143,10 @@ code, .code-line { font-family: var(--font-mono); }
   cursor: pointer;
   font-family: var(--font-ui);
   color: var(--ink);
-  transition: border-color 0.15s var(--ease);
+  transition: border-color 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .now-claude:hover { border-color: var(--border-strong); }
+.now-claude:active { transform: scale(0.99); }
 .now-claude.selected { border-color: var(--accent); }
 .now-claude-bezel {
   flex: none;
@@ -194,9 +195,10 @@ code, .code-line { font-family: var(--font-mono); }
   border-radius: 8px;
   cursor: pointer;
   box-shadow: inset 2px 0 0 transparent;
-  transition: background 0.15s var(--ease);
+  transition: background 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .profile-item:hover { background: var(--surface-alt); }
+.profile-item:active { transform: scale(0.99); }
 .profile-item.selected {
   background: var(--surface-alt);
   box-shadow: inset 2px 0 0 var(--accent);
@@ -425,9 +427,10 @@ code, .code-line { font-family: var(--font-mono); }
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .icon-btn:hover { background: var(--surface); color: var(--ink); border-color: var(--border); }
+.icon-btn:active { transform: scale(0.92); }
 .icon-btn .icon { width: 15px; height: 15px; }
 
 /* Sharing summary + read-only breakdown (detail) */
@@ -445,8 +448,10 @@ code, .code-line { font-family: var(--font-mono); }
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 13px;
+  transition: border-color 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .sharing-summary:hover { border-color: var(--border-strong); }
+.sharing-summary:active { transform: scale(0.995); }
 .sharing-summary .summary-text { flex: 1; }
 .sharing-summary .summary-sub { color: var(--ink-muted); font-size: 12px; }
 .summary-chevron { transition: transform 0.2s var(--ease); }
@@ -597,11 +602,13 @@ code, .code-line { font-family: var(--font-mono); }
   background: transparent;
   border: 0;
   color: var(--ink-muted);
+  transition: color 0.15s var(--ease), transform 0.12s var(--ease);
   font-family: var(--font-ui);
   font-size: 12.5px;
   cursor: pointer;
 }
 .advanced-toggle:hover { color: var(--ink); }
+.advanced-toggle:active { transform: scale(0.98); }
 .advanced-chevron { width: 15px; height: 15px; transition: transform 0.2s var(--ease); }
 .advanced.open .advanced-chevron { transform: rotate(90deg); }
 .advanced-panel {
