@@ -187,9 +187,7 @@ html[lang="ja"] .headline {
     line-height: 1.25;
 }
 
-.text-nowrap {
-    display: inline-block;
-}.subtext {
+.subtext {
     font-size: 1.25rem;
     color: var(--text-secondary);
     max-width: 500px;
@@ -275,9 +273,17 @@ html[lang="ja"] .subtext {
     text-decoration-color: var(--accent);
 }
 
-/* Typography Utilities */
-.text-nowrap {
-    white-space: nowrap;
+/* 見出しの行バランス（手動の nowrap/wbr ハックの置き換え）。
+   非対応ブラウザでは通常折り返しにフォールバックし、コピーは短く保つ。 */
+@supports (text-wrap: balance) {
+    .headline,
+    .feature-intro h2,
+    .workflow-header h2,
+    .guide-header h2,
+    .guide-card h3,
+    .step-body h3 {
+        text-wrap: balance;
+    }
 }
 
 code {

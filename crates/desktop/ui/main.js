@@ -211,7 +211,7 @@ async function showDetail(name) {
       h('div', { class: 'detail-avatar', text: d.icon ? d.icon : name.charAt(0).toUpperCase() })),
     h('div', { class: 'detail-titles' },
       h('div', { class: 'detail-name', text: isDefault ? 'いま使っている Claude' : name }),
-      h('div', { class: 'detail-tagline', text: isDefault ? 'ふだんの環境。CSW は変更しません' : (isActive ? '使用中の環境' : '作成した環境') })),
+      h('div', { class: 'detail-tagline', text: isDefault ? 'ふだんの環境。変更しません' : (isActive ? '使用中の環境' : '作成した環境') })),
     isActive ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', text: '使用中' }) : null);
 
   const nodes = [header];

@@ -34,7 +34,7 @@
             <div class="hero-text fade-in">
                 <span class="eyebrow">Zero-Impact Isolation</span>
                 <h1 class="headline">
-                    <span class="text-nowrap">Claudeデスクトップアプリを、</span><wbr><span class="text-nowrap">用途ごとに分ける。</span>
+                    Claudeデスクトップアプリを、用途ごとに分ける。
                 </h1>
                 <p class="subtext">チャット・Projects・Claude Cowork・Artifacts・Claude Design を含むスイート全体を、アカウント・用途ごとに分離。必要なら Claude Code（CLI）も連動できる Mac 用ユーティリティです。</p>
                 <div class="button-group">
@@ -143,7 +143,7 @@
                         <span class="usecase-num">04</span>
                         <h3 class="usecase-title">GUI の分離に CLI を連動させる（開発者向け）</h3>
                         <p class="usecase-text">GUI で分けた環境を Claude Code（CLI）側でも同じ環境で使いたい。</p>
-                        <p class="usecase-solution">GUI で選んだ環境に <code>CLAUDE_CONFIG_DIR</code> を連動させ、別に開いたターミナルで <code>eval $(csw env "&lt;名前&gt;")</code> を実行すれば、CLI もその隔離環境で動きます。CLI 単体スイッチャーが既に解決している領域に、GUI 分離との一貫性を足します。</p>
+                        <p class="usecase-solution">GUI で選んだ環境を、別に開いたターミナルの Claude Code（CLI）にも 1 コマンドで連動できます。CLI 単体スイッチャーが既に解決している領域に、GUI 分離との一貫性を足すのが狙いです。具体的な手順は後述のターミナル連携を参照してください。</p>
                     </div>
                 </div>
             </div>
@@ -152,28 +152,28 @@
         <!-- Vertical Stack: How it Works -->
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
-                <h2><span class="text-nowrap">GUIワークフロー</span></h2>
+                <h2>GUIワークフロー</h2>
                 <p>デスクトップの環境はメニューバーから管理。CLI 連携はターミナルのコマンドで行います。</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
                     <div class="step-num">01</div>
                     <div class="step-body">
-                        <h3>インストール<span class="text-nowrap">＆起動</span></h3>
+                        <h3>インストールと起動</h3>
                         <p>アプリケーションフォルダに入れて起動するだけ。メニューバーに常駐します。</p>
                     </div>
                 </div>
                 <div class="step-item border-top">
                     <div class="step-num">02</div>
                     <div class="step-body">
-                        <h3>環境の<span class="text-nowrap">作成</span></h3>
+                        <h3>環境の作成</h3>
                         <p>ワンクリックで「業務」「研究」など、完全に独立した環境を作成できます。</p>
                     </div>
                 </div>
                 <div class="step-item border-top">
                     <div class="step-num">03</div>
                     <div class="step-body">
-                        <h3>分離環境での<span class="text-nowrap">起動</span></h3>
+                        <h3>分離環境で起動</h3>
                         <p>環境を選択すると、Claudeデスクトップアプリが隔離された専用ディレクトリを参照して起動します。</p>
                     </div>
                 </div>
@@ -181,24 +181,24 @@
         </section>
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>ターミナル（Claude Code）<wbr><span class="text-nowrap">連携</span></h2>
+                <h2>ターミナル（Claude Code）連携</h2>
                 <p>アプリ内蔵のターミナルは環境を自動で引き継ぎます。別に開く外部ターミナル（iTerm 等）は、次の 1 コマンドで切り替えます。</p>
             </div>
             
             <div class="guide-grid">
                 <div class="guide-card">
                     <div class="guide-icon">01</div>
-                    <h3>環境の<span class="text-nowrap">一元管理</span></h3>
+                    <h3>環境の一元管理</h3>
                     <p>GUIデータ領域とCLI設定ファイルが、1つの環境のもとで統合的に管理されます。</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
-                    <h3>柔軟な<span class="text-nowrap">共有設定</span></h3>
+                    <h3>柔軟な共有設定</h3>
                     <p>完全な隔離（デフォルト）か、一部設定ファイルのみを同期する構成かを柔軟に選択可能です。</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>ターミナル<span class="text-nowrap">連携</span></h3>
+                    <h3>ターミナル連携</h3>
                     <p>アプリ内蔵のターミナルは環境を自動で引き継ぎます。別に開く外部ターミナル（iTerm2 等）は、次の 1 コマンドで切り替えます。</p>
                     <div class="code-snippet">
                         <code>eval $(csw env &lt;名前&gt;)</code>

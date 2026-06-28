@@ -141,7 +141,7 @@
                         <span class="usecase-num">04</span>
                         <h3 class="usecase-title">Link the CLI to your GUI separation</h3>
                         <p class="usecase-text">You want to use the environment you chose in the GUI from the CLI as well (for developers).</p>
-                        <p class="usecase-solution">Link the chosen environment to the CLI's <code>CLAUDE_CONFIG_DIR</code>. Run <code>eval $(csw env &lt;name&gt;)</code> in a separate terminal to use the CLI in the same isolated environment. This adds GUI consistency on top of what existing CLI-only switchers already solve.</p>
+                        <p class="usecase-solution">Sync the environment you chose in the GUI to Claude Code (CLI) in a separate terminal with a single command. This adds GUI-level consistency on top of what existing CLI-only switchers already solve. See Terminal Integration below for the exact command.</p>
                     </div>
                 </div>
             </div>
@@ -196,7 +196,7 @@
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
-                    <h3>Terminal<span class="text-nowrap"> Integration</span></h3>
+                    <h3>Terminal Integration</h3>
                     <p>The built-in terminal inherits its environment automatically. For an external terminal (iTerm2, etc.), one command switches it.</p>
                     <div class="code-snippet">
                         <code>eval $(csw env &lt;name&gt;)</code>
