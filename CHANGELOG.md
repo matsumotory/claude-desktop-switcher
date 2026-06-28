@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.2...v0.8.3) (2026-06-28)
+
+
+### Bug Fixes
+
+* **desktop,website:** 設定UIを単一環境レールに再設計し用語を統一 ([#66](https://github.com/matsumotory/claude-desktop-switcher/issues/66)) ([ce1afae](https://github.com/matsumotory/claude-desktop-switcher/commit/ce1afaeef0d3800cdeb7daab002472b242542884))
+
 ## [0.8.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.8.1...v0.8.2) (2026-06-28)
 
 
