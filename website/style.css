@@ -768,43 +768,38 @@ html[lang="ja"] .faq-header h2 {
     font-size: 1.0625rem;
 }
 
-/* Engineering note (technical column near the foot of the page). Hairline-
-   separated points mirror the FAQ list so the column matches the page structure
-   instead of being a wall of paragraphs (design-taste-frontend L214: group with
-   a divider/border, not heavy cards). */
+/* Engineering notes: a few hairline-separated columns near the foot of the page.
+   Hairlines (not heavy cards) group the columns to match the FAQ list and the
+   page structure (design-taste-frontend L214). Prose width is capped for
+   readability (L167). */
 .tech-note {
     padding-bottom: 120px;
 }
-.tech-note-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 64px;
+.tech-note-cols {
+    max-width: 820px;
 }
-.tech-note-item {
-    padding: 28px 0;
+.tech-note-col {
+    padding: 34px 0;
     border-top: 1px solid var(--border-color);
 }
-.tech-note-item.span-full {
-    grid-column: 1 / -1;
-}
-.tech-note-item h3 {
-    font-size: 1.0625rem;
+.tech-note-col h3 {
+    font-size: 1.375rem;
     font-weight: 600;
-    margin-bottom: 10px;
+    line-height: 1.4;
+    margin-bottom: 16px;
     color: var(--text-primary);
 }
-.tech-note-item p {
+.tech-note-col p {
     color: var(--text-secondary);
     font-size: 1.0625rem;
-    line-height: 1.7;
+    line-height: 1.8;
+    margin-bottom: 14px;
 }
-html[lang="ja"] .tech-note-item p {
-    line-height: 1.85;
+.tech-note-col p:last-child {
+    margin-bottom: 0;
 }
-@media (max-width: 768px) {
-    .tech-note-grid {
-        grid-template-columns: 1fr;
-    }
+html[lang="ja"] .tech-note-col p {
+    line-height: 1.9;
 }
 
 /* Footer */
