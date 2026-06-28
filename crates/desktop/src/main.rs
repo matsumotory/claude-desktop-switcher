@@ -234,14 +234,9 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let mut menu_items = Vec::new();
 
     // 1. Title Item
-    let title_item = MenuItem::with_id(
-        app,
-        "title",
-        "🔵 Claude Desktop Switcher",
-        false,
-        None::<&str>,
-    )
-    .map_err(|e| e.to_string())?;
+    let title_item =
+        MenuItem::with_id(app, "title", "Claude Desktop Switcher", false, None::<&str>)
+            .map_err(|e| e.to_string())?;
     menu_items.push(Box::new(title_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
     let sep1 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
@@ -271,7 +266,7 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let sep2 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(sep2) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
-    let settings_item = MenuItem::with_id(app, "settings", "⚙ 設定...", true, None::<&str>)
+    let settings_item = MenuItem::with_id(app, "settings", "設定...", true, None::<&str>)
         .map_err(|e| e.to_string())?;
     menu_items.push(Box::new(settings_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
