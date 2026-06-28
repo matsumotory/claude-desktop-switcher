@@ -88,6 +88,16 @@ crates/
   desktop/   # Tauri v2 menu bar app and settings UI
 ```
 
+## Why Rust and Tauri
+
+CSW is built around a shared Rust library (`crates/core`) that handles environment isolation, path resolution, and data safety; the CLI (`csw`) and the menu-bar GUI are thin layers over that same core. Because the top priority is never destroying your existing Claude data, the core lives in Rust, where invariants are enforced at compile time.
+
+The GUI uses Tauri v2, which renders through the operating system's WebView (WebKit on macOS) instead of bundling a browser engine. The result is a small download (the universal DMG is around 7 MB), and code signing plus notarization run through Tauri's standard distribution flow.
+
+This also keeps the development and verification loop easy to automate: the core is checked continuously by the Rust compiler, clippy, and tests, and the UI can be rendered and inspected with a standard headless browser in CI.
+
+For native macOS UI, Apple's Swift and SwiftUI are the first choice, and an excellent one for apps that need deep system integration or a richly crafted native experience. Because CSW's value centers on systems-level logic with a thin UI, we prioritized core correctness and an automatable verification loop. A different kind of app would call for a different choice.
+
 ## License
 
 MIT
@@ -181,3 +191,13 @@ crates/
   cli/       # CLIツール (csw コマンド)
   desktop/   # Tauri v2 を用いたメニューバーアプリと設定画面
 ```
+
+### なぜ Rust と Tauri なのか
+
+CSW の中核は、環境の隔離・パス解決・データ保護を担う共有の Rust ライブラリ（`crates/core`）です。CLI（`csw`）とメニューバー GUI は、どちらもこの同じコアの上に薄く乗っています。ユーザーの既存 Claude データを壊さないことが最優先のため、不変条件をコンパイル時に固められる Rust を中核に置いています。
+
+GUI は Tauri v2 で、macOS 標準の WebView（WebKit）を使い、ブラウザエンジンを同梱しません。そのため配布物は小さく（universal の DMG で約 7MB）、署名と公証も Tauri の標準的な配布フローでそのまま行えます。
+
+この構成は、開発と検証のループを自動で回しやすい利点もあります。中核は Rust のコンパイラ・clippy・テストで継続的に検証でき、画面は標準的なヘッドレスブラウザで CI 上でもレンダリング確認できます。
+
+macOS ネイティブ UI の第一候補は Apple の Swift と SwiftUI で、深いシステム統合や作り込んだネイティブ体験が必要なアプリには優れた選択肢です。CSW は価値の中心がシステム寄りのロジックにあり UI が薄いため、コアの正しさと自動で回る検証を優先しました。用途が変われば、最適な選択も変わります。

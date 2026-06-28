@@ -768,6 +768,26 @@ html[lang="ja"] .faq-header h2 {
     font-size: 1.0625rem;
 }
 
+/* Engineering note (technical column near the foot of the page) */
+.tech-note {
+    padding-bottom: 120px;
+}
+.tech-note-body {
+    max-width: 760px;
+}
+.tech-note-body p {
+    color: var(--text-secondary);
+    font-size: 1.0625rem; /* body-lg — 17px */
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+.tech-note-body p:last-child {
+    margin-bottom: 0;
+}
+html[lang="ja"] .tech-note-body p {
+    line-height: 1.9;
+}
+
 /* Footer */
 .site-footer {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
