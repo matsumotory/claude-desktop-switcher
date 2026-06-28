@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.3...v0.7.4) (2026-06-28)
+
+
+### Bug Fixes
+
+* **desktop,website:** 選択/フォーカス指標を「1意味=1指標」に整理しLPスクショを刷新 ([#56](https://github.com/matsumotory/claude-desktop-switcher/issues/56)) ([6019c77](https://github.com/matsumotory/claude-desktop-switcher/commit/6019c77d88c598bb712bd8d547198a29ef31dc08))
+
 ## [0.7.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.2...v0.7.3) (2026-06-28)
 
 
