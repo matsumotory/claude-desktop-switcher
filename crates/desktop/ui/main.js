@@ -169,7 +169,9 @@ function setView(view) {
 function renderSidebar() {
   el.nowClaudeActive.hidden = activeName !== 'default';
   el.nowClaude.classList.toggle('selected', selectedName === 'default');
-  el.nowClaude.setAttribute('aria-current', selectedName === 'default' ? 'true' : 'false');
+  // aria-current marks the in-use (active) item, not the one being viewed.
+  if (activeName === 'default') el.nowClaude.setAttribute('aria-current', 'true');
+  else el.nowClaude.removeAttribute('aria-current');
 
   const created = profiles.filter((p) => p.name !== 'default');
   el.createdSection.hidden = created.length === 0;
@@ -179,6 +181,7 @@ function renderSidebar() {
     const li = h('li', {
       class: 'profile-item' + (p.name === selectedName ? ' selected' : ''),
       role: 'button', tabindex: '0', onclick: open,
+      'aria-current': p.name === activeName ? 'true' : null, // current = in-use
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
       h('span', { class: 'profile-avatar', text: avatarText(p) }),
