@@ -82,12 +82,10 @@ svg.icon {
    warm accent instead of the blue one. */
 :focus:not(:focus-visible) { outline: none; }
 .profile-item:focus-visible,
-.now-claude:focus-visible,
 .sharing-summary:focus-visible,
 .advanced-toggle:focus-visible,
 .icon-btn:focus-visible,
-.link-reset:focus-visible,
-.disclosure-inner [data-disclosure-toggle]:focus-visible {
+.link-reset:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
@@ -131,69 +129,7 @@ code, .code-line { font-family: var(--font-mono); }
   color: var(--ink);
 }
 
-/* "The Claude you use now" — double-bezel, accent stripe, special */
-.now-claude {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  padding: 10px 12px 10px 11px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-alt);
-  cursor: pointer;
-  font-family: var(--font-ui);
-  color: var(--ink);
-  transition: border-color 0.15s var(--ease), transform 0.12s var(--ease);
-}
-.now-claude:hover { border-color: var(--border-strong); }
-.now-claude:active { transform: scale(0.99); }
-/* "Selected" (viewing) is shown by the fill + a stronger neutral border — never
-   the accent. accent is reserved for the keyboard focus ring only. */
-.now-claude.selected { border-color: var(--border-strong); }
-.now-claude-bezel {
-  flex: none;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 3px;
-}
-.now-claude-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--accent-ink);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-@media (prefers-color-scheme: dark) {
-  .now-claude-icon { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
-}
-.now-claude-text { min-width: 0; flex: 1; }
-.now-claude-title { display: block; font-size: 12.5px; font-weight: 600; line-height: 1.3; }
-.now-claude-sub { display: block; font-size: 11px; color: var(--ink-muted); line-height: 1.3; }
-/* 短文コピーで一次対策しつつ、将来の文言変更でも行末1文字孤立を防ぐ二次防御。
-   サブ行のみに適用(タイトルは語中で割れるのを避け、自然な空白区切りに任せる)。
-   未対応の WebView では通常折り返しにフォールバックする。 */
-@supports (text-wrap: balance) {
-  .now-claude-sub { text-wrap: balance; }
-}
-
-.sidebar-divider { height: 1px; background: var(--border); margin: 14px 6px; }
-
-.sidebar-section { display: flex; flex-direction: column; min-height: 0; }
-.sidebar-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  padding: 0 6px 8px;
-}
+.sidebar-section { display: flex; flex-direction: column; min-height: 0; margin-top: 4px; }
 .profile-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
 
 .profile-item {
@@ -204,19 +140,19 @@ code, .code-line { font-family: var(--font-mono); }
   padding: 0 10px;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: inset 2px 0 0 transparent;
   scroll-margin: 8px; /* WCAG 2.4.11: keep focused row clear of the scroll edge */
   transition: background 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .profile-item:hover { background: var(--surface-alt); }
 .profile-item:active { transform: scale(0.99); }
-/* Selected (viewing) = fill is the primary signal; the left rule is a neutral
-   outline, not accent. On these sidebar lists accent is the focus-ring color only;
-   form controls (mode cards, segmented control) do use accent to mark the chosen
-   option, which is the conventional pattern for a radio/segment choice. */
+/* Selected (viewing) = a neutral background fill ONLY. No left bar and no box
+   outline of any kind: a left rule reads as an IDE "current line" marker (slop),
+   and any border re-draws that same left vertical edge. The persistent fill plus
+   the lifted avatar (below) marks the row being viewed. accent stays reserved for
+   the focus ring + the active ("利用中") pill; form controls (mode cards, segmented
+   control) use accent to mark the chosen option, the conventional radio pattern. */
 .profile-item.selected {
   background: var(--surface-alt);
-  box-shadow: inset 2px 0 0 var(--border-strong);
 }
 .profile-avatar {
   flex: none;
@@ -233,6 +169,9 @@ code, .code-line { font-family: var(--font-mono); }
   color: var(--ink-muted);
 }
 .profile-item.selected .profile-avatar { background: var(--surface); }
+/* default row uses the monitor glyph in its avatar (vs an initial) so the
+   baseline reads at a glance without a separate card. */
+.profile-avatar svg.icon { width: 16px; height: 16px; color: var(--ink-muted); }
 .profile-name {
   flex: 1;
   min-width: 0;
@@ -388,6 +327,7 @@ code, .code-line { font-family: var(--font-mono); }
 @media (prefers-color-scheme: dark) {
   .detail-avatar { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
 }
+.detail-avatar svg.icon { width: 24px; height: 24px; color: var(--ink-muted); }
 .detail-titles { min-width: 0; }
 .detail-name {
   font-family: var(--font-disp);
@@ -433,6 +373,9 @@ code, .code-line { font-family: var(--font-mono); }
 .path-label { font-size: 11px; color: var(--ink-muted); }
 .path-code { display: block; font-size: 12.5px; color: var(--ink); word-break: break-all; }
 .path-caption { font-size: 11.5px; color: var(--ink-muted); margin-top: 6px; }
+/* One-line, contextual hint next to the switch action (not a persistent block) */
+.detail-switch-hint { font-size: 12px; color: var(--ink-muted); line-height: 1.55; margin-top: 20px; }
+@supports (text-wrap: balance) { .detail-switch-hint { text-wrap: balance; } }
 .icon-btn {
   flex: none;
   display: inline-flex; align-items: center; justify-content: center;

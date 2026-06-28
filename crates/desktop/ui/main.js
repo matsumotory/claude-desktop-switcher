@@ -113,9 +113,6 @@ function withTransition(update) {
 
 // --- DOM refs ---------------------------------------------------------------
 const el = {
-  nowClaude: $('nowClaude'),
-  nowClaudeActive: $('nowClaudeActive'),
-  createdSection: $('createdSection'),
   profileList: $('profileList'),
   btnCreate: $('btnCreate'),
   btnCreateEmpty: $('btnCreateEmpty'),
@@ -167,27 +164,33 @@ function setView(view) {
 
 // --- Sidebar ----------------------------------------------------------------
 function renderSidebar() {
-  el.nowClaudeActive.hidden = activeName !== 'default';
-  el.nowClaude.classList.toggle('selected', selectedName === 'default');
-  // aria-current marks the in-use (active) item, not the one being viewed.
-  if (activeName === 'default') el.nowClaude.setAttribute('aria-current', 'true');
-  else el.nowClaude.removeAttribute('aria-current');
-
+  // One rail: "既存の Claude" (default) pinned first, then created environments.
+  // default is a selectable row like any other, not a separate card. Pin it
+  // explicitly so order never depends on the backend's list_profiles order.
   const created = profiles.filter((p) => p.name !== 'default');
-  el.createdSection.hidden = created.length === 0;
+  const defaultP = profiles.find((p) => p.name === 'default') || { name: 'default', icon: '', is_default: true };
+  const ordered = [defaultP, ...created];
 
-  const rows = created.map((p) => {
+  const rows = ordered.map((p) => {
+    const isDefault = p.name === 'default';
+    const isActive = p.name === activeName;
     const open = () => withTransition(() => showDetail(p.name));
-    const li = h('li', {
+    // One pill at most: the active ("利用中") row. The default row needs no extra
+    // marker — its name ("既存の Claude") + monitor icon + first position already
+    // signal the baseline.
+    const pill = isActive
+      ? h('span', { class: 'pill pill-active', text: '利用中' })
+      : null;
+    return h('li', {
       class: 'profile-item' + (p.name === selectedName ? ' selected' : ''),
       role: 'button', tabindex: '0', onclick: open,
-      'aria-current': p.name === activeName ? 'true' : null, // current = in-use
+      'aria-label': isDefault ? '既存の Claude（標準環境）' : null,
+      'aria-current': isActive ? 'true' : null, // current = in-use target
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
-      h('span', { class: 'profile-avatar', text: avatarText(p) }),
-      h('span', { class: 'profile-name', text: p.name }),
-      p.name === activeName ? h('span', { class: 'pill pill-active', text: '使用中' }) : null);
-    return li;
+      h('span', { class: 'profile-avatar' }, isDefault ? icon('i-monitor') : avatarText(p)),
+      h('span', { class: 'profile-name', text: isDefault ? '既存の Claude' : p.name }),
+      pill);
   });
   el.profileList.replaceChildren(...rows);
 }
@@ -208,27 +211,36 @@ async function showDetail(name) {
 
   const header = h('div', { class: 'detail-header' },
     h('div', { class: 'detail-bezel' },
-      h('div', { class: 'detail-avatar', text: d.icon ? d.icon : name.charAt(0).toUpperCase() })),
+      h('div', { class: 'detail-avatar' }, isDefault ? icon('i-monitor') : (d.icon ? d.icon : name.charAt(0).toUpperCase()))),
     h('div', { class: 'detail-titles' },
-      h('div', { class: 'detail-name', text: isDefault ? 'いま使っている Claude' : name }),
-      h('div', { class: 'detail-tagline', text: isDefault ? 'ふだんの環境。変更しません' : (isActive ? '使用中の環境' : '作成した環境') })),
-    isActive ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', text: '使用中' }) : null);
+      h('div', { class: 'detail-name', text: isDefault ? '既存の Claude' : name }),
+      h('div', { class: 'detail-tagline', text: isDefault ? 'あなた自身の環境' : (isActive ? '利用中の環境' : '作成した環境') })),
+    isActive ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', 'aria-label': '利用中', text: '利用中' }) : null);
 
   const nodes = [header];
 
   if (isDefault) {
+    // Keep only the reassurance (the user's real worry: "will this break my
+    // setup?"). The paths are collapsed; the "all 11 shared" line is dropped as
+    // self-evident for the baseline.
     nodes.push(section('', [
       h('div', { class: 'note-card' },
         'あなたが普段使っている ', h('strong', { text: 'Claudeデスクトップアプリ' }), 'と ',
         h('strong', { text: 'Claude Code' }),
-        ' の環境です。CSW はここを表示しているだけで、設定・履歴・ログインを変更したり削除したりしません。切り替えると、いつものこの環境に戻ります。'),
+        ' の環境です。CSW はここを表示しているだけで、設定・履歴・ログインを変更したり削除したりしません。'),
     ]));
     nodes.push(pathsSection(d, true));
-    nodes.push(section('共有の状態', [h('div', { class: 'note-card', text: 'すべて元のまま（11 項目すべて共有）。' })]));
   } else {
-    nodes.push(pathsSection(d, false));
+    // State first (what this environment inherits), then collapsed detail, then
+    // a one-line switch hint by the action. The "利用中"/multi-window concept lives
+    // in onboarding, not repeated as an always-on block here.
     nodes.push(sharingDisclosure(d.sharing));
+    nodes.push(pathsSection(d, false));
     nodes.push(terminalSection(name));
+    if (!isActive) {
+      nodes.push(h('p', { class: 'detail-switch-hint', text:
+        '切り替えると、この環境のウィンドウが開きます。' }));
+    }
   }
 
   el.detailContent.replaceChildren(...nodes);
@@ -242,11 +254,13 @@ function section(label, children) {
 }
 
 function pathsSection(d, isDefault) {
-  return section(isDefault ? '場所（本物の Claude フォルダ）' : '場所（この環境）', [
+  const rows = [
     pathRow('Claudeデスクトップアプリ', d.desktop_path),
     pathRow('Claude Code', d.cli_path),
-    isDefault ? h('p', { class: 'path-caption', text: 'これは CSW が作った場所ではなく、あなたの本物の Claude フォルダです。' }) : null,
-  ]);
+    isDefault ? h('p', { class: 'path-caption', text: 'これは CSW が作った場所ではなく、あなた自身の Claude フォルダです。' }) : null,
+  ];
+  // Paths are needed rarely (not for switch/clone/delete) → collapsed by default.
+  return section('', [disclosure(isDefault ? '場所（あなたの Claude フォルダ）' : '場所（この環境のデータ）', null, rows)]);
 }
 
 function pathRow(label, value) {
@@ -266,15 +280,40 @@ function copyButton(value, title) {
 
 function terminalSection(name) {
   const cmd = `eval $(csw env "${name}")`;
-  return section('ターミナル（Claude Code）で使う', [
-    h('div', { class: 'note-card', text:
-      'CSW からこの環境を開くと、その Claudeデスクトップアプリの中のターミナルは最初からこの環境です。そのまま claude で始められます。' }),
-    h('div', { class: 'note-card', style: 'margin-top:8px', text:
-      '別に開く iTerm2 などのターミナルでこの環境を使うときは、次を実行します。そのタブだけに適用され、普段の環境には影響しません。' }),
-    h('div', { class: 'path-row', style: 'margin-top:8px' },
+  // Collapsed by default: most users drive everything from the GUI; the CLI
+  // command is only needed when opening a separate terminal yourself.
+  const inner = [
+    h('p', { class: 'share-basis', text:
+      'CSW から開いたターミナルは、最初からこの環境です。別に開く iTerm2 などのターミナルでは、次を実行します（そのタブだけに適用されます）。' }),
+    h('div', { class: 'path-row' },
       h('div', { class: 'path-meta' }, h('code', { class: 'path-code', text: cmd })),
       copyButton(cmd, 'コマンドをコピー')),
-  ]);
+  ];
+  return section('', [disclosure('ターミナル（Claude Code）で使う', null, inner)]);
+}
+
+// Generic collapsible disclosure: a summary row stays visible, the panel opens
+// on click. Keeps secondary detail (paths, the terminal command, the full
+// sharing breakdown) off the always-on surface so the detail view shows state +
+// actions first and discloses the rest only when asked.
+function disclosure(label, sub, innerNodes) {
+  const wrap = h('div', { class: 'disclosure' });
+  const innerWrap = h('div', { class: 'disclosure-inner' }, ...innerNodes);
+  innerWrap.inert = true; // keep collapsed content out of the tab order
+  const toggle = h('button', {
+    type: 'button', class: 'sharing-summary', 'aria-expanded': 'false',
+    onclick: () => {
+      const open = wrap.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+      innerWrap.inert = !open;
+      requestAnimationFrame(refreshFades);
+    },
+  },
+    h('span', { class: 'summary-text' }, label,
+      sub ? h('span', { class: 'summary-sub', text: sub }) : null),
+    icon('i-chevron', 'icon summary-chevron'));
+  appendKids(wrap, [toggle, h('div', { class: 'disclosure-panel' }, innerWrap)]);
+  return wrap;
 }
 
 function sharingDisclosure(sharing) {
@@ -282,35 +321,19 @@ function sharingDisclosure(sharing) {
   for (const k of ALL_KEYS) if (sharing[k] === 'share') shareCount++;
   const isoCount = ALL_KEYS.length - shareCount;
 
-  const inner = [];
+  const inner = [
+    // Name the reference point so "shared/isolated" is never ambiguous.
+    h('p', { class: 'share-basis', text: '「共有」は既存の Claude と中身を共通にすること、「分離」はこの環境だけで持つことです。' }),
+  ];
   for (const g of SHARE_GROUPS) {
     inner.push(h('div', { class: 'share-group' },
       h('div', { class: 'share-group-label', text: g.label }),
       ...g.items.map((it) => sharingReadRow(it, sharing[it.key]))));
   }
   inner.push(h('div', { class: 'share-group' }, sharingReadRow(DEVICE_ID, sharing[DEVICE_ID.key])));
-  // Name the reference point so "shared/isolated" is never ambiguous.
-  inner.unshift(h('p', { class: 'share-basis', text: '「共有」はいま使っている Claude と同じもの、「分離」はこの環境だけのものです。' }));
 
-  const wrap = h('div', { class: 'disclosure' });
-  const toggle = h('button', {
-    type: 'button', class: 'sharing-summary', 'aria-expanded': 'false',
-    onclick: () => {
-      const open = wrap.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-      innerWrap.inert = !open; // keep collapsed rows out of the tab order
-      requestAnimationFrame(refreshFades);
-    },
-  },
-    h('span', { class: 'summary-text' },
-      `共有 ${shareCount} 件・分離 ${isoCount} 件`,
-      h('span', { class: 'summary-sub', text: ' ／ ログインと履歴は分離' })),
-    icon('i-chevron', 'icon summary-chevron'));
-  const innerWrap = h('div', { class: 'disclosure-inner' }, ...inner);
-  innerWrap.inert = true;
-  appendKids(wrap, [toggle, h('div', { class: 'disclosure-panel' }, innerWrap)]);
-
-  return section('この環境が引き継いでいるもの', [wrap]);
+  return section('この環境が引き継いでいるもの',
+    [disclosure(`共有 ${shareCount} 件・分離 ${isoCount} 件`, ' ／ ログインと履歴は分離', inner)]);
 }
 
 function sharingReadRow(item, mode) {
@@ -332,11 +355,11 @@ function renderDetailFooter(name, isDefault, isActive) {
   const switchBtn = h('button', {
     type: 'button', class: 'btn btn-primary', disabled: isActive,
     onclick: () => { if (!isActive) doSwitch(name); },
-  }, icon('i-switch'), h('span', { text: isActive ? '使用中の環境' : 'この環境に切り替える' }));
+  }, icon('i-switch'), h('span', { text: isActive ? '利用中の環境' : 'この環境に切り替える' }));
 
   if (isDefault) {
     el.detailFooter.replaceChildren(
-      h('span', { class: 'confirm-text', style: 'color:var(--ink-muted)', text: 'この環境は変更・削除できません' }),
+      h('span', { class: 'confirm-text', style: 'color:var(--ink-muted)', text: '既存の Claude は変更・削除できません' }),
       switchBtn);
     return;
   }
@@ -354,7 +377,7 @@ function showDeleteRow(name) {
   el.detailFooter.className = 'view-footer split';
   const cancel = h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, 'やめる');
   el.detailFooter.replaceChildren(
-    h('span', { class: 'confirm-text', text: 'この環境を削除します。共有リンクと分離データが消えます。元の Claude には影響しません。' }),
+    h('span', { class: 'confirm-text', text: 'この環境を削除します。共有リンクと分離データが消えます。既存の Claude には影響しません。' }),
     h('div', { class: 'footer-group' },
       cancel,
       h('button', { type: 'button', class: 'btn btn-danger-solid', onclick: () => doDelete(name) }, '削除する')));
@@ -381,7 +404,7 @@ async function doSwitch(name) {
     await invoke('switch_profile', { name, noLaunch: false });
     await refreshProfiles();
     withTransition(() => showDetail(name));
-    showToast(`${name === 'default' ? 'いま使っている Claude' : name}に切り替えました`);
+    showToast(`${name === 'default' ? '既存の Claude' : name}に切り替えました`);
   } catch (err) {
     showToast('切り替えできませんでした。もう一度お試しください。', true);
   }
@@ -396,7 +419,7 @@ async function doDelete(name) {
     withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
     showToast(`${name}を削除しました`);
   } catch (err) {
-    showToast('削除できませんでした。使用中の環境は切り替えてから削除してください。', true);
+    showToast('削除できませんでした。利用中の環境は切り替えてから削除してください。', true);
   }
 }
 
@@ -445,7 +468,7 @@ function setMode(mode) {
 function renderAdvancedRows() {
   // Name the reference point + define the words once, so all 11 rows read clearly.
   const nodes = [
-    h('p', { class: 'share-basis', text: '各項目を、いま使っている Claude と「共有」するか「分離」するか選びます。' }),
+    h('p', { class: 'share-basis', text: '各項目を、既存の Claude と共有するか、この環境だけにするかを選びます。' }),
     h('p', { class: 'share-legend', text: '共有 = いまのを使う ／ 分離 = この環境だけ ／ コピー = 最初だけ写す' }),
   ];
   for (const g of SHARE_GROUPS) {
@@ -470,7 +493,7 @@ function segRow(item, value, fixed) {
     h('div', { class: 'share-line-meta' },
       h('div', { class: 'share-line-name', text: item.name }),
       h('div', { class: 'share-line-desc', text: item.desc })),
-    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': item.name + '：いま使っている Claude と共有・分離・コピーのどれにするか' },
+    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': item.name + '：既存の Claude と共有・分離・コピーのどれにするか' },
       opt('share', 'i-link', '共有'), opt('isolate', 'i-lock', '分離'), opt('copy', 'i-copy', 'コピー')));
 }
 
@@ -566,7 +589,6 @@ function wireEvents() {
   el.btnCreateCancel.addEventListener('click', () => withTransition(() =>
     selectedName ? showDetail(selectedName) : showEmpty()));
   el.btnCreateSubmit.addEventListener('click', submitCreate);
-  el.nowClaude.addEventListener('click', () => withTransition(() => showDetail('default')));
 
   document.querySelectorAll('input[name="mode"]').forEach((r) =>
     r.addEventListener('change', () => {
