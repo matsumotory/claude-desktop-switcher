@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.7.0...v0.7.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **desktop,website:** トレイの絵文字を撤去しモバイルのセクション余白崩れを修正 ([#50](https://github.com/matsumotory/claude-desktop-switcher/issues/50)) ([a7c6421](https://github.com/matsumotory/claude-desktop-switcher/commit/a7c6421be0246d54d474066de0a12aad0d271729))
+
 ## [0.7.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.6.0...v0.7.0) (2026-06-28)
 
 
