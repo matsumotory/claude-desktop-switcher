@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.9.2...v0.10.0) (2026-06-29)
+
+
+### Features
+
+* **desktop:** 作成画面にアイコンピッカーを追加しモード名を整える ([dc44eca](https://github.com/matsumotory/claude-desktop-switcher/commit/dc44eca7f65c8b5165e2f0ff16d6cd59728bdab9))
+
 ## [0.9.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.9.1...v0.9.2) (2026-06-29)
 
 
