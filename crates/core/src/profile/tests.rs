@@ -157,3 +157,34 @@ fn create_profile_rejects_path_traversal_name() {
         .unwrap_err();
     assert!(matches!(err, crate::error::CswError::InvalidProfileName(_)));
 }
+
+#[test]
+fn default_roots_status_reports_present_when_dirs_have_content() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    std::fs::write(provider.desktop_default.join("config.json"), "{}").unwrap();
+    std::fs::write(provider.cli_default.join("settings.json"), "{}").unwrap();
+    let s = manager.default_roots_status();
+    assert!(s.desktop_present);
+    assert!(s.cli_present);
+}
+
+#[test]
+fn default_roots_status_reports_cli_absent_when_only_desktop_has_content() {
+    // The CLAUDE_CONFIG_DIR case: Desktop is at the standard location, but the CLI
+    // config was moved elsewhere, so the standard ~/.claude is empty.
+    let (provider, manager, _tmp) = setup_test_manager();
+    std::fs::write(provider.desktop_default.join("config.json"), "{}").unwrap();
+    let s = manager.default_roots_status();
+    assert!(s.desktop_present);
+    assert!(!s.cli_present);
+}
+
+#[test]
+fn default_roots_status_reports_both_absent_when_dirs_empty() {
+    // Neither standard dir holds data: nothing to share, so the UI offers only
+    // "すべて分ける".
+    let (_provider, manager, _tmp) = setup_test_manager();
+    let s = manager.default_roots_status();
+    assert!(!s.desktop_present);
+    assert!(!s.cli_present);
+}

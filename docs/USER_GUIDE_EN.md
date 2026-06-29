@@ -55,6 +55,8 @@ For advanced use cases (such as "I want to share my personal MCP settings and ru
    * **Start fresh (recommended, default)**: Login, settings, and history all start from scratch. Your existing Claude is never touched, so you get a fully independent environment.
    * **Reuse settings**: Keep your usual MCP, rules, and skills; only login and history move to a separate account. Reuse your config assets while spending tokens on a different account.
 
+   > If your existing Claude isn't found at the standard locations (for example, when Claude Code's config has been moved elsewhere via `CLAUDE_CONFIG_DIR`), "Reuse settings" won't carry over whichever side is missing. If neither the Desktop nor the CLI config is found, there's nothing to reuse, so only "Start fresh" can be created. The create screen explains this in either case.
+
    **< How to choose >**
    * **Case A (Completely separate project)**:
      Pick **"Start fresh"**. You get a pristine environment cleanly detached from your personal one.
