@@ -1,16 +1,27 @@
 {
   "version": "0.0.1",
+  "_note": "preview の静的配信は node を使う。macOS の /usr/bin/python3 (Xcode) は preview サンドボックス内で http.server 取り込み時に os.getcwd() を弾かれ PermissionError で必ず失敗するため使わない。runtimeArgs は [code, ルート, ポート] で、code が argv[1]=ルート / argv[2]=ポートを読む。",
   "configurations": [
     {
       "name": "lp",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8181", "--directory", "website"],
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": [
+        "-e",
+        "const http=require('http'),fs=require('fs'),path=require('path');const root=path.resolve(process.argv[1]);const port=Number(process.argv[2]);const types={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.ico':'image/x-icon','.json':'application/json','.woff2':'font/woff2'};http.createServer((req,res)=>{let u=decodeURIComponent(req.url.split('?')[0]);if(u.endsWith('/'))u+='index.html';const fp=path.normalize(path.join(root,u));if(!fp.startsWith(root)){res.statusCode=403;return res.end('forbidden');}fs.readFile(fp,(e,d)=>{if(e){res.statusCode=404;return res.end('not found');}res.setHeader('Content-Type',types[path.extname(fp)]||'application/octet-stream');res.end(d);});}).listen(port,()=>console.log('serving '+root+' on http://localhost:'+port));",
+        "website",
+        "8181"
+      ],
       "port": 8181
     },
     {
       "name": "app",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8182", "--directory", "crates/desktop/ui"],
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": [
+        "-e",
+        "const http=require('http'),fs=require('fs'),path=require('path');const root=path.resolve(process.argv[1]);const port=Number(process.argv[2]);const types={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.ico':'image/x-icon','.json':'application/json','.woff2':'font/woff2'};http.createServer((req,res)=>{let u=decodeURIComponent(req.url.split('?')[0]);if(u.endsWith('/'))u+='index.html';const fp=path.normalize(path.join(root,u));if(!fp.startsWith(root)){res.statusCode=403;return res.end('forbidden');}fs.readFile(fp,(e,d)=>{if(e){res.statusCode=404;return res.end('not found');}res.setHeader('Content-Type',types[path.extname(fp)]||'application/octet-stream');res.end(d);});}).listen(port,()=>console.log('serving '+root+' on http://localhost:'+port));",
+        "crates/desktop/ui",
+        "8182"
+      ],
       "port": 8182
     }
   ]
