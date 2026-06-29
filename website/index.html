@@ -221,6 +221,10 @@
                     <p class="faq-a">Your existing Claude Desktop and Claude Code setup. CSW only uses it as the reference point and never changes or deletes your settings, history, or login.</p>
                 </div>
                 <div class="faq-item">
+                    <p class="faq-q">Does it work if I've customized where my existing config lives?</p>
+                    <p class="faq-a">The desktop app uses the standard location (<code>~/Library/Application Support/Claude</code>) as is. Only for Claude Code (CLI): if you've moved its config away from the default <code>~/.claude</code> with the <code>CLAUDE_CONFIG_DIR</code> environment variable, the CLI side of "Existing Claude" won't automatically point at that custom location (because CSW assumes the standard one). Your existing <code>CLAUDE_CONFIG_DIR</code> setup keeps working as before, and CSW never rewrites it.</p>
+                </div>
+                <div class="faq-item">
                     <p class="faq-q">Do I need a new environment just to use the same account?</p>
                     <p class="faq-a">No. If you only want to keep using the same setup, just launch Claude as usual and "Existing Claude" is used directly. CSW helps when you want independent environments for other accounts or projects.</p>
                 </div>
