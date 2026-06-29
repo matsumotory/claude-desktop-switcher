@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.11.0...v0.11.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **desktop:** 環境作成のIME Enter誤作成を防ぎ作成前に確認ステップを追加 ([0baa05e](https://github.com/matsumotory/claude-desktop-switcher/commit/0baa05e3e76cc4328db17d5424d49f6fcb81742a))
+
 ## [0.11.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.10.0...v0.11.0) (2026-06-29)
 
 
