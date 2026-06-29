@@ -102,8 +102,31 @@ function icon(id, cls) {
 }
 
 const $ = (id) => document.getElementById(id);
-function avatarText(p) {
-  return p.icon ? p.icon : (p.name || '?').charAt(0).toUpperCase();
+
+// Avatar icons: a curated set drawn from the app's Phosphor sprite (never
+// hand-rolled). A profile's `icon` is either one of these slugs (rendered as the
+// SVG glyph) or a short emoji/character (rendered as text); empty falls back to
+// the first letter of the name.
+const AVATAR_ICONS = [
+  { slug: 'briefcase', label: '仕事' },
+  { slug: 'user', label: '個人' },
+  { slug: 'flask', label: '検証' },
+  { slug: 'code', label: '開発' },
+  { slug: 'buildings', label: '会社' },
+  { slug: 'graduation-cap', label: '学習' },
+  { slug: 'palette', label: 'デザイン' },
+  { slug: 'rocket', label: 'ローンチ' },
+  { slug: 'folder', label: 'プロジェクト' },
+  { slug: 'star', label: 'お気に入り' },
+  { slug: 'globe', label: 'グローバル' },
+  { slug: 'heart', label: 'ハート' },
+];
+const ICON_SLUGS = AVATAR_ICONS.map((i) => i.slug);
+
+function avatarContent(iconVal, name) {
+  if (iconVal && ICON_SLUGS.includes(iconVal)) return icon('i-' + iconVal, 'icon avatar-glyph');
+  if (iconVal) return iconVal;
+  return (name || '?').charAt(0).toUpperCase();
 }
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function withTransition(update) {
@@ -125,6 +148,7 @@ const el = {
   firstRunExtra: $('firstRunExtra'),
   inputName: $('inputName'),
   inputIcon: $('inputIcon'),
+  iconPicker: $('iconPicker'),
   nameError: $('nameError'),
   advancedToggle: $('advancedToggle'),
   advancedState: $('advancedState'),
@@ -188,7 +212,7 @@ function renderSidebar() {
       'aria-current': isActive ? 'true' : null, // current = in-use target
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
-      h('span', { class: 'profile-avatar' }, isDefault ? icon('i-monitor') : avatarText(p)),
+      h('span', { class: 'profile-avatar' }, isDefault ? icon('i-monitor') : avatarContent(p.icon, p.name)),
       h('span', { class: 'profile-name', text: isDefault ? '既存の Claude' : p.name }),
       pill);
   });
@@ -211,7 +235,7 @@ async function showDetail(name) {
 
   const header = h('div', { class: 'detail-header' },
     h('div', { class: 'detail-bezel' },
-      h('div', { class: 'detail-avatar' }, isDefault ? icon('i-monitor') : (d.icon ? d.icon : name.charAt(0).toUpperCase()))),
+      h('div', { class: 'detail-avatar' }, isDefault ? icon('i-monitor') : avatarContent(d.icon, name))),
     h('div', { class: 'detail-titles' },
       h('div', { class: 'detail-name', text: isDefault ? '既存の Claude' : name }),
       h('div', { class: 'detail-tagline', text: isDefault ? 'あなた自身の環境' : (isActive ? '利用中の環境' : '作成した環境') })),
@@ -453,6 +477,31 @@ async function doClone(source, target) {
 }
 
 // --- Empty / create flow ----------------------------------------------------
+let createIcon = ''; // selected avatar: an AVATAR_ICONS slug, an emoji/char, or '' (none)
+
+// Render the icon picker grid (designed glyphs) for the create view.
+function renderIconPicker() {
+  el.iconPicker.replaceChildren(...AVATAR_ICONS.map((it) =>
+    h('button', {
+      type: 'button', class: 'icon-tile', role: 'radio', 'data-slug': it.slug,
+      'aria-label': it.label, 'aria-checked': 'false', title: it.label,
+      onclick: () => selectIcon(it.slug),
+    }, icon('i-' + it.slug))));
+  syncIconPicker();
+}
+function selectIcon(slug) {
+  createIcon = createIcon === slug ? '' : slug; // click again to clear
+  el.inputIcon.value = ''; // picking a glyph clears the emoji fallback
+  syncIconPicker();
+}
+function syncIconPicker() {
+  el.iconPicker.querySelectorAll('.icon-tile').forEach((b) => {
+    const on = b.dataset.slug === createIcon;
+    b.classList.toggle('selected', on);
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
+}
+
 function showEmpty() {
   selectedName = null;
   renderSidebar();
@@ -463,6 +512,8 @@ function showCreate() {
   localStorage.setItem('csw_onboarded', '1');
   el.inputName.value = '';
   el.inputIcon.value = '';
+  createIcon = '';
+  renderIconPicker();
   el.nameError.hidden = true;
   setMode('isolate');
   closeAdvanced();
@@ -546,7 +597,7 @@ function validateName(name) {
 
 async function submitCreate() {
   const name = el.inputName.value.trim();
-  const iconVal = el.inputIcon.value.trim();
+  const iconVal = createIcon || el.inputIcon.value.trim();
   const err = validateName(name);
   if (err) { el.nameError.textContent = err; el.nameError.hidden = false; el.inputName.focus(); return; }
   el.nameError.hidden = true;
@@ -634,6 +685,10 @@ function wireEvents() {
   el.createScroll.addEventListener('scroll', () => fadeFor(el.createScroll, el.createFade), { passive: true });
   window.addEventListener('resize', refreshFades);
   el.inputName.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCreate(); });
+  el.inputIcon.addEventListener('input', () => { // typing an emoji overrides a glyph; clearing resets
+    createIcon = el.inputIcon.value.trim();
+    syncIconPicker();
+  });
 }
 
 function checkFirstRun() {
@@ -682,15 +737,15 @@ document.addEventListener('DOMContentLoaded', init);
 function devInvoke(cmd, args) {
   const sample = {
     default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
-    仕事用: { name: '仕事用', icon: '', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', sharing: { ...PRESETS.share_settings } },
-    検証用: { name: '検証用', icon: '', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', sharing: { ...PRESETS.isolate } },
+    仕事用: { name: '仕事用', icon: 'briefcase', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', sharing: { ...PRESETS.share_settings } },
+    検証用: { name: '検証用', icon: 'flask', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', sharing: { ...PRESETS.isolate } },
   };
   switch (cmd) {
     case 'list_profiles':
       return Promise.resolve([
         { name: 'default', icon: '', is_default: true },
-        { name: '仕事用', icon: '', is_default: false },
-        { name: '検証用', icon: '', is_default: false },
+        { name: '仕事用', icon: 'briefcase', is_default: false },
+        { name: '検証用', icon: 'flask', is_default: false },
       ]);
     case 'get_active_profile':
       return Promise.resolve('default');
