@@ -360,6 +360,24 @@ html[lang="ja"] .subtext {
     text-decoration-color: var(--accent);
 }
 
+/* 本文（FAQ・規約）内のリンクはページのアクセント色（白）で統一する。
+   ブラウザ既定の青紫リンクは使わない（design-taste-frontend: THE LILA RULE /
+   COLOR CONSISTENCY LOCK）。読み手が拾えるよう下線はやや濃いめにする。 */
+.faq-a a,
+.terms-item a {
+    color: var(--text-primary);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.32);
+    text-underline-offset: 3px;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.faq-a a:hover,
+.terms-item a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+}
+
 /* 見出しの行バランス（手動の nowrap/wbr ハックの置き換え）。
    非対応ブラウザでは通常折り返しにフォールバックし、コピーは短く保つ。 */
 @supports (text-wrap: balance) {
