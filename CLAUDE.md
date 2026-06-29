@@ -33,6 +33,8 @@ cargo fmt --all                    # フォーマット
 
 GUI の実機確認は `cargo tauri dev` (要 `cargo install tauri-cli`)。デスクトップ署名/公証/DMG は GitHub Actions の `Release Please` ワークフローが担う。
 
+LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launch.json` の `lp` を起動する (preview_start で `website/` を `python3 -m http.server` 配信、EN は `/`、日本語は `/ja/`)。`website/` をルートに配信しないと相対パス (`../style.css` 等) が解決しないので、単体 HTML を file:// で開くのではなくこの設定で見る。
+
 ## Skill トリガーテーブル
 
 以下の条件に合致したら、該当する `.agents/skills/<name>/SKILL.md` を `Read` で読み、その手順に従う。`/bugfix` `/spec-first` `/audit-consistency` はスラッシュコマンドからも起動できる (`.claude/commands/`)。
