@@ -221,6 +221,10 @@
                     <p class="faq-a">普段お使いの既存の Claudeデスクトップアプリと Claude Code の環境です。CSW はこれを基準にするだけで、設定・履歴・ログインを変更も削除もしません。</p>
                 </div>
                 <div class="faq-item">
+                    <p class="faq-q">既存の設定を別の場所にカスタマイズしていても使えますか？</p>
+                    <p class="faq-a">デスクトップアプリは標準の場所（<code>~/Library/Application Support/Claude</code>）をそのまま扱います。Claude Code（CLI）の設定だけは、環境変数 <code>CLAUDE_CONFIG_DIR</code> を使って標準の <code>~/.claude</code> から別の場所へ移している場合、「既存の Claude」の CLI 側はその独自の場所を自動では指しません（CSW が標準の場所を前提にしているためです）。その場合もこれまでの <code>CLAUDE_CONFIG_DIR</code> 運用はそのまま使え、CSW が勝手に書き換えることはありません。</p>
+                </div>
+                <div class="faq-item">
                     <p class="faq-q">同じアカウントでも環境を作る必要がありますか？</p>
                     <p class="faq-a">いいえ。同じ環境を使い続けたいだけなら不要です。いつもどおり起動すれば「既存の Claude」が使われます。CSW は別アカウントや別案件の独立環境を増やすときに役立ちます。</p>
                 </div>
