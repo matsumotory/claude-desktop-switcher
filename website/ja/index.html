@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude Desktop Switcher</title>
     <meta name="description" content="既存の環境を一切壊さず、複数のClaude Desktopアカウントを安全に管理・切り替え。">
+    <link rel="canonical" href="https://matsumotory.github.io/claude-desktop-switcher/ja/">
+    <link rel="alternate" hreflang="en" href="https://matsumotory.github.io/claude-desktop-switcher/">
+    <link rel="alternate" hreflang="ja" href="https://matsumotory.github.io/claude-desktop-switcher/ja/">
+    <link rel="alternate" hreflang="x-default" href="https://matsumotory.github.io/claude-desktop-switcher/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Claude Desktop Switcher">
+    <meta property="og:title" content="Claude Desktop Switcher：Claudeデスクトップアプリを用途ごとに分ける">
+    <meta property="og:description" content="既存の環境を一切壊さず、複数のClaude Desktopアカウントを安全に管理・切り替え。">
+    <meta property="og:url" content="https://matsumotory.github.io/claude-desktop-switcher/ja/">
+    <meta property="og:image" content="https://matsumotory.github.io/claude-desktop-switcher/assets/ja_og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Claude Desktop Switcher：Claude デスクトップアプリのスイートをアカウント・用途ごとに分ける。">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude Desktop Switcher：Claudeデスクトップアプリを用途ごとに分ける">
+    <meta name="twitter:description" content="既存の環境を一切壊さず、複数のClaude Desktopアカウントを安全に管理・切り替え。">
+    <meta name="twitter:image" content="https://matsumotory.github.io/claude-desktop-switcher/assets/ja_og.png">
     <link rel="icon" type="image/png" href="../assets/logo.png">
     <link rel="apple-touch-icon" href="../assets/logo.png">
     <link rel="stylesheet" href="../style.css">
@@ -73,7 +92,7 @@
                     <div class="feature-cell cell-small fade-in delay-1">
                         <div class="cell-content">
                             <h2>分離度のカスタマイズ</h2>
-                            <p>共有したい設定と分けたいデータを用途に合わせて選択可能です。例えば「業務」と「プライベート」でログインアカウントやチャット履歴を完全に分離し、情報が混ざるリスクを防ぐことができます。</p>
+                            <p>既存の設定からどこまで引き継ぐかを選べます。会話を続けたいなら「アカウントだけ分ける」、共通ルールやスキルを使い回したいなら「会話とメモリも分ける」、何も引き継ぎたくないなら「すべて分ける」を選びます。どのモードでもアカウントは分かれます。</p>
                         </div>
                     </div>
 
@@ -95,12 +114,12 @@
             </div>
             <div class="screens-bento">
                 <figure class="screen-card screen-wide fade-in delay-1">
-                    <img src="../assets/ja_screen_overview.png" alt="各環境のパスとコンポーネント別の共有/分離マトリクスを表示した CSW 設定画面" loading="lazy">
-                    <figcaption>各環境は専用のデータディレクトリを持ち、コンポーネントごと（MCP 設定・CLAUDE.md・プラグイン・セッション・履歴など）に共有か分離を選べます。</figcaption>
+                    <img src="../assets/ja_screen_overview.png" alt="各環境のパスと項目別の共有/分離マトリクスを表示した CSW 設定画面" loading="lazy">
+                    <figcaption>各環境は専用のデータディレクトリを持ちます。共有の中心は Claude Code 側の共通ルール（CLAUDE.md）・スキル・プラグインで、会話履歴・自動メモリ・入力履歴は項目ごとに引き継ぐか分けるかを選べます。アカウントのサインイン情報とコネクタ（MCP）設定は常に分離されます。</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
-                    <img src="../assets/ja_screen_create.png" alt="「すべて分ける」「設定だけ引き継ぐ」を選べる環境作成画面" loading="lazy">
-                    <figcaption>数秒で環境を作成。ゼロから始めるなら「すべて分ける」、既存環境を使い回すなら「設定だけ引き継ぐ」を選びます。</figcaption>
+                    <img src="../assets/ja_screen_create.png" alt="「アカウントだけ分ける」「会話とメモリも分ける」「すべて分ける」を選べる環境作成画面" loading="lazy">
+                    <figcaption>数秒で環境を作成。会話を続けつつ課金だけ分けるなら「アカウントだけ分ける」、設定だけ使い回すなら「会話とメモリも分ける」、何も引き継がないなら「すべて分ける」を選びます。どのモードでもアカウントは分かれます。</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
                     <img src="../assets/ja_screen_onboarding.png" alt="既存環境が保持されることを説明する初回オンボーディング" loading="lazy">
@@ -120,8 +139,8 @@
                     <div class="cell-content">
                         <span class="usecase-num">01</span>
                         <h3 class="usecase-title">案件・クライアントごとにスイート丸ごと分ける</h3>
-                        <p class="usecase-text">複数のクライアント案件やプロジェクトを並行する際、チャット履歴・Projects のメモリ・Cowork の作業フォルダ・Artifacts が混ざる懸念を避けたい。</p>
-                        <p class="usecase-solution">「完全隔離」構成を選ぶと、環境ごとに独立したデータ領域が割り当てられ、各々が自分のログインを保持します。別案件の文脈へ漏れる事故を構造的に防ぎます。</p>
+                        <p class="usecase-text">複数のクライアント案件やプロジェクトを並行する際、会話履歴・Projects の会話やメモリ・Cowork の作業フォルダ・Artifacts が混ざる懸念を避けたい。</p>
+                        <p class="usecase-solution">「すべて分ける」を選ぶと、何も引き継がずに環境ごと完全に独立し、各環境がそれぞれのアカウントでサインインします。別案件の文脈へ漏れる事故を構造的に防ぎます。</p>
                     </div>
                 </div>
                 <div class="feature-cell dark-accent fade-in delay-2">
@@ -129,20 +148,28 @@
                         <span class="usecase-num">02</span>
                         <h3 class="usecase-title">仕事用と個人用を 1 台で分ける（非エンジニア向け）</h3>
                         <p class="usecase-text">業務アカウントと個人アカウントを混ぜたくないが、ターミナル操作はしたくない。</p>
-                        <p class="usecase-solution">メニューバーから環境を選んで切り替えると、再ログインなしに別アカウントのデスクトップアプリが立ち上がります。ターミナルは不要、GUI だけで完結します。</p>
+                        <p class="usecase-solution">メニューバーから環境を選んで切り替えると、再サインインなしに別アカウントのデスクトップアプリが立ち上がります。ターミナルは不要、GUI だけで完結します。</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">03</span>
-                        <h3 class="usecase-title">用途ごとに分けつつ共通ルールは共有する</h3>
+                        <h3 class="usecase-title">用途ごとに分けつつ共通ルールは引き継ぐ</h3>
                         <p class="usecase-text">アカウントは用途別に分けたいが、共通の運用ルールや設定は使い回したい。</p>
-                        <p class="usecase-solution">特定の設定ファイル（CLAUDE.md 等）だけを全環境で共有する構成に対応。履歴やログインは分離したまま設定の二重管理を防ぎます。</p>
+                        <p class="usecase-solution">「会話とメモリも分ける」を選ぶと、Claude Code 側の共通ルール（CLAUDE.md）・スキル・プラグインとツール権限を引き継ぎつつ、会話履歴と自動メモリはこの環境だけにします。アカウントは分かれたまま、設定の二重管理を防ぎます。</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">04</span>
+                        <h3 class="usecase-title">研究と開発でアカウントだけ分ける</h3>
+                        <p class="usecase-text">研究と開発で課金やリソースは分けたいが、これまでの会話やメモリは引き継いで作業を続けたい。</p>
+                        <p class="usecase-solution">「アカウントだけ分ける」を選ぶと、会話履歴も自動メモリも引き継ぎ、分離するのはアカウントだけです。決済を分けながら、ひとつながりの作業を続けられます。</p>
+                    </div>
+                </div>
+                <div class="feature-cell fade-in delay-2">
+                    <div class="cell-content">
+                        <span class="usecase-num">05</span>
                         <h3 class="usecase-title">GUI の分離に CLI を連動させる（開発者向け）</h3>
                         <p class="usecase-text">GUI で分けた環境を Claude Code（CLI）側でも同じ環境で使いたい。</p>
                         <p class="usecase-solution">GUI で選んだ環境を、別に開いたターミナルの Claude Code（CLI）にも 1 コマンドで連動できます。CLI 単体スイッチャーが既に解決している領域に、GUI 分離との一貫性を足すのが狙いです。具体的な手順は後述のターミナル連携を参照してください。</p>
@@ -196,7 +223,7 @@
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
                     <h3>柔軟な共有設定</h3>
-                    <p>完全な隔離（デフォルト）か、一部設定ファイルのみを同期する構成かを柔軟に選択可能です。</p>
+                    <p>新しい環境を作るとき、すべて分ける（推奨・既定）か、会話とメモリも分けるか、アカウントだけ分けるかを選べます。</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
@@ -222,7 +249,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">「既存の Claude」とは？</p>
-                    <p class="faq-a">普段お使いの既存の Claudeデスクトップアプリと Claude Code の環境です。CSW はこれを基準にするだけで、設定・履歴・ログインを変更も削除もしません。</p>
+                    <p class="faq-a">普段お使いの既存の Claudeデスクトップアプリと Claude Code の環境です。CSW はこれを基準にするだけで、設定・会話履歴・アカウントのサインイン情報を変更も削除もしません。</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">既存の設定を別の場所にカスタマイズしていても使えますか？</p>
@@ -237,8 +264,8 @@
                     <p class="faq-a">壊れません。各環境は専用ディレクトリに分かれており、環境を削除しても既存の Claude には影響しません。</p>
                 </div>
                 <div class="faq-item">
-                    <p class="faq-q">切り替えるたびに再ログインが必要ですか？</p>
-                    <p class="faq-a">いいえ。各環境はログイン状態を自分のディレクトリ内に保持します。初回だけログインすれば、以後は切り替えても保たれます（分離した項目は新しい環境では空から始まります）。</p>
+                    <p class="faq-q">切り替えるたびに再サインインが必要ですか？</p>
+                    <p class="faq-a">いいえ。各環境はアカウントのサインイン情報を自分のディレクトリ内に保持します。初回だけサインインすれば、以後は切り替えても保たれます（分離した項目は新しい環境では空から始まります）。</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">デスクトップを切り替えるとターミナルも揃いますか？</p>
@@ -256,7 +283,7 @@
             <div class="tech-note-cols">
                 <div class="tech-note-col">
                     <h3>「壊さない」ことを最優先にした Rust と Tauri</h3>
-                    <p>CSW がいちばん大事にしているのは、いま使っている Claude のデータを壊さないことです。アカウントを切り替えるたびに設定ファイルを入れ替えるので、途中で失敗すれば、チャット履歴やログイン状態が消えかねません。そこで、壊すと困る処理は一カ所に集めました。具体的には、環境ごとにデータを分ける、ファイルの置き場所を判断する、いま使っているデータを守る、といった処理です。これらをすべて Rust で書いた共通の部品（<code>crates/core</code>）にまとめ、ターミナルから使う版（<code>csw</code>）も、メニューバーのアプリ（<code>crates/desktop</code>）も、この同じ部品を呼び出すだけにしています。危ない処理が一カ所にまとまっていれば、見直す場所もそこだけで済みます。</p>
+                    <p>CSW がいちばん大事にしているのは、いま使っている Claude のデータを壊さないことです。アカウントを切り替えるたびに設定ファイルを入れ替えるので、途中で失敗すれば、会話履歴やアカウントのサインイン情報が消えかねません。そこで、壊すと困る処理は一カ所に集めました。具体的には、環境ごとにデータを分ける、ファイルの置き場所を判断する、いま使っているデータを守る、といった処理です。これらをすべて Rust で書いた共通の部品（<code>crates/core</code>）にまとめ、ターミナルから使う版（<code>csw</code>）も、メニューバーのアプリ（<code>crates/desktop</code>）も、この同じ部品を呼び出すだけにしています。危ない処理が一カ所にまとまっていれば、見直す場所もそこだけで済みます。</p>
                     <p>消す操作では、いま使っているデータの場所だけは、消す対象から必ず外します。共有する設定ファイルを切り替えるときも、元のファイルを一度別の場所へ退避してから、新しいものに差し替えます。Rust を選んだ理由は、こうした守るべき約束を、プログラムを動かす前の準備段階で機械に自動チェックさせられるからです。約束を破るコードを書くと、この段階でエラーになって止まり、配布物を作る工程まで進めません。つまり、決めた約束に反する書き間違いは、世に出る前にはじけます。これをテストと組み合わせて、安全側に倒しています。</p>
                     <p>GUI は Tauri v2 です。macOS にもともと入っている表示の仕組みである WebKit を借りるので、アプリの中にブラウザの仕組みをまるごと同梱しなくて済みます。そのぶん配布ファイルが小さく、Intel と Apple Silicon の両対応版でも、v0.9.1 の DMG は約 7MB に収まっています。Apple にアプリの身元を確認してもらう手続きである、コードの署名と公証も、Tauri の標準的な配布の流れで行えます。</p>
                     <p>macOS のネイティブ UI なら、本来は Apple の Swift と SwiftUI が第一候補です。ただ CSW は、見た目よりも、裏でファイルや設定を安全に入れ替える処理こそが中心で、画面の量は多くありません。だから、その中身の処理が正しいかをコンパイラやテストで確かめやすいことを優先して、Rust と Tauri にしました。作るものが変われば、ふさわしい選択も変わります。</p>

@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude Desktop Switcher</title>
     <meta name="description" content="Safely manage and switch between multiple Claude Desktop accounts with zero impact on your existing setup.">
+    <link rel="canonical" href="https://matsumotory.github.io/claude-desktop-switcher/">
+    <link rel="alternate" hreflang="en" href="https://matsumotory.github.io/claude-desktop-switcher/">
+    <link rel="alternate" hreflang="ja" href="https://matsumotory.github.io/claude-desktop-switcher/ja/">
+    <link rel="alternate" hreflang="x-default" href="https://matsumotory.github.io/claude-desktop-switcher/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Claude Desktop Switcher">
+    <meta property="og:title" content="Claude Desktop Switcher: Separate your Claude Desktop App by use case">
+    <meta property="og:description" content="Safely manage and switch between multiple Claude Desktop accounts with zero impact on your existing setup.">
+    <meta property="og:url" content="https://matsumotory.github.io/claude-desktop-switcher/">
+    <meta property="og:image" content="https://matsumotory.github.io/claude-desktop-switcher/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Claude Desktop Switcher: separate the Claude Desktop App suite by account and use case.">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude Desktop Switcher: Separate your Claude Desktop App by use case">
+    <meta name="twitter:description" content="Safely manage and switch between multiple Claude Desktop accounts with zero impact on your existing setup.">
+    <meta name="twitter:image" content="https://matsumotory.github.io/claude-desktop-switcher/assets/og.png">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
     <link rel="stylesheet" href="style.css">
@@ -73,14 +92,14 @@
                     <div class="feature-cell cell-small fade-in delay-1">
                         <div class="cell-content">
                             <h2>Customizable Separation</h2>
-                            <p>Define exactly what to share and what to isolate. For example, you can completely separate your login sessions and past chat histories between 'Work' and 'Personal' environments, ensuring your data never crosses over.</p>
+                            <p>Choose how much carries over from your existing setup. Separate the account only and keep one continuous workspace, separate conversations and memory too while reusing your rules and skills, or separate everything for full independence. The account is always separate.</p>
                         </div>
                     </div>
 
                     <div class="feature-cell cell-small dark-accent fade-in delay-2">
                         <div class="cell-content">
                             <h2>Localized Application</h2>
-                            <p>Your Mac's global system settings remain untouched. The active environment applies strictly locally, only to the Claude Desktop App launched via this tool or your specific terminal tab. This prevents unexpected bleeding into your usual environment, with the actual isolation level depending on your sharing configuration.</p>
+                            <p>Your Mac's global system settings remain untouched. The active environment applies strictly locally, only to the Claude Desktop App launched via this tool or your specific terminal tab. This prevents unexpected bleeding into your usual environment, with the actual separation level depending on how much you chose to carry over.</p>
                         </div>
                     </div>
                 </div>
@@ -91,16 +110,16 @@
         <section id="screens" class="screens container fade-in">
             <div class="screens-header">
                 <h2>See it in action.</h2>
-                <p>The whole environment system lives in one settings window. Create isolated or shared environments, inspect exactly what each environment shares, and switch from the menu bar.</p>
+                <p>The whole environment system lives in one settings window. Create an environment by choosing how much carries over, inspect exactly what each environment carries over, and switch from the menu bar.</p>
             </div>
             <div class="screens-bento">
                 <figure class="screen-card screen-wide fade-in delay-1">
-                    <img src="assets/screen_overview.png" alt="CSW settings window showing an environment's paths and a per-component Share / Isolate matrix" loading="lazy">
-                    <figcaption>Every environment gets its own data directories, with a Share or Isolate setting for each component: MCP config, CLAUDE.md, plugins, sessions, history, and more.</figcaption>
+                    <img src="assets/screen_overview.png" alt="CSW settings window showing an environment's paths and a per-component carry-over matrix" loading="lazy">
+                    <figcaption>Every environment gets its own data directories. For each component you decide whether it carries over from your existing setup or stays separate to this environment: common rules (CLAUDE.md), tool permissions and hooks (settings.json), plugins, skills, project conversations and memory (projects/), prompt history, and more. The account sign-in info (config.json) is always separate.</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
-                    <img src="assets/screen_create.png" alt="New-environment screen offering Start fresh or Reuse settings" loading="lazy">
-                    <figcaption>Create an environment in seconds. Pick “Start fresh” for a clean slate, or “Reuse settings” to keep your existing setup.</figcaption>
+                    <img src="assets/screen_create.png" alt="New-environment screen offering the three separation modes" loading="lazy">
+                    <figcaption>Create an environment in seconds. Choose how much carries over: separate the account only, separate conversations and memory too, or separate everything.</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
                     <img src="assets/screen_onboarding.png" alt="First-run onboarding explaining that the existing setup is preserved" loading="lazy">
@@ -121,7 +140,7 @@
                         <span class="usecase-num">01</span>
                         <h3 class="usecase-title">Separate the whole suite per project/client</h3>
                         <p class="usecase-text">When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts.</p>
-                        <p class="usecase-solution">Selecting the "Isolated" configuration allocates a separate data directory for each environment, each keeping its own login. Information from one client never structurally leaks across the desktop suite into another.</p>
+                        <p class="usecase-solution">Pick "Separate everything" and nothing carries over: each environment gets its own data directory and stays fully independent, so one client's work never leaks into another across the desktop suite.</p>
                     </div>
                 </div>
                 <div class="feature-cell dark-accent fade-in delay-2">
@@ -135,14 +154,22 @@
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">03</span>
-                        <h3 class="usecase-title">Share common rules across environments</h3>
-                        <p class="usecase-text">You want separate accounts but want to reuse common rules and settings.</p>
-                        <p class="usecase-solution">A "Shared" configuration synchronizes specific files (such as CLAUDE.md) across environments while keeping history and logins separate.</p>
+                        <h3 class="usecase-title">Split by purpose while reusing your setup</h3>
+                        <p class="usecase-text">You want separate accounts by purpose, but want to reuse your common rules and settings.</p>
+                        <p class="usecase-solution">Pick "Separate conversations &amp; memory too" to carry over your common rules, skills, plugins, and tool permissions, while keeping conversation history and auto-memory to this environment. The account stays separate either way.</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">04</span>
+                        <h3 class="usecase-title">Separate billing while keeping one workspace</h3>
+                        <p class="usecase-text">You want to run research and development on separate accounts, but keep working in one continuous space.</p>
+                        <p class="usecase-solution">Pick "Separate the account only" to carry over conversation history and auto-memory too; the only thing that becomes separate is the account. Split the billing while your work continues uninterrupted.</p>
+                    </div>
+                </div>
+                <div class="feature-cell fade-in delay-2">
+                    <div class="cell-content">
+                        <span class="usecase-num">05</span>
                         <h3 class="usecase-title">Link the CLI to your GUI separation</h3>
                         <p class="usecase-text">You want to use the environment you chose in the GUI from the CLI as well (for developers).</p>
                         <p class="usecase-solution">Sync the environment you chose in the GUI to Claude Code (CLI) in a separate terminal with a single command. This adds GUI-level consistency on top of what existing CLI-only switchers already solve. See Terminal Integration below for the exact command.</p>
@@ -169,7 +196,7 @@
                     <div class="step-num">02</div>
                     <div class="step-body">
                         <h3>Create Environments</h3>
-                        <p>Generate isolated "Work" or "Research" environments with single clicks.</p>
+                        <p>Generate separate "Work" or "Research" environments with single clicks.</p>
                     </div>
                 </div>
                 <div class="step-item border-top">
@@ -195,8 +222,8 @@
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
-                    <h3>Flexible Sharing</h3>
-                    <p>Choose between complete isolation (default) or syncing specific settings across environments.</p>
+                    <h3>Flexible Separation</h3>
+                    <p>Choose how much carries over: separate everything, separate conversations and memory too, or separate the account only.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
@@ -213,16 +240,16 @@
         <section id="faq" class="faq container fade-in">
             <div class="faq-header">
                 <h2>FAQ</h2>
-                <p>Share and isolate are always relative to "Existing Claude". You build a new environment by choosing what to inherit from it and what to keep separate.</p>
+                <p>What carries over is always relative to "Existing Claude". You build a new environment by choosing what to carry over from it and what to keep separate.</p>
             </div>
             <div class="faq-grid">
                 <div class="faq-item">
-                    <p class="faq-q">Share / isolate: relative to what?</p>
-                    <p class="faq-a">Always relative to "Existing Claude" (your existing setup). For each item, you choose whether to use the same thing as your existing Claude (share) or keep a new one just for this environment (isolate).</p>
+                    <p class="faq-q">Carry over or keep separate: relative to what?</p>
+                    <p class="faq-a">Always relative to "Existing Claude" (your existing setup). For each item, you choose whether to carry over the same thing as your existing Claude, or keep a new one just for this environment. The account is always separate.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">What is "Existing Claude"?</p>
-                    <p class="faq-a">Your existing Claude Desktop and Claude Code setup. CSW only uses it as the reference point and never changes or deletes your settings, history, or login.</p>
+                    <p class="faq-a">Your existing Claude Desktop and Claude Code setup. CSW only uses it as the reference point and never changes or deletes your settings, history, or account sign-in.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does it work if I've customized where my existing config lives?</p>
@@ -238,7 +265,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Do I have to sign in again on every switch?</p>
-                    <p class="faq-a">No. Each environment keeps its login inside its own directory. Sign in once and it persists across switches (items set to isolate start empty in the new environment).</p>
+                    <p class="faq-a">No. Each environment keeps its account sign-in inside its own directory. Sign in once and it persists across switches (items set to stay separate start empty in the new environment).</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
@@ -256,7 +283,7 @@
             <div class="tech-note-cols">
                 <div class="tech-note-col">
                     <h3>Rust and Tauri, chosen to avoid breaking anything</h3>
-                    <p>What CSW cares about most is not breaking the Claude data you already have. Switching accounts means swapping configuration files, so if that ever fails midway, your chat history or login state could be lost. To contain that risk, the operations that could break something all live in one place: separating each environment's data, deciding where files belong, and protecting the data currently in use. All of this sits in one shared Rust component (<code>crates/core</code>), and both the command-line tool (<code>csw</code>) and the menu-bar app (<code>crates/desktop</code>) simply call into that same component. With the risky work in a single place, there is only one place to review.</p>
+                    <p>What CSW cares about most is not breaking the Claude data you already have. Switching accounts means swapping configuration files, so if that ever fails midway, your chat history or account sign-in could be lost. To contain that risk, the operations that could break something all live in one place: separating each environment's data, deciding where files belong, and protecting the data currently in use. All of this sits in one shared Rust component (<code>crates/core</code>), and both the command-line tool (<code>csw</code>) and the menu-bar app (<code>crates/desktop</code>) simply call into that same component. With the risky work in a single place, there is only one place to review.</p>
                     <p>On deletion paths, the directory currently in use is always excluded from what gets removed. When swapping a shared configuration file, the original is moved to a backup first, then replaced. We chose Rust because these promises can be checked automatically, by the machine, before the program even runs, at compile time. Write code that breaks a promise and it stops with an error at that stage and never reaches the step that builds the distributable. In other words, a mistake that violates a defined promise is caught before it ships. We pair this with tests and err on the side of safety.</p>
                     <p>The GUI is built with Tauri v2. It renders through WebKit, the display engine already built into macOS, so the app does not bundle a whole browser engine of its own. That keeps the distributable small: the build covering both Intel and Apple Silicon is about 7 MB as a DMG in v0.9.1. Code signing and notarization, where Apple confirms the app's identity, also run through Tauri's standard distribution flow.</p>
                     <p>For native macOS UI, Apple's Swift and SwiftUI would be the first choice. But CSW's heart is the systems work of swapping files and settings safely, not the screens, and there is not much UI. So we prioritized being able to check that underlying logic with the compiler and tests, and chose Rust and Tauri. A different kind of app would call for a different choice.</p>
