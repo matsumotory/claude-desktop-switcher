@@ -30,6 +30,22 @@ Must be one of the following:
 - `test`: Adding missing tests or correcting existing tests
 - `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation
 
+### 1.1 リリースへの影響(release-please・超重要)
+
+このリポジトリは release-please で版を管理する。**`fix:` / `feat:` / 破壊的変更(`!` または `BREAKING CHANGE`)のいずれかが `main` に入ったときだけ**リリース PR が起票され、マージすると署名・公証つき DMG をビルドして GitHub Release を切る。`docs:` / `chore:` / `style:` / `refactor:` / `perf:` / `test:` / `ci:` は版を上げず、リリース PR を作らない。
+
+判断基準は「**出荷するアプリ本体(`crates/`)を変えるか**」であって、概念的に bug fix かどうかではない:
+
+- `crates/`(core / cli / desktop のロジック)を変える → `fix:` / `feat:`(= リリース対象)
+- `website/`(LP)・`docs/`・`README` だけ、または `.agents/` のスキル・CI 補助だけ → **`docs:` か `chore:` を使う。`fix:` / `feat:` は使わない**
+
+理由: LP は GitHub Pages で**アプリのリリースとは独立にデプロイ**される。LP やドキュメントだけの変更で `fix:` を使うと、アプリのコードは何も変わっていないのに版が上がり、中身が前バージョンと同一の DMG をリリースしてしまう(2026-06-29、技術コラムとスクショを `fix(website)` で積んだ結果、ドキュメントだけの 0.9.2 リリース PR が起票された)。LP の不具合(リンク切れ・レイアウト崩れ)を直すときも、`crates/` を触らないなら `docs(website):` を使う。
+
+例:
+- `docs(website): 技術コラムを平易な説明文に書き直す`(LP のみ → リリースされない)
+- `docs: USER_GUIDE に環境切替の手順を追記する`(docs のみ → リリースされない)
+- `fix(core): プロファイル名検証で日本語を許可する`(アプリ変更 → リリース対象)
+
 ### 2. Scope (Optional but Recommended)
 Indicates the area of the codebase the commit affects. Common scopes in this project:
 - `core`: `csw-core` library (profile / switcher / linker / keychain / platform)
