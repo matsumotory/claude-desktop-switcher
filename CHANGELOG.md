@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.9.1...v0.9.2) (2026-06-29)
+
+
+### Bug Fixes
+
+* **website,docs:** アプリの最新UIを反映してスクショ8枚を再生成 ([0b2df03](https://github.com/matsumotory/claude-desktop-switcher/commit/0b2df03864c5d33835ae535d896b9703c8f08973))
+* **website:** 技術コラムを平易な説明文に書き直し余白とスキルの具体効果を整える ([d26d915](https://github.com/matsumotory/claude-desktop-switcher/commit/d26d91581c4038fa697cebcf748648c2fbc28e73))
+* **website:** 技術コラムを構造化レイアウトに再設計しAI自律開発との相性を追記 ([#80](https://github.com/matsumotory/claude-desktop-switcher/issues/80)) ([94efdbf](https://github.com/matsumotory/claude-desktop-switcher/commit/94efdbfcd36a52b10bdc97728183078d419068e9))
+* **website:** 技術コラムを複数コラムの技術ノートに拡張し敬体で統一 ([#82](https://github.com/matsumotory/claude-desktop-switcher/issues/82)) ([ce676b7](https://github.com/matsumotory/claude-desktop-switcher/commit/ce676b70742600e0afd8ce5d8c323a43653ea3c7))
+
 ## [0.9.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.9.0...v0.9.1) (2026-06-28)
 
 
