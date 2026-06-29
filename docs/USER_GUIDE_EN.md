@@ -52,7 +52,7 @@ For other cases (such as "I want to reuse my common rules and skills, but route 
    * **Name**: (e.g., `Work`, `Research`)
    * **Icon (optional)**: pick from the prepared icons (or use an emoji if none fit)
 4. **Choose how it should be separated (pick one of three modes)**
-   The account is always separate in every mode (the create screen states this once up front). The three modes differ only in what else carries over, listed from least carried over to most. Open **"Configure in detail (per item)"** if you want to change individual components.
+   The account is always separate in every mode (the create screen states this once up front). The three modes differ only in what else carries over, listed from most carried over to least. Open **"Configure in detail (per item)"** if you want to change individual components.
 
    * **Separate the account only**: Carry over conversation history and auto-memory too; only the account is separate. Run research and development on separate billing while keeping one continuous workspace.
    * **Separate conversations & memory too**: Carry over your common rules, skills, plugins and tool permissions; keep conversation history and auto-memory to this environment. Split by purpose while reusing your setup.
