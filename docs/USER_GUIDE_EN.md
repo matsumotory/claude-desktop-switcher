@@ -119,6 +119,8 @@ A terminal you open on your own stays in your usual environment. To use a specif
   If you are unsure which account your terminal is using, simply run the `csw status` command. This safely shows the environment in use for that terminal session.
 * **Pick the accent color**
   Use the swatches at the bottom of the sidebar to choose the accent: blue (default), teal, indigo, or terracotta. Your choice is saved and applied next time (the semantic colors for shared, isolated, and delete stay the same).
+* **Help and version**
+  From the very bottom of the sidebar you can open the user guide, report an issue (GitHub), and "About" (the disclaimer). The current version and "Check for updates" (the latest release) live there too. External links open in your default browser; the app itself makes no network requests.
 
 ---
 
