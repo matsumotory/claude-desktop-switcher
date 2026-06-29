@@ -28,6 +28,12 @@ body {
     overflow-x: hidden;
 }
 
+/* The header is sticky (~73px); offset in-page anchor jumps so a section's heading
+   lands below the header instead of hidden behind it. */
+html {
+    scroll-padding-top: 88px;
+}
+
 html[lang="ja"] body {
     font-family: 'Outfit', 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
     line-height: 1.8;
