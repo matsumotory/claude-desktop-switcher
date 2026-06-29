@@ -271,6 +271,18 @@
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
                     <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env &lt;env-name&gt;)</code> (the name of the environment you want) to sync it (it applies to that tab only).</p>
                 </div>
+                <div class="faq-item">
+                    <p class="faq-q">Does using multiple accounts go against Anthropic's terms?</p>
+                    <p class="faq-a">This app works with the official Claude desktop app and the official Claude Code, and you sign in to each environment yourself, with your own account, in the official app. The app does not read, store, or pass your password or sign-in to any other software. The 2026 change that limits using a subscription sign-in in non-official tools does not apply here, because this app uses the official Claude apps as they are. Anthropic's terms currently have no "one account per person" rule, but terms can change without notice. At the same time, sharing an account with other people, using a different account in place of a suspended one, and pooling several accounts to exceed the usage limits are not allowed. Using it within those limits is your own responsibility. Please check Anthropic's current <a href="https://www.anthropic.com/legal/consumer-terms" target="_blank" rel="noopener">terms of service</a> and <a href="https://www.anthropic.com/legal/aup" target="_blank" rel="noopener">usage policy</a>. This is not legal advice.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">Are my sign-in and conversations handled safely?</p>
+                    <p class="faq-a">This app makes no internet connection and does not record or send how you use it. You sign in through the official app; this app does not read your password or sign-in, and it never touches the macOS keychain where passwords are kept. All it does is switch which folder the official app uses. Your sign-in, the per-account app settings, the device identifier, and the working state while it runs are always kept separate for each environment, with no option to share them, so they never get mixed even by mistake. What you can share across environments is limited to things unrelated to sign-in, such as your common rules, skills, plugins, and conversation history. Each environment's data is stored on your Mac, the same as the normal Claude, and this app does not make it any less safe.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">What if the official Claude adds account switching?</p>
+                    <p class="faq-a">Many people have <a href="https://github.com/anthropics/claude-code/issues?q=is%3Aissue+multiple+account+switch" target="_blank" rel="noopener">asked the official Claude</a> for the ability to switch between multiple accounts. If Anthropic builds this into the official app or Claude Code, this app's role here may come to an end. We think that would be the best outcome for users.</p>
+                </div>
             </div>
         </section>
 
@@ -328,6 +340,10 @@
                 <div class="terms-item">
                     <h3>Unofficial project</h3>
                     <p>This is an unofficial community project, not affiliated with Anthropic. "Claude" is a trademark of Anthropic.</p>
+                </div>
+                <div class="terms-item">
+                    <h3>Responsible use</h3>
+                    <p>This app is for keeping your own multiple Claude accounts and uses separated on your Mac. You sign in through the official app; this app does not read your password or sign-in, and it makes no internet connection. It is meant for things like separating work from personal, or splitting billing between research and development. Sharing an account with other people, using a different account in place of a suspended one, and pooling several accounts to exceed the usage limits are not allowed by Anthropic's <a href="https://www.anthropic.com/legal/consumer-terms" target="_blank" rel="noopener">terms of service</a>. How you use it is your own responsibility. Please review Anthropic's current terms before using it.</p>
                 </div>
             </div>
         </section>

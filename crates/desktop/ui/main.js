@@ -823,9 +823,11 @@ function showAbout() {
   const card = h('div', { class: 'about-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'このアプリについて' },
     h('div', { class: 'about-title', text: 'Claude Desktop Switcher' }),
     h('div', { class: 'about-version', text: el.appVersion.textContent || '' }),
-    ...DISCLAIMER.map(([t, b]) => h('div', { class: 'about-item' },
-      h('div', { class: 'about-item-title', text: t }),
-      h('div', { class: 'about-item-body', text: b }))),
+    h('p', { class: 'about-intro', text: '非公式のオープンソースのコミュニティプロジェクトです。' }),
+    h('div', { class: 'about-list' },
+      ...DISCLAIMER.map(([t, b]) => h('div', { class: 'about-item' },
+        h('div', { class: 'about-item-title', text: t }),
+        h('div', { class: 'about-item-body', text: b })))),
     h('div', { class: 'about-foot' }, closeBtn));
   overlay = h('div', { class: 'about-overlay', onclick: (e) => { if (e.target === overlay) close(); } }, card);
   document.addEventListener('keydown', onKey);
@@ -882,7 +884,7 @@ function devInvoke(cmd, args) {
     case 'get_default_roots_status':
       return Promise.resolve({ desktop_present: true, cli_present: true });
     case 'app_version':
-      return Promise.resolve('0.12.0');
+      return Promise.resolve('0.13.1');
     case 'open_url':
       return Promise.resolve(null);
     default:

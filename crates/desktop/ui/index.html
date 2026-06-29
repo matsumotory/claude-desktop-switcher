@@ -77,9 +77,15 @@
       <!-- Quiet footer. External links open in the default browser via the Rust
            open_url command; CSW itself never makes network requests. -->
       <nav class="sidebar-footer" aria-label="ヘルプ">
-        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md">ユーザーガイド</button>
-        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/issues">問題を報告</button>
-        <button type="button" class="footer-link" id="btnAbout">このアプリについて</button>
+        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md">
+          <svg class="icon"><use href="#i-book-open"/></svg><span>ユーザーガイド</span>
+        </button>
+        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/issues">
+          <svg class="icon"><use href="#i-chat-circle"/></svg><span>問題を報告</span>
+        </button>
+        <button type="button" class="footer-link" id="btnAbout">
+          <svg class="icon"><use href="#i-info"/></svg><span>このアプリについて</span>
+        </button>
         <div class="footer-meta">
           <span class="footer-version" id="appVersion"></span>
           <button type="button" class="footer-link footer-update" data-url="https://github.com/matsumotory/claude-desktop-switcher/releases">更新を確認</button>

@@ -226,39 +226,47 @@ code, .code-line { font-family: var(--font-mono); }
 .sidebar-footer {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 1px;
   margin-top: 14px;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
 }
+/* Icon + label rows, like the app's other nav rows (not a bare bullet stack).
+   Aligned to the sidebar's content edge (same inset as the theme-picker). */
 .footer-link {
-  background: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 5px 6px;
   border: none;
-  padding: 3px 6px;
-  margin: 0 -6px;
-  border-radius: 5px;
+  border-radius: 6px;
+  background: none;
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--ink-muted);
-  cursor: pointer;
   text-align: left;
+  cursor: pointer;
   transition: color 0.15s var(--ease), background 0.15s var(--ease);
 }
+.footer-link svg.icon { width: 15px; height: 15px; flex: none; color: var(--ink-muted); }
 .footer-link:hover { color: var(--ink); background: var(--surface-alt); }
+.footer-link:hover svg.icon { color: var(--ink); }
 .footer-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* Version + update: a quieter meta line set apart below the action rows, its left
+   edge aligned with the icon column above. */
 .footer-meta {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-top: 5px;
-  padding: 0 6px;
+  margin-top: 8px;
+  padding-left: 6px;
   font-size: 11px;
   color: var(--ink-muted);
 }
 .footer-version { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
-.footer-update { padding: 0; margin: 0; font-size: 11px; }
-.footer-update:hover { background: none; }
+.footer-update { width: auto; padding: 0; gap: 0; font-size: 11px; }
+.footer-update:hover { background: none; color: var(--ink); }
 
 /* About dialog: a centered card over a dim backdrop (the app has no other modals;
    built on demand in JS like toasts). Holds the version + the same disclaimer the
@@ -293,15 +301,36 @@ code, .code-line { font-family: var(--font-mono); }
   letter-spacing: -0.01em;
 }
 .about-version {
+  margin-top: 1px;
   font-size: 12px;
   color: var(--ink-muted);
-  margin: 2px 0 16px;
   font-variant-numeric: tabular-nums;
 }
-.about-item { margin-bottom: 13px; }
-.about-item-title { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.about-intro {
+  margin: 12px 0 2px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+/* Disclaimer as a hairline-separated list (minimalist-ui: no boxes, divide with a
+   single 1px rule), with a small label + muted body — not a ragged bullet stack. */
+.about-list { margin-top: 8px; }
+.about-item { padding: 13px 0; border-top: 1px solid var(--border); }
+.about-item-title {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+}
 .about-item-body { font-size: 12.5px; line-height: 1.6; color: var(--ink-muted); }
-.about-foot { display: flex; justify-content: flex-end; margin-top: 6px; }
+.about-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
 
 /* --------------------------------------------------------------------- Pane */
 .pane {
