@@ -539,8 +539,8 @@ code, .code-line { font-family: var(--font-mono); }
 /* Icon picker (create view): pick a designed glyph, or fall back to an emoji. */
 .icon-picker {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
   margin-bottom: 12px;
 }
 .icon-tile {
@@ -563,9 +563,6 @@ code, .code-line { font-family: var(--font-mono); }
   color: var(--accent-ink);
 }
 .icon-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.icon-emoji-row { display: flex; align-items: center; gap: 10px; }
-.icon-emoji-label { flex-shrink: 0; font-size: 12px; color: var(--ink-muted); }
-.input-emoji { width: 96px; text-align: center; }
 /* A chosen designed glyph carries the accent color in avatars (theme-aware). */
 .profile-avatar svg.avatar-glyph,
 .detail-avatar svg.avatar-glyph { color: var(--accent); }
