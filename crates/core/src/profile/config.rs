@@ -94,17 +94,13 @@ mod tests {
                 cli_config_dir: PathBuf::from("/tmp/test/cli-data"),
             },
             sharing: SharingConfig {
-                desktop_config: SharingMode::Share,
-                desktop_app_config: SharingMode::Share,
                 cli_settings: SharingMode::Share,
                 cli_claude_md: SharingMode::Share,
                 cli_project_memory: SharingMode::Isolate,
                 cli_plugins: SharingMode::Share,
                 cli_skills: SharingMode::Share,
-                cli_sessions: SharingMode::Share,
                 cli_history: SharingMode::Share,
                 desktop_worktrees: SharingMode::Share,
-                desktop_device_id: SharingMode::Share,
                 source: SharingSource {
                     profile: "default".to_string(),
                 },
@@ -120,7 +116,7 @@ mod tests {
 
         let loaded = load_profile(&path).unwrap();
         assert_eq!(loaded.profile.name, "test-work");
-        assert_eq!(loaded.sharing.desktop_config, SharingMode::Share);
+        assert_eq!(loaded.sharing.cli_claude_md, SharingMode::Share);
         assert_eq!(loaded.sharing.cli_project_memory, SharingMode::Isolate);
 
         let _ = std::fs::remove_dir_all(&tmp);

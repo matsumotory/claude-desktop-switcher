@@ -36,9 +36,6 @@ impl FileWatcher {
         if active_profile.sharing.cli_claude_md == SharingMode::Copy {
             paths_to_watch.push(cli_dir.join("CLAUDE.md"));
         }
-        if active_profile.sharing.desktop_config == SharingMode::Copy {
-            paths_to_watch.push(desktop_dir.join("claude_desktop_config.json"));
-        }
         if active_profile.sharing.desktop_worktrees == SharingMode::Copy {
             paths_to_watch.push(desktop_dir.join("git-worktrees.json"));
         }
@@ -106,10 +103,6 @@ impl FileWatcher {
                     other_profile.sharing.cli_claude_md == SharingMode::Copy
                         && other_profile.sharing.source.profile == "default"
                 }
-                "claude_desktop_config.json" => {
-                    other_profile.sharing.desktop_config == SharingMode::Copy
-                        && other_profile.sharing.source.profile == "default"
-                }
                 "git-worktrees.json" => {
                     other_profile.sharing.desktop_worktrees == SharingMode::Copy
                         && other_profile.sharing.source.profile == "default"
@@ -122,7 +115,7 @@ impl FileWatcher {
                     "settings.json" | "CLAUDE.md" => {
                         other_profile.isolation.cli_config_dir.join(file_name)
                     }
-                    "claude_desktop_config.json" | "git-worktrees.json" => other_profile
+                    "git-worktrees.json" => other_profile
                         .isolation
                         .desktop_user_data_dir
                         .join(file_name),

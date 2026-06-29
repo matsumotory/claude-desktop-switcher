@@ -27,11 +27,14 @@ impl<'a> Linker<'a> {
         let source_desktop_dir = &source_profile.isolation.desktop_user_data_dir;
         let source_cli_dir = &source_profile.isolation.cli_config_dir;
 
-        // 1. Desktop Config (claude_desktop_config.json)
+        // 1. claude_desktop_config.json — ALWAYS isolated. It holds account-keyed
+        // permission gates and is rewritten via temp+rename on launch (breaking any
+        // symlink). It is not a SharingConfig field, so no mode or caller can express
+        // sharing it; the isolation is structural, not a runtime guard.
         self.apply_link(
             &source_desktop_dir.join("claude_desktop_config.json"),
             &target_desktop_dir.join("claude_desktop_config.json"),
-            target_profile.sharing.desktop_config.clone(),
+            SharingMode::Isolate,
             false, // is_directory
         )?;
 
@@ -75,11 +78,12 @@ impl<'a> Linker<'a> {
             true,
         )?;
 
-        // 5c. CLI Sessions (sessions/ directory)
+        // 5c. sessions/ — ALWAYS isolated. Per-environment runtime state (pid, cwd,
+        // start time), not conversation content; not a SharingConfig field.
         self.apply_link(
             &source_cli_dir.join("sessions"),
             &target_cli_dir.join("sessions"),
-            target_profile.sharing.cli_sessions.clone(),
+            SharingMode::Isolate,
             true,
         )?;
 
@@ -99,19 +103,21 @@ impl<'a> Linker<'a> {
             false,
         )?;
 
-        // 7. Desktop Device ID (ant-did)
+        // 7. ant-did — ALWAYS isolated. Sharing the device id would correlate two
+        // accounts as one device; not a SharingConfig field.
         self.apply_link(
             &source_desktop_dir.join("ant-did"),
             &target_desktop_dir.join("ant-did"),
-            target_profile.sharing.desktop_device_id.clone(),
+            SharingMode::Isolate,
             false,
         )?;
 
-        // 8. Desktop App Configuration (config.json)
+        // 8. config.json — ALWAYS isolated. Holds OAuth token caches and per-account
+        // state; sharing it would mix two logins into one file. Not a SharingConfig field.
         self.apply_link(
             &source_desktop_dir.join("config.json"),
             &target_desktop_dir.join("config.json"),
-            target_profile.sharing.desktop_app_config.clone(),
+            SharingMode::Isolate,
             false,
         )?;
 

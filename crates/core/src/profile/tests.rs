@@ -1,4 +1,5 @@
 use super::*;
+use crate::platform::PlatformProvider;
 use crate::platform::mock::MockPlatformProvider;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -187,4 +188,205 @@ fn default_roots_status_reports_both_absent_when_dirs_empty() {
     let s = manager.default_roots_status();
     assert!(!s.desktop_present);
     assert!(!s.cli_present);
+}
+
+#[test]
+fn share_settings_preset_shares_rules_copies_settings_isolates_conversations() {
+    let p = SharingConfig::share_settings_preset();
+    // Shared by symlink: the app reads these and the user is the single writer.
+    assert_eq!(p.cli_claude_md, SharingMode::Share);
+    assert_eq!(p.cli_plugins, SharingMode::Share);
+    assert_eq!(p.cli_skills, SharingMode::Share);
+    // Copied once: the user's own settings and worktree list, reused as a starting
+    // point (a single file that the CLI may rewrite, so copy rather than symlink).
+    assert_eq!(p.cli_settings, SharingMode::Copy);
+    assert_eq!(p.desktop_worktrees, SharingMode::Copy);
+    // Conversations stay separate in this mode.
+    assert_eq!(p.cli_project_memory, SharingMode::Isolate);
+    assert_eq!(p.cli_history, SharingMode::Isolate);
+    // The account-keyed files (config.json, claude_desktop_config.json), sessions/
+    // and the device id are not SharingConfig fields at all, so no preset can ever
+    // express sharing them — the always-isolated invariant is structural.
+}
+
+#[test]
+fn share_workspace_preset_also_shares_conversations_but_never_auth() {
+    let p = SharingConfig::share_workspace_preset();
+    // Inherits everything the settings preset shares/copies.
+    assert_eq!(p.cli_claude_md, SharingMode::Share);
+    assert_eq!(p.cli_plugins, SharingMode::Share);
+    assert_eq!(p.cli_skills, SharingMode::Share);
+    assert_eq!(p.cli_settings, SharingMode::Copy);
+    assert_eq!(p.desktop_worktrees, SharingMode::Copy);
+    // Plus the per-project conversation history, auto-memory and prompt history.
+    assert_eq!(p.cli_project_memory, SharingMode::Share);
+    assert_eq!(p.cli_history, SharingMode::Share);
+    // sessions/, config.json, claude_desktop_config.json and the device id are not
+    // SharingConfig fields, so even this loosest mode cannot express sharing the
+    // login / account state — the isolation is structural (verified at the file
+    // system level in create_with_share_workspace_preset_shares_conversations_isolates_auth).
+}
+
+#[test]
+fn default_sharing_isolates_all_configurable_components() {
+    // "すべて分ける" uses the default; nothing carries over. The account-keyed files,
+    // sessions/ and the device id are not fields here at all (always isolated).
+    let d = SharingConfig::default();
+    for mode in [
+        d.cli_settings,
+        d.cli_claude_md,
+        d.cli_project_memory,
+        d.cli_plugins,
+        d.cli_skills,
+        d.cli_history,
+        d.desktop_worktrees,
+    ] {
+        assert_eq!(mode, SharingMode::Isolate);
+    }
+}
+
+#[test]
+fn create_with_share_settings_preset_isolates_auth_and_shares_rules() {
+    let (provider, manager, _tmp) = setup_test_manager();
+
+    // Seed the source ("default") with files that mirror the real machine.
+    std::fs::write(provider.cli_default.join("CLAUDE.md"), "global rules").unwrap();
+    std::fs::create_dir_all(provider.cli_default.join("skills")).unwrap();
+    std::fs::write(
+        provider.cli_default.join("settings.json"),
+        "{\"hooks\":\"rm -rf /\"}",
+    )
+    .unwrap();
+    std::fs::write(
+        provider.desktop_default.join("config.json"),
+        "{\"oauth:tokenCache\":\"SECRET-TOKEN\"}",
+    )
+    .unwrap();
+    std::fs::create_dir_all(provider.cli_default.join("projects")).unwrap();
+    std::fs::write(
+        provider.cli_default.join("projects").join("session.jsonl"),
+        "private transcript",
+    )
+    .unwrap();
+    std::fs::write(
+        provider.desktop_default.join("git-worktrees.json"),
+        "{\"w\":1}",
+    )
+    .unwrap();
+
+    let profile = manager
+        .create_profile("研究用", SharingConfig::share_settings_preset(), None)
+        .expect("create should succeed");
+    let cli = &profile.isolation.cli_config_dir;
+    let desk = &profile.isolation.desktop_user_data_dir;
+
+    // Shared rules/skills are symlinks back to the source.
+    assert!(provider.is_symlink(&cli.join("CLAUDE.md")));
+    assert!(provider.is_symlink(&cli.join("skills")));
+
+    // settings.json is copied: a real file (not a symlink) so the two accounts'
+    // settings diverge after creation rather than sharing one live file.
+    assert!(cli.join("settings.json").exists());
+    assert!(!provider.is_symlink(&cli.join("settings.json")));
+
+    // config.json (OAuth token) must never appear in the profile.
+    assert!(!desk.join("config.json").exists());
+
+    // In 会話とメモリも分ける, conversations stay separate: no transcript leaks.
+    assert!(!cli.join("projects").join("session.jsonl").exists());
+
+    // git-worktrees.json is copied: a real file (not a symlink) with the content.
+    assert!(desk.join("git-worktrees.json").exists());
+    assert!(!provider.is_symlink(&desk.join("git-worktrees.json")));
+    assert_eq!(
+        std::fs::read_to_string(desk.join("git-worktrees.json")).unwrap(),
+        "{\"w\":1}"
+    );
+}
+
+#[test]
+fn create_with_share_workspace_preset_shares_conversations_isolates_auth() {
+    let (provider, manager, _tmp) = setup_test_manager();
+
+    std::fs::write(provider.cli_default.join("CLAUDE.md"), "global rules").unwrap();
+    std::fs::create_dir_all(provider.cli_default.join("projects")).unwrap();
+    std::fs::write(
+        provider.cli_default.join("projects").join("session.jsonl"),
+        "shared transcript",
+    )
+    .unwrap();
+    std::fs::create_dir_all(provider.cli_default.join("sessions")).unwrap();
+    std::fs::write(
+        provider.desktop_default.join("config.json"),
+        "{\"oauth:tokenCache\":\"SECRET-TOKEN\"}",
+    )
+    .unwrap();
+
+    let profile = manager
+        .create_profile("研究用", SharingConfig::share_workspace_preset(), None)
+        .expect("create should succeed");
+    let cli = &profile.isolation.cli_config_dir;
+    let desk = &profile.isolation.desktop_user_data_dir;
+
+    // アカウントだけ分ける: conversation history + auto-memory is shared via a
+    // directory symlink, so the transcript IS visible in the new environment
+    // (same person, continuity).
+    assert!(provider.is_symlink(&cli.join("projects")));
+    assert!(cli.join("projects").join("session.jsonl").exists());
+    // sessions/ holds runtime state, not conversation content, so it is isolated
+    // (an empty dir, never a symlink) even in this loosest mode.
+    assert!(!provider.is_symlink(&cli.join("sessions")));
+
+    // And the login / OAuth token is still never shared, even in this loose mode.
+    assert!(!desk.join("config.json").exists());
+}
+
+#[test]
+fn always_isolated_files_are_never_linked_in_any_mode() {
+    // SPECIFICATION.md §3 "常に分離する項目": config.json, claude_desktop_config.json,
+    // sessions/ and the device id (ant-did) are isolated in EVERY mode. They are not
+    // even SharingConfig fields, so "share them" is unrepresentable at COMPILE TIME —
+    // no caller (GUI, CLI, or a hand-built config) can express it; there is no field
+    // to set. Here we prove the filesystem effect in the loosest mode (share_workspace,
+    // which shares the most): with all four present in the source, none leaks across.
+    let (provider, manager, _tmp) = setup_test_manager();
+
+    std::fs::write(
+        provider.desktop_default.join("claude_desktop_config.json"),
+        "{\"mcpServers\":{},\"bypassPermissionsGateByAccount\":{}}",
+    )
+    .unwrap();
+    std::fs::write(
+        provider.desktop_default.join("config.json"),
+        "{\"oauth:tokenCache\":\"SECRET-TOKEN\"}",
+    )
+    .unwrap();
+    std::fs::write(provider.desktop_default.join("ant-did"), "device-1234").unwrap();
+    std::fs::create_dir_all(provider.cli_default.join("sessions")).unwrap();
+    std::fs::write(
+        provider.cli_default.join("sessions").join("live.json"),
+        "{\"pid\":1}",
+    )
+    .unwrap();
+
+    let profile = manager
+        .create_profile("研究用", SharingConfig::share_workspace_preset(), None)
+        .expect("create should succeed");
+    let desk = &profile.isolation.desktop_user_data_dir;
+    let cli = &profile.isolation.cli_config_dir;
+
+    // None of the account-keyed files is symlinked to the source, and the OAuth token
+    // / connector file never appear in the profile at all.
+    assert!(!provider.is_symlink(&desk.join("claude_desktop_config.json")));
+    assert!(!desk.join("claude_desktop_config.json").exists());
+    assert!(!provider.is_symlink(&desk.join("config.json")));
+    assert!(!desk.join("config.json").exists());
+    assert!(!provider.is_symlink(&desk.join("ant-did")));
+    // sessions/ is an isolated (empty) directory, never a symlink, even here.
+    assert!(!provider.is_symlink(&cli.join("sessions")));
+    assert!(!cli.join("sessions").join("live.json").exists());
+
+    // The mode's legitimate carry-overs are unaffected.
+    assert_eq!(profile.sharing.cli_project_memory, SharingMode::Share);
+    assert_eq!(profile.sharing.cli_claude_md, SharingMode::Share);
 }

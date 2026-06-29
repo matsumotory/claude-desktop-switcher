@@ -125,19 +125,18 @@ fn test_profile_sharing_and_isolation_matrix() {
 
     let profile_manager = ProfileManager::new(platform.clone()).unwrap();
 
-    // Configure a matrix of Share, Copy, and Isolate components
+    // Configure a matrix of Share, Copy, and Isolate over the CONFIGURABLE set. The
+    // account-keyed files (config.json, claude_desktop_config.json, sessions/, ant-did)
+    // are not SharingConfig fields and so cannot even be requested here — the linker
+    // isolates them unconditionally (asserted on disk below).
     let matrix_sharing = SharingConfig {
-        desktop_config: SharingMode::Share, // MCP server config -> Shared (symlink)
-        desktop_app_config: SharingMode::Copy, // App preferences -> Copied
         cli_settings: SharingMode::Isolate, // CLI settings -> Isolated (none initially)
         cli_claude_md: SharingMode::Share,  // CLAUDE.md -> Shared (symlink)
         cli_project_memory: SharingMode::Share, // Project memory -> Shared (symlink)
         cli_plugins: SharingMode::Isolate,  // Plugins -> Isolated (empty dir)
         cli_skills: SharingMode::Copy,      // Skills -> Copied (physical copy)
-        cli_sessions: SharingMode::Isolate, // Sessions -> Isolated (empty dir)
         cli_history: SharingMode::Isolate,  // History -> Isolated (none)
         desktop_worktrees: SharingMode::Copy, // Worktrees -> Copied
-        desktop_device_id: SharingMode::Share, // Device ID -> Shared
         source: SharingSource::default(),
     };
 
@@ -147,22 +146,27 @@ fn test_profile_sharing_and_isolation_matrix() {
     let target_desktop = &profile.isolation.desktop_user_data_dir;
     let target_cli = &profile.isolation.cli_config_dir;
 
-    // --- ASSERTIONS FOR SHARE MODE ---
+    // --- ALWAYS-ISOLATED INVARIANT (structural; not configurable in any mode) ---
+    // The account-keyed files cannot even be requested as shared (no SharingConfig
+    // field), and the linker isolates them unconditionally (SPECIFICATION.md §3).
+    // Confirm the on-disk effect: no account-keyed file is symlink-shared or copied.
     let target_desktop_config = target_desktop.join("claude_desktop_config.json");
-    assert!(target_desktop_config.exists());
-    assert!(platform.is_symlink(&target_desktop_config));
+    assert!(
+        !target_desktop_config.exists(),
+        "claude_desktop_config.json holds account-keyed permission gates; it must never be shared or copied"
+    );
+    let target_config_json = target_desktop.join("config.json");
+    assert!(
+        !target_config_json.exists(),
+        "config.json holds OAuth/account state; it must never be shared or copied"
+    );
 
+    // --- ASSERTIONS FOR SHARE MODE (a legitimately shareable item) ---
     let target_claude_md = target_cli.join("CLAUDE.md");
     assert!(target_claude_md.exists());
     assert!(platform.is_symlink(&target_claude_md));
 
-    // --- ASSERTIONS FOR COPY MODE ---
-    let target_config_json = target_desktop.join("config.json");
-    assert!(target_config_json.exists());
-    assert!(!platform.is_symlink(&target_config_json));
-    let orig_content = fs::read_to_string(desktop_dir.path().join("config.json")).unwrap();
-    let copied_content = fs::read_to_string(&target_config_json).unwrap();
-    assert_eq!(orig_content, copied_content);
+    // --- ASSERTIONS FOR COPY MODE (a legitimately copyable item) ---
 
     let target_skills_dir = target_cli.join("skills");
     assert!(target_skills_dir.is_dir());
@@ -212,7 +216,6 @@ fn test_profile_cloning_with_data() {
     // Create OriginalWork that copies skills from the default environment.
     let sharing = SharingConfig {
         cli_skills: SharingMode::Copy,
-        cli_sessions: SharingMode::Isolate,
         ..Default::default()
     };
     profile_manager
@@ -226,7 +229,6 @@ fn test_profile_cloning_with_data() {
 
     // --- VERIFY SHARING CONFIG INHERITED ---
     assert_eq!(cloned_profile.sharing.cli_skills, SharingMode::Copy);
-    assert_eq!(cloned_profile.sharing.cli_sessions, SharingMode::Isolate);
 
     // --- VERIFY PHYSICAL DATA DUPLICATION ---
     // Copy-mode skills should be physically present in the clone.
