@@ -178,6 +178,8 @@ const el = {
   createScroll: $('createScroll'),
   createFade: $('createFade'),
   toastArea: $('toastArea'),
+  appVersion: $('appVersion'),
+  btnAbout: $('btnAbout'),
 };
 
 // --- Toast ------------------------------------------------------------------
@@ -790,9 +792,61 @@ function initAccent() {
   });
 }
 
+// --- Footer: help links, version, about dialog ------------------------------
+// Same disclaimer the LP shows under "免責・利用について" (kept in sync by hand).
+const DISCLAIMER = [
+  ['無保証', '本ソフトウェアは MIT ライセンスのもとで、そのままの状態で提供されます。動作や品質について、いかなる保証もありません。'],
+  ['自己責任でのご利用', 'ご利用は自己責任でお願いします。データの損失や不具合などについて、作者は責任を負いません。大切なデータは、お試しになる前にバックアップしておくことをおすすめします。'],
+  ['プライバシー', 'CSW はインターネット通信も、利用状況の送信も行いません。パスワードを保管する macOS のキーチェーンにも触れず、すべて手元のフォルダと設定の操作だけで動きます。'],
+  ['非公式プロジェクト', '本プロジェクトは非公式のコミュニティ製で、Anthropic 社とは関係ありません。「Claude」は Anthropic の商標です。'],
+];
+
+// Hand a fixed https GitHub URL to the OS (Rust open_url) so it opens in the
+// default browser. CSW makes no network requests itself.
+async function openExternal(url) {
+  try {
+    await invoke('open_url', { url });
+  } catch (e) {
+    showToast('リンクを開けませんでした。', true);
+  }
+}
+
+function showAbout() {
+  let overlay;
+  const close = () => {
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+    el.btnAbout.focus();
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const closeBtn = h('button', { type: 'button', class: 'btn btn-ghost', onclick: close }, '閉じる');
+  const card = h('div', { class: 'about-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'このアプリについて' },
+    h('div', { class: 'about-title', text: 'Claude Desktop Switcher' }),
+    h('div', { class: 'about-version', text: el.appVersion.textContent || '' }),
+    ...DISCLAIMER.map(([t, b]) => h('div', { class: 'about-item' },
+      h('div', { class: 'about-item-title', text: t }),
+      h('div', { class: 'about-item-body', text: b }))),
+    h('div', { class: 'about-foot' }, closeBtn));
+  overlay = h('div', { class: 'about-overlay', onclick: (e) => { if (e.target === overlay) close(); } }, card);
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(overlay);
+  closeBtn.focus();
+}
+
+function wireFooter() {
+  document.querySelectorAll('.footer-link[data-url]').forEach((b) =>
+    b.addEventListener('click', () => openExternal(b.dataset.url)));
+  el.btnAbout.addEventListener('click', showAbout);
+  // Version from tauri.conf.json (release-please keeps it current). Hide on failure.
+  invoke('app_version')
+    .then((v) => { el.appVersion.textContent = 'v' + v; })
+    .catch(() => { el.appVersion.hidden = true; });
+}
+
 async function init() {
   initAccent();
   wireEvents();
+  wireFooter();
   await refreshProfiles();
   checkFirstRun();
   showEmpty();
@@ -827,6 +881,10 @@ function devInvoke(cmd, args) {
       return Promise.resolve(false);
     case 'get_default_roots_status':
       return Promise.resolve({ desktop_present: true, cli_present: true });
+    case 'app_version':
+      return Promise.resolve('0.12.0');
+    case 'open_url':
+      return Promise.resolve(null);
     default:
       return Promise.resolve(null);
   }

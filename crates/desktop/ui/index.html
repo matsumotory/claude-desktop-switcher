@@ -73,6 +73,18 @@
         <button type="button" class="theme-dot" data-accent="indigo" aria-label="インディゴ"></button>
         <button type="button" class="theme-dot" data-accent="claude" aria-label="テラコッタ"></button>
       </div>
+
+      <!-- Quiet footer. External links open in the default browser via the Rust
+           open_url command; CSW itself never makes network requests. -->
+      <nav class="sidebar-footer" aria-label="ヘルプ">
+        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md">ユーザーガイド</button>
+        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/issues">問題を報告</button>
+        <button type="button" class="footer-link" id="btnAbout">このアプリについて</button>
+        <div class="footer-meta">
+          <span class="footer-version" id="appVersion"></span>
+          <button type="button" class="footer-link footer-update" data-url="https://github.com/matsumotory/claude-desktop-switcher/releases">更新を確認</button>
+        </div>
+      </nav>
     </aside>
 
     <!-- Right pane: one of empty / detail / create is visible -->

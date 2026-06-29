@@ -221,6 +221,88 @@ code, .code-line { font-family: var(--font-mono); }
 .theme-dot.active { box-shadow: 0 0 0 2px var(--canvas), 0 0 0 3px var(--ink-muted); }
 .theme-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* Quiet help footer at the very bottom of the sidebar. Muted, hairline-separated,
+   matching the theme-picker's restrained register — never competes with the rail. */
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.footer-link {
+  background: none;
+  border: none;
+  padding: 3px 6px;
+  margin: 0 -6px;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.footer-link:hover { color: var(--ink); background: var(--surface-alt); }
+.footer-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.footer-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 5px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+.footer-version { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.footer-update { padding: 0; margin: 0; font-size: 11px; }
+.footer-update:hover { background: none; }
+
+/* About dialog: a centered card over a dim backdrop (the app has no other modals;
+   built on demand in JS like toasts). Holds the version + the same disclaimer the
+   LP shows under "免責・利用について". */
+.about-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.32);
+  animation: about-fade 0.16s var(--ease);
+}
+@keyframes about-fade { from { opacity: 0; } to { opacity: 1; } }
+.about-card {
+  width: 100%;
+  max-width: 400px;
+  max-height: 82vh;
+  overflow-y: auto;
+  padding: 22px 22px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+.about-title {
+  font-family: var(--font-disp);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.about-version {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 2px 0 16px;
+  font-variant-numeric: tabular-nums;
+}
+.about-item { margin-bottom: 13px; }
+.about-item-title { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.about-item-body { font-size: 12.5px; line-height: 1.6; color: var(--ink-muted); }
+.about-foot { display: flex; justify-content: flex-end; margin-top: 6px; }
+
 /* --------------------------------------------------------------------- Pane */
 .pane {
   display: flex;

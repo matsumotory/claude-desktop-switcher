@@ -309,6 +309,29 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// The app version from tauri.conf.json (kept in sync by release-please), shown in
+/// the sidebar footer. Not the crate version, which stays at 0.1.0.
+#[tauri::command]
+fn app_version(app: AppHandle) -> String {
+    app.package_info().version.to_string()
+}
+
+/// Open an https URL in the user's default browser. The footer only ever passes
+/// fixed GitHub URLs; we still reject any non-https scheme so the command can never
+/// open an arbitrary file or app. CSW itself makes no network requests — this only
+/// hands the URL to the OS, which opens the browser.
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    if !url.starts_with("https://") {
+        return Err(format!("refused non-https url: {url}"));
+    }
+    std::process::Command::new("open")
+        .arg(&url)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 fn main() {
     let provider: Arc<dyn csw_core::platform::PlatformProvider> =
         Arc::from(create_provider().expect("Failed to initialize platform provider"));
@@ -394,7 +417,9 @@ fn main() {
             clone_profile,
             switch_profile,
             get_desktop_running_status,
-            get_default_roots_status
+            get_default_roots_status,
+            app_version,
+            open_url
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
