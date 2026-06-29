@@ -628,6 +628,10 @@ code, .code-line { font-family: var(--font-mono); }
   transition: opacity 0.15s var(--ease);
 }
 .mode-card:has(input:checked) .mode-card-check { opacity: 1; }
+/* Notice + disabled state when the existing Claude is not at the standard location. */
+.create-notice { margin-bottom: 12px; }
+.mode-card.is-disabled { opacity: 0.5; }
+.mode-card.is-disabled .mode-card-body { cursor: default; }
 
 /* Advanced settings (progressive disclosure, level 2) */
 .advanced { margin-top: 4px; }

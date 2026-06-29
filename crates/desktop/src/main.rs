@@ -222,6 +222,17 @@ async fn get_desktop_running_status(state: State<'_, AppState>) -> Result<bool, 
         .map_err(|e| e.to_string())
 }
 
+/// Report whether the standard existing-Claude data dirs (Desktop / CLI) hold
+/// data. The create flow gates the "share" mode when there is nothing to share.
+#[tauri::command]
+async fn get_default_roots_status(state: State<'_, AppState>) -> Result<serde_json::Value, String> {
+    let s = state.profile_manager.default_roots_status();
+    Ok(serde_json::json!({
+        "desktop_present": s.desktop_present,
+        "cli_present": s.cli_present,
+    }))
+}
+
 // Function to update the system tray menu dynamically
 fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let state = app.state::<AppState>();
@@ -382,7 +393,8 @@ fn main() {
             delete_profile,
             clone_profile,
             switch_profile,
-            get_desktop_running_status
+            get_desktop_running_status,
+            get_default_roots_status
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

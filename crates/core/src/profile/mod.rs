@@ -176,6 +176,25 @@ impl Default for SharingConfig {
     }
 }
 
+/// Whether the user's existing Claude data is present at the standard locations.
+///
+/// Sharing ("設定だけ引き継ぐ") symlinks from these default dirs, so a root that is
+/// missing or empty has nothing to share. The create flow uses this to gate the
+/// share mode: both missing → only "すべて分ける" makes sense; one missing → that
+/// side simply won't carry over and the user should be told.
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct DefaultRootsStatus {
+    pub desktop_present: bool,
+    pub cli_present: bool,
+}
+
+/// True if `dir` exists and holds at least one entry (i.e. real data lives there).
+fn dir_has_content(dir: &std::path::Path) -> bool {
+    fs::read_dir(dir)
+        .map(|mut entries| entries.next().is_some())
+        .unwrap_or(false)
+}
+
 pub struct ProfileManager {
     provider: Arc<dyn crate::platform::PlatformProvider>,
     app_config_path: PathBuf,
@@ -207,6 +226,16 @@ impl ProfileManager {
 
     pub fn active_profile_name(&self) -> String {
         self.app_config.lock().unwrap().active_profile.clone()
+    }
+
+    /// Report whether the standard existing-Claude data dirs (Desktop and CLI)
+    /// exist and are non-empty. Used by the create flow to decide whether the
+    /// "share" mode can carry anything over.
+    pub fn default_roots_status(&self) -> DefaultRootsStatus {
+        DefaultRootsStatus {
+            desktop_present: dir_has_content(&self.provider.claude_desktop_default_dir()),
+            cli_present: dir_has_content(&self.provider.claude_cli_default_dir()),
+        }
     }
 
     pub fn active_profile(&self) -> Result<Profile> {

@@ -149,6 +149,7 @@ const el = {
   inputName: $('inputName'),
   inputIcon: $('inputIcon'),
   iconPicker: $('iconPicker'),
+  createNotice: $('createNotice'),
   nameError: $('nameError'),
   advancedToggle: $('advancedToggle'),
   advancedState: $('advancedState'),
@@ -518,7 +519,34 @@ function showCreate() {
   setMode('isolate');
   closeAdvanced();
   setView('create');
+  applyRootsStatus();
   setTimeout(() => el.inputName.focus(), 0);
+}
+
+// Gate the "share" mode by what the existing Claude actually has at the standard
+// locations. Sharing symlinks from the default dirs, so a root that is missing has
+// nothing to share: both missing → only "すべて分ける"; one missing → that side
+// won't carry over, so warn but keep sharing available for the present side.
+async function applyRootsStatus() {
+  let st = { desktop_present: true, cli_present: true };
+  try { st = await invoke('get_default_roots_status'); } catch (e) { /* keep optimistic default */ }
+  const shareInput = document.querySelector('input[name="mode"][value="share_settings"]');
+  const shareCard = shareInput ? shareInput.closest('.mode-card') : null;
+  const bothAbsent = !st.desktop_present && !st.cli_present;
+  if (shareInput) shareInput.disabled = bothAbsent;
+  if (shareCard) shareCard.classList.toggle('is-disabled', bothAbsent);
+  if (bothAbsent) setMode('isolate'); // nothing to share → a fully separate environment
+
+  let msg = '';
+  if (bothAbsent) {
+    msg = '既存の Claude が標準の場所に見つかりません。引き継げる設定が無いため、「すべて分ける」だけで作成できます。';
+  } else if (!st.cli_present) {
+    msg = 'Claude Code（CLI）の設定が標準の場所に見つからないため、「設定だけ引き継ぐ」を選んでも CLI 側は引き継がれません（デスクトップ側は引き継がれます）。';
+  } else if (!st.desktop_present) {
+    msg = 'Claude デスクトップアプリの設定が標準の場所に見つからないため、「設定だけ引き継ぐ」を選んでもデスクトップ側は引き継がれません（Claude Code 側は引き継がれます）。';
+  }
+  el.createNotice.textContent = msg;
+  el.createNotice.hidden = !msg;
 }
 
 function setMode(mode) {
@@ -753,6 +781,8 @@ function devInvoke(cmd, args) {
       return Promise.resolve(sample[args.name] || sample['検証用']);
     case 'get_desktop_running_status':
       return Promise.resolve(false);
+    case 'get_default_roots_status':
+      return Promise.resolve({ desktop_present: true, cli_present: true });
     default:
       return Promise.resolve(null);
   }
