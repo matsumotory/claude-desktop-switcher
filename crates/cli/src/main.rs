@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use colored::*;
 use csw_core::platform::create_provider;
-use csw_core::profile::{ProfileManager, SharingConfig, SharingMode};
+use csw_core::profile::{ProfileManager, SharingConfig};
 use csw_core::switcher::ContextSwitcher;
 use std::sync::Arc;
 
@@ -51,8 +51,14 @@ enum ProfileAction {
     Create {
         /// Profile name
         name: String,
-        /// Sharing mode preset: "isolate" (default) or "share"
-        #[arg(long, default_value = "isolate")]
+        /// Sharing mode: "isolate" (default; すべて分ける), "share_settings"
+        /// (会話とメモリも分ける), or "share_workspace" (アカウントだけ分ける).
+        /// "share" is a deprecated alias for "share_settings".
+        #[arg(
+            long,
+            default_value = "isolate",
+            value_parser = ["isolate", "share_settings", "share_workspace", "share"]
+        )]
         mode: String,
     },
     /// List all profiles
@@ -105,14 +111,16 @@ fn main() -> anyhow::Result<()> {
                         mode.bold()
                     );
 
-                    let mut sharing = SharingConfig::default();
-                    if mode == "share" {
-                        sharing.desktop_config = SharingMode::Share;
-                        sharing.cli_settings = SharingMode::Share;
-                        sharing.cli_claude_md = SharingMode::Share;
-                        sharing.cli_plugins = SharingMode::Share;
-                        sharing.desktop_worktrees = SharingMode::Share;
-                    } // Else keep defaults (Isolate)
+                    // Mirror the GUI's three modes (build_sharing_config in the desktop
+                    // crate). "share" is a backward-compatible alias for "share_settings".
+                    // The account-keyed files (config.json, claude_desktop_config.json),
+                    // the device id and sessions/ stay isolated in every preset and are
+                    // clamped again in create_profile, so no CLI mode can share them.
+                    let sharing = match mode.as_str() {
+                        "share_settings" | "share" => SharingConfig::share_settings_preset(),
+                        "share_workspace" => SharingConfig::share_workspace_preset(),
+                        _ => SharingConfig::default(), // "isolate"
+                    };
 
                     match manager.create_profile(&name, sharing, None) {
                         Ok(_) => {
@@ -170,13 +178,16 @@ fn main() -> anyhow::Result<()> {
                         println!("  Desktop Path: {:?}", p.isolation.desktop_user_data_dir);
                         println!("  CLI Path: {:?}", p.isolation.cli_config_dir);
                         println!("  Sharing Configurations:");
-                        println!("    Desktop Config (MCP): {:?}", p.sharing.desktop_config);
                         println!("    CLI Settings: {:?}", p.sharing.cli_settings);
                         println!("    CLAUDE.md (Rules): {:?}", p.sharing.cli_claude_md);
-                        println!("    CLI Project Memory: {:?}", p.sharing.cli_project_memory);
                         println!("    CLI Plugins: {:?}", p.sharing.cli_plugins);
+                        println!("    CLI Skills: {:?}", p.sharing.cli_skills);
+                        println!("    CLI Project Memory: {:?}", p.sharing.cli_project_memory);
+                        println!("    CLI Input History: {:?}", p.sharing.cli_history);
                         println!("    Desktop Worktrees: {:?}", p.sharing.desktop_worktrees);
-                        println!("    Desktop Device ID: {:?}", p.sharing.desktop_device_id);
+                        println!(
+                            "    Always isolated: config.json, claude_desktop_config.json, sessions/, device id"
+                        );
                     }
                     Err(e) => {
                         eprintln!(

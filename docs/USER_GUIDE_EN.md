@@ -14,6 +14,8 @@ This tool eliminates the need for complex shell scripts. It achieves **"Desktop 
 
 Understand this one thing and nothing else is confusing.
 
+First, the account. An account is the Claude account you sign in to; your billing and usage attach to it. Each environment signs in with its own account, so the sign-in info (the OAuth token in `config.json`) is always separate per environment, in every mode.
+
 - **"Existing Claude" = your existing setup** (the Claude Desktop and Claude Code you already use). It is the reference point, and CSW never changes it.
 - **Creating a new environment = deciding, item by item, what to inherit from "Existing Claude" and what to keep separate.** The counterpart of share / isolate / copy is always "Existing Claude".
   - **Share**: use the same thing as your existing Claude (changes apply to both)
@@ -40,35 +42,40 @@ Create a new isolated environment for work or research.
 
 ![Claude Desktop Switcher Settings UI](../website/assets/hero.png)
 
-**By default, this app operates in "Isolated" mode to strictly prevent accidental data mixing.**
+**By default, this app separates everything to strictly prevent accidental data mixing.**
 
-For advanced use cases (such as "I want to share my personal MCP settings and rules, but route token usage to my Work account"), we provide flexible customization options.
+For other cases (such as "I want to reuse my common rules and skills, but route usage to my Work account"), you can adjust what carries over.
 
 1. Click the Claude Desktop Switcher icon in the menu bar and select **"Settings..."**.
 2. In the settings window, click **"環境を作る" (Create environment)**.
 3. Enter the environment information.
    * **Name**: (e.g., `Work`, `Research`)
    * **Icon (optional)**: pick from the prepared icons (or use an emoji if none fit)
-4. **Choose how it should be separated (pick one of two modes first)**
-   To keep first-time use simple, there are just two choices. Open **"Configure in detail (11 items)"** only if you want to change individual components.
+4. **Choose how it should be separated (pick one of three modes)**
+   The account is always separate in every mode (the create screen states this once up front). The three modes differ only in what else carries over, listed from least carried over to most. Open **"Configure in detail (per item)"** if you want to change individual components.
 
-   * **Start fresh (recommended, default)**: Login, settings, and history all start from scratch. Your existing Claude is never touched, so you get a fully independent environment.
-   * **Reuse settings**: Keep your usual MCP, rules, and skills; only login and history move to a separate account. Reuse your config assets while spending tokens on a different account.
+   * **Separate the account only**: Carry over conversation history and auto-memory too; only the account is separate. Run research and development on separate billing while keeping one continuous workspace.
+   * **Separate conversations & memory too**: Carry over your common rules, skills, plugins and tool permissions; keep conversation history and auto-memory to this environment. Split by purpose while reusing your setup.
+   * **Separate everything (recommended, default)**: Nothing carries over — the new environment is fully independent. For clients and projects, or work-vs-personal, that must not mix. Your existing Claude is never touched.
 
-   > If your existing Claude isn't found at the standard locations (for example, when Claude Code's config has been moved elsewhere via `CLAUDE_CONFIG_DIR`), "Reuse settings" won't carry over whichever side is missing. If neither the Desktop nor the CLI config is found, there's nothing to reuse, so only "Start fresh" can be created. The create screen explains this in either case.
+   The difference between "Separate conversations & memory too" and "Separate the account only" is the single point of whether conversation history and auto-memory carry over.
+
+   > If your existing Claude isn't found at the standard locations (for example, when Claude Code's config has been moved elsewhere via `CLAUDE_CONFIG_DIR`), the carry-over modes won't bring over whichever side is missing. If neither the Desktop nor the CLI config is found, there's nothing to carry over, so only "Separate everything" can be created. The create screen explains this in either case.
 
    **< How to choose >**
    * **Case A (Completely separate project)**:
-     Pick **"Start fresh"**. You get a pristine environment cleanly detached from your personal one.
-   * **Case B (Switching accounts while keeping personal environment config)**:
-     Pick **"Reuse settings"** to bring your familiar environment (MCP settings, CLAUDE.md rules) into the new environment.
+     Pick **"Separate everything"**. You get a pristine environment cleanly detached from your personal one.
+   * **Case B (Switching the account while keeping your common rules and skills)**:
+     Pick **"Separate conversations & memory too"** to bring your common rules (CLAUDE.md) and skills into the new environment.
+   * **Case C (Split billing for research vs development while keeping one continuous workspace)**:
+     Pick **"Separate the account only"** to carry over conversation history and auto-memory too, so only the account is separate while your work continues uninterrupted.
 
 5. Click **"Create this environment"** to save.
 
 ![Create-environment dialog](../website/assets/screen_create.png)
 
 > **Duplicating an existing environment**
-> Select an environment in the settings window and click the **複製 (Duplicate)** button to create a new environment that inherits its sharing configuration and layout. Login state follows each component's sharing mode; isolated components are not carried over, so you may need to sign in again in the new environment.
+> Select an environment in the settings window and click the **複製 (Duplicate)** button to create a new environment that inherits its sharing configuration and layout. The account sign-in is always separate, so you sign in again in the new environment; isolated components also start empty.
 
 ---
 
@@ -121,7 +128,7 @@ A terminal you open on your own stays in your usual environment. To use a specif
 Always relative to "Existing Claude" (your existing setup). For each item in a new environment, you choose whether to use the same thing as your existing Claude (share) or keep a new one just for this environment (isolate).
 
 **Q. What is "Existing Claude"?**
-It is your existing Claude Desktop and Claude Code setup. CSW only displays it and uses it as the reference; it never changes or deletes your settings, history, or login. In the app it appears as the first row of the environment list.
+It is your existing Claude Desktop and Claude Code setup. CSW only displays it and uses it as the reference; it never changes or deletes your settings, history, or account sign-in. In the app it appears as the first row of the environment list.
 
 **Q. Do I need to create a new environment just to use the same account?**
 No. If you only want to keep using the same account, you do not need a new environment; launch Claude as usual and "Existing Claude" is used directly. CSW helps when you want additional, independent environments for different accounts or projects.
@@ -130,11 +137,20 @@ No. If you only want to keep using the same account, you do not need a new envir
 No. Each new environment is created in its own dedicated directory, physically separate from the original. Deleting an environment does not affect your original Claude.
 
 **Q. Do I have to sign in again every time I switch?**
-No. Each environment keeps its login inside its own directory. Sign in once and it persists across switches (items set to "isolate" start empty in the new environment).
+No. Each environment keeps its own account sign-in info (`config.json`) inside its own directory. Sign in once per environment and it persists across switches (items set to "isolate" start empty in the new environment).
 
 **Q. Does switching the desktop app also switch the terminal (Claude Code)?**
 The terminal you open inside the app launched from CSW (built-in) is already in the same environment as that app, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run `eval $(csw env Work)` to sync it explicitly (it applies to that tab only and never affects your usual environment).
 
-**Q. What exactly is shared by "Reuse settings"?**
-Your MCP server config, global rules (CLAUDE.md), permissions/hooks, plugins, skills, app settings, and worktrees (your config assets) are shared with "Existing Claude". Login, conversation history, command history, and project memory are kept separate for safety. To fine-tune, use "Configure in detail (11 items)" on the create screen.
+**Q. What exactly carries over with "Separate conversations & memory too"?**
+Your common rules (CLAUDE.md), tool permissions and hooks (settings.json), plugins, and skills carry over from "Existing Claude". Conversation history and auto-memory (projects/), prompt history (history.jsonl), and the account sign-in info (config.json) stay separate. The connector and app settings (claude_desktop_config.json, which is where MCP connectors live) and the session state (sessions/) are always separate as well. To fine-tune, use "Configure in detail (per item)" on the create screen.
+
+**Q. What changes if I pick "Separate the account only"?**
+On top of the common rules, skills, plugins, and tool permissions, this mode also carries over the per-project conversations and memory (projects/) and the prompt history (history.jsonl). The only thing kept separate is the account (the sign-in info in config.json, which billing and usage are tied to). It suits splitting payment between, say, research and development while keeping one continuous stream of work. The connector and app settings and the session run state stay separate in this mode as well.
+
+**Q. What's the difference between memory and conversation history?**
+Memory is the distilled, summarized insight carried over from the past (the human-written CLAUDE.md and Claude's auto-memory under projects/<project>/memory/). Conversation history is the raw record of the exchanges themselves (the .jsonl files under projects/<project>/). "Separate the account only" carries over both; "Separate conversations & memory too" keeps both just for this environment.
+
+**Q. Are the Desktop app's settings and MCP connectors shared?**
+No. The Desktop side handles account authentication and rewrites parts of its config at startup, so it cannot be shared safely. The connector and app settings (claude_desktop_config.json) are always separate, and that file is where MCP connectors are configured. What carries over is centered on the Claude Code (CLI) side: common rules, skills, plugins, and tool permissions.
 

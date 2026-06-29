@@ -85,10 +85,6 @@ pub struct IsolationConfig {
 /// Per-component sharing/isolation preferences.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SharingConfig {
-    /// claude_desktop_config.json (MCP servers, preferences)
-    #[serde(default)]
-    pub desktop_config: SharingMode,
-
     /// settings.json (permissions, hooks, theme, plugins config)
     #[serde(default)]
     pub cli_settings: SharingMode,
@@ -110,33 +106,17 @@ pub struct SharingConfig {
     #[serde(default)]
     pub cli_skills: SharingMode,
 
-    /// sessions/ directory (CLI conversation history)
-    #[serde(default)]
-    pub cli_sessions: SharingMode,
-
     /// history.jsonl (CLI command history file)
     #[serde(default)]
     pub cli_history: SharingMode,
-
-    /// config.json (Desktop app preferences and general settings)
-    #[serde(default)]
-    pub desktop_app_config: SharingMode,
 
     /// git-worktrees.json (worktree name → repo/branch mapping)
     #[serde(default)]
     pub desktop_worktrees: SharingMode,
 
-    /// ant-did (device identifier, machine-unique)
-    #[serde(default = "default_share")]
-    pub desktop_device_id: SharingMode,
-
     /// Source profile for shared components (default: "default")
     #[serde(default)]
     pub source: SharingSource,
-}
-
-fn default_share() -> SharingMode {
-    SharingMode::Share
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,27 +138,82 @@ impl Default for SharingSource {
 }
 
 impl Default for SharingConfig {
+    /// Fully isolated: every component gets its own per-profile copy and nothing
+    /// is carried over from the source. This backs the "すべて分ける" create mode,
+    /// so even the machine device id is isolated (no cross-account linkage).
     fn default() -> Self {
         Self {
-            desktop_config: SharingMode::Isolate,
             cli_settings: SharingMode::Isolate,
             cli_claude_md: SharingMode::Isolate,
             cli_project_memory: SharingMode::Isolate,
             cli_plugins: SharingMode::Isolate,
             cli_skills: SharingMode::Isolate,
-            cli_sessions: SharingMode::Isolate,
             cli_history: SharingMode::Isolate,
-            desktop_app_config: SharingMode::Isolate,
             desktop_worktrees: SharingMode::Isolate,
-            desktop_device_id: SharingMode::Share,
             source: SharingSource::default(),
+        }
+    }
+}
+
+impl SharingConfig {
+    // Some components can never be shared or copied, so they are deliberately NOT
+    // fields of SharingConfig at all: there is no SharingMode to set, which makes the
+    // illegal "share an account-keyed file" state unrepresentable for every caller
+    // (GUI, CLI, or a hand-built config). The linker isolates them unconditionally
+    // (see Linker::link_profile), so a mode is only ever a choice over the components
+    // below — never over these:
+    //   - config.json holds OAuth token caches and per-account state; sharing it
+    //     would mix two logins into one file.
+    //   - claude_desktop_config.json holds account-keyed permission gates and is
+    //     rewritten via temp+rename on launch (which breaks any symlink), so it can
+    //     be neither shared nor safely copied.
+    //   - the device id (ant-did) is isolated so two accounts are not linked as one.
+    //   - sessions/ is per-environment runtime state (pid, cwd), not shareable content.
+    //   - the account login lives in the per-profile data dir, untouched by the linker.
+
+    /// Preset for "会話とメモリも分ける" — separate accounts and conversations, but
+    /// reuse the common setup. The CLI global rules (`CLAUDE.md`), `plugins/` and
+    /// `skills/` are shared by symlink (the app only reads them and the user is
+    /// their single writer, so a bidirectional write never breaks the link). The
+    /// permission/hook `settings.json` and the worktree list are copied once at
+    /// creation. Conversation history, project memory and command history stay
+    /// isolated. Use case: split by purpose while keeping one rule set.
+    pub fn share_settings_preset() -> Self {
+        Self {
+            cli_claude_md: SharingMode::Share,
+            cli_plugins: SharingMode::Share,
+            cli_skills: SharingMode::Share,
+            cli_settings: SharingMode::Copy,
+            desktop_worktrees: SharingMode::Copy,
+            ..Self::default()
+        }
+    }
+
+    /// Preset for "アカウントだけ分ける" — separate only the account (billing and
+    /// resource usage); carry the whole working context across. On top of
+    /// [`Self::share_settings_preset`] it also shares the per-project conversation
+    /// history and auto-memory (`projects/`) and the prompt history
+    /// (`history.jsonl`) by symlink — these are directories the app appends into
+    /// plus an append-only file, so the links stay intact. Because every account
+    /// belongs to the same user, sharing their own conversations is a continuity
+    /// choice, not a leak. `sessions/` is deliberately NOT shared: it holds runtime
+    /// session state (pid, cwd, start time), which is per-environment bookkeeping,
+    /// not conversation content. The login, OAuth tokens, Desktop config files and
+    /// device id also stay isolated.
+    /// Use case: run research and development on separate billing accounts while
+    /// keeping one continuous workspace.
+    pub fn share_workspace_preset() -> Self {
+        Self {
+            cli_project_memory: SharingMode::Share,
+            cli_history: SharingMode::Share,
+            ..Self::share_settings_preset()
         }
     }
 }
 
 /// Whether the user's existing Claude data is present at the standard locations.
 ///
-/// Sharing ("設定だけ引き継ぐ") symlinks from these default dirs, so a root that is
+/// Sharing ("会話とメモリも分ける") symlinks from these default dirs, so a root that is
 /// missing or empty has nothing to share. The create flow uses this to gate the
 /// share mode: both missing → only "すべて分ける" makes sense; one missing → that
 /// side simply won't carry over and the user should be told.
@@ -260,17 +295,13 @@ impl ProfileManager {
                     cli_config_dir: self.provider.claude_cli_default_dir(),
                 },
                 sharing: SharingConfig {
-                    desktop_config: SharingMode::Share,
                     cli_settings: SharingMode::Share,
                     cli_claude_md: SharingMode::Share,
                     cli_project_memory: SharingMode::Share,
                     cli_plugins: SharingMode::Share,
                     cli_skills: SharingMode::Share,
-                    cli_sessions: SharingMode::Share,
                     cli_history: SharingMode::Share,
-                    desktop_app_config: SharingMode::Share,
                     desktop_worktrees: SharingMode::Share,
-                    desktop_device_id: SharingMode::Share,
                     source: SharingSource {
                         profile: "default".to_string(),
                     },

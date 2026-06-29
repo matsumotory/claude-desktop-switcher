@@ -12,47 +12,59 @@
 const HAS_TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
 const invoke = HAS_TAURI ? window.__TAURI__.core.invoke : devInvoke;
 
-// --- The 11 sharing components, grouped and described in plain language ------
+// --- The sharing components the user can tune, grouped and described in plain
+// language. config.json (OAuth tokens) and claude_desktop_config.json (account
+// state, rewritten on launch) are deliberately absent: they are always isolated
+// and never offered as a choice. -------------------------------------------
 const SHARE_GROUPS = [
   {
     label: 'Claudeデスクトップアプリ',
     items: [
-      { key: 'desktop_config', name: 'MCP サーバー', desc: '接続済みの MCP サーバー構成' },
-      { key: 'desktop_app_config', name: 'アプリ設定', desc: '表示や挙動などの一般設定' },
-      { key: 'desktop_worktrees', name: 'ワークツリー', desc: 'Git ワークツリーの対応表' },
+      { key: 'desktop_worktrees', name: 'ワークツリー一覧', desc: 'Git ワークツリーと repo の対応' },
     ],
   },
   {
     label: 'Claude Code',
     items: [
-      { key: 'cli_settings', name: '権限・フック', desc: '許可設定とフック' },
-      { key: 'cli_claude_md', name: 'グローバルルール', desc: 'CLAUDE.md の共通ルール' },
-      { key: 'cli_project_memory', name: 'プロジェクト記憶', desc: 'プロジェクトごとのメモリ' },
-      { key: 'cli_plugins', name: 'プラグイン', desc: 'インストール済みプラグイン' },
-      { key: 'cli_skills', name: 'スキル', desc: 'カスタムスキル定義' },
-      { key: 'cli_sessions', name: '会話履歴', desc: 'これまでの会話セッション' },
-      { key: 'cli_history', name: 'コマンド履歴', desc: '入力したコマンドの履歴' },
+      { key: 'cli_claude_md', name: '共通ルール', desc: 'CLAUDE.md に書いた常時ルール' },
+      { key: 'cli_plugins', name: 'プラグイン', desc: '導入したプラグイン' },
+      { key: 'cli_skills', name: 'スキル', desc: 'カスタムスキル' },
+      { key: 'cli_settings', name: 'ツール権限・フック', desc: 'ツールの実行可否とフック' },
+      { key: 'cli_project_memory', name: 'プロジェクトの会話・メモリ', desc: 'プロジェクトごとの会話履歴と自動メモリ' },
+      { key: 'cli_history', name: '入力履歴', desc: '入力したプロンプトの履歴' },
     ],
   },
 ];
-const DEVICE_ID = { key: 'desktop_device_id', name: '端末 ID', desc: '端末を識別するための ID。共有が既定です' };
+const DEVICE_ID = { key: 'desktop_device_id', name: '端末 ID', desc: '端末を識別するための ID' };
 const ALL_KEYS = [...SHARE_GROUPS.flatMap((g) => g.items.map((i) => i.key)), DEVICE_ID.key];
 
-// Mode presets (must mirror build_sharing_config in main.rs).
+// Mode presets — must mirror SharingConfig::{share_settings,share_workspace}_preset
+// and build_sharing_config in main.rs. config.json / claude_desktop_config.json are
+// always isolated and are not part of these maps.
 const PRESETS = {
-  isolate: Object.fromEntries(ALL_KEYS.map((k) => [k, k === 'desktop_device_id' ? 'share' : 'isolate'])),
+  // すべて分ける: a fully separated environment, nothing carried over.
+  isolate: Object.fromEntries(ALL_KEYS.map((k) => [k, 'isolate'])),
+  // 会話とメモリも分ける: reuse the common setup, keep conversation history + memory and the account separate.
   share_settings: {
-    desktop_config: 'share',
-    cli_settings: 'share',
     cli_claude_md: 'share',
     cli_plugins: 'share',
     cli_skills: 'share',
-    desktop_app_config: 'share',
-    desktop_worktrees: 'share',
+    cli_settings: 'copy',
+    desktop_worktrees: 'copy',
     cli_project_memory: 'isolate',
-    cli_sessions: 'isolate',
     cli_history: 'isolate',
-    desktop_device_id: 'share',
+    desktop_device_id: 'isolate',
+  },
+  // アカウントだけ分ける: also carry conversation history + memory across, separating only the account.
+  share_workspace: {
+    cli_claude_md: 'share',
+    cli_plugins: 'share',
+    cli_skills: 'share',
+    cli_settings: 'copy',
+    desktop_worktrees: 'copy',
+    cli_project_memory: 'share',
+    cli_history: 'share',
+    desktop_device_id: 'isolate',
   },
 };
 
@@ -120,6 +132,10 @@ const AVATAR_ICONS = [
   { slug: 'star', label: 'お気に入り' },
   { slug: 'globe', label: 'グローバル' },
   { slug: 'heart', label: 'ハート' },
+  { slug: 'wrench', label: 'ツール' },
+  { slug: 'lightbulb', label: 'アイデア' },
+  { slug: 'book-open', label: '資料' },
+  { slug: 'chat-circle', label: '会話' },
 ];
 const ICON_SLUGS = AVATAR_ICONS.map((i) => i.slug);
 
@@ -147,7 +163,6 @@ const el = {
   emptyFirstRun: $('emptyFirstRun'),
   firstRunExtra: $('firstRunExtra'),
   inputName: $('inputName'),
-  inputIcon: $('inputIcon'),
   iconPicker: $('iconPicker'),
   createNotice: $('createNotice'),
   nameError: $('nameError'),
@@ -341,13 +356,16 @@ function disclosure(label, sub, innerNodes) {
 }
 
 function sharingDisclosure(sharing) {
-  let shareCount = 0;
-  for (const k of ALL_KEYS) if (sharing[k] === 'share') shareCount++;
-  const isoCount = ALL_KEYS.length - shareCount;
+  const shareCount = ALL_KEYS.filter((k) => sharing[k] === 'share').length;
+  const copyCount = ALL_KEYS.filter((k) => sharing[k] === 'copy').length;
+  const isoCount = ALL_KEYS.length - shareCount - copyCount;
+  const summary = copyCount
+    ? `共有 ${shareCount}・コピー ${copyCount}・分離 ${isoCount} 件`
+    : `共有 ${shareCount}・分離 ${isoCount} 件`;
 
   const inner = [
-    // Name the reference point so "shared/isolated" is never ambiguous.
-    h('p', { class: 'share-basis', text: '「共有」は既存の Claude と中身を共通にすること、「分離」はこの環境だけで持つことです。' }),
+    // Name the reference point so "shared/copied/isolated" is never ambiguous.
+    h('p', { class: 'share-basis', text: '「共有」は既存の Claude と中身を共通にすること、「コピー」は作成時に一度だけ写して以後は別々、「分離」はこの環境だけで持つことです。' }),
   ];
   for (const g of SHARE_GROUPS) {
     inner.push(h('div', { class: 'share-group' },
@@ -357,7 +375,7 @@ function sharingDisclosure(sharing) {
   inner.push(h('div', { class: 'share-group' }, sharingReadRow(DEVICE_ID, sharing[DEVICE_ID.key])));
 
   return section('この環境が引き継いでいるもの',
-    [disclosure(`共有 ${shareCount} 件・分離 ${isoCount} 件`, ' ／ ログインと履歴は分離', inner)]);
+    [disclosure(summary, ' ／ アカウントは常に分離', inner)]);
 }
 
 function sharingReadRow(item, mode) {
@@ -483,20 +501,19 @@ let createIcon = ''; // selected avatar: an AVATAR_ICONS slug, an emoji/char, or
 function renderIconPicker() {
   el.iconPicker.replaceChildren(...AVATAR_ICONS.map((it) =>
     h('button', {
-      type: 'button', class: 'icon-tile', role: 'radio', 'data-slug': it.slug,
+      type: 'button', class: 'icon-tile', role: 'radio', 'data-icon': it.slug,
       'aria-label': it.label, 'aria-checked': 'false', title: it.label,
       onclick: () => selectIcon(it.slug),
     }, icon('i-' + it.slug))));
   syncIconPicker();
 }
-function selectIcon(slug) {
-  createIcon = createIcon === slug ? '' : slug; // click again to clear
-  el.inputIcon.value = ''; // picking a glyph clears the emoji fallback
+function selectIcon(value) {
+  createIcon = createIcon === value ? '' : value; // click again to clear
   syncIconPicker();
 }
 function syncIconPicker() {
-  el.iconPicker.querySelectorAll('.icon-tile').forEach((b) => {
-    const on = b.dataset.slug === createIcon;
+  document.querySelectorAll('.icon-tile').forEach((b) => {
+    const on = b.dataset.icon === createIcon && createIcon !== '';
     b.classList.toggle('selected', on);
     b.setAttribute('aria-checked', on ? 'true' : 'false');
   });
@@ -511,7 +528,6 @@ function showEmpty() {
 function showCreate() {
   localStorage.setItem('csw_onboarded', '1');
   el.inputName.value = '';
-  el.inputIcon.value = '';
   createIcon = '';
   renderIconPicker();
   el.nameError.hidden = true;
@@ -556,20 +572,22 @@ function requestCreate() {
 async function applyRootsStatus() {
   let st = { desktop_present: true, cli_present: true };
   try { st = await invoke('get_default_roots_status'); } catch (e) { /* keep optimistic default */ }
-  const shareInput = document.querySelector('input[name="mode"][value="share_settings"]');
-  const shareCard = shareInput ? shareInput.closest('.mode-card') : null;
+  // Both share modes carry over from the existing Claude, so both need its data.
+  const shareModes = ['share_settings', 'share_workspace'];
   const bothAbsent = !st.desktop_present && !st.cli_present;
-  if (shareInput) shareInput.disabled = bothAbsent;
-  if (shareCard) shareCard.classList.toggle('is-disabled', bothAbsent);
-  if (bothAbsent) setMode('isolate'); // nothing to share → a fully separate environment
+  for (const mode of shareModes) {
+    const input = document.querySelector(`input[name="mode"][value="${mode}"]`);
+    if (input) input.disabled = bothAbsent;
+    const card = input ? input.closest('.mode-card') : null;
+    if (card) card.classList.toggle('is-disabled', bothAbsent);
+  }
+  if (bothAbsent) setMode('isolate'); // nothing to carry over → a fully separate environment
 
   let msg = '';
   if (bothAbsent) {
-    msg = '既存の Claude が標準の場所に見つかりません。引き継げる設定が無いため、「すべて分ける」だけで作成できます。';
+    msg = '既存の Claude が標準の場所に見つかりません。引き継げるものが無いため、「すべて分ける」だけで作成できます。';
   } else if (!st.cli_present) {
-    msg = 'Claude Code（CLI）の設定が標準の場所に見つからないため、「設定だけ引き継ぐ」を選んでも CLI 側は引き継がれません（デスクトップ側は引き継がれます）。';
-  } else if (!st.desktop_present) {
-    msg = 'Claude デスクトップアプリの設定が標準の場所に見つからないため、「設定だけ引き継ぐ」を選んでもデスクトップ側は引き継がれません（Claude Code 側は引き継がれます）。';
+    msg = 'Claude Code（CLI）の設定が標準の場所に見つかりません。引き継ぐモードを選んでも、ルールやスキル、会話などの CLI 側は引き継がれません。';
   }
   el.createNotice.textContent = msg;
   el.createNotice.hidden = !msg;
@@ -586,10 +604,11 @@ function setMode(mode) {
 }
 
 function renderAdvancedRows() {
-  // Name the reference point + define the words once, so all 11 rows read clearly.
+  // Name the reference point + define the words once, so every row reads clearly.
   const nodes = [
     h('p', { class: 'share-basis', text: '各項目を、既存の Claude と共有するか、この環境だけにするかを選びます。' }),
     h('p', { class: 'share-legend', text: '共有 = いまのを使う ／ 分離 = この環境だけ ／ コピー = 最初だけ写す' }),
+    h('p', { class: 'path-caption', text: 'アカウントのサインイン情報（config.json）と、コネクタ・アプリ設定（claude_desktop_config.json）は、アカウント別の情報を含むため、どのモードでも必ずこの環境だけに分離します。' }),
   ];
   for (const g of SHARE_GROUPS) {
     nodes.push(h('div', { class: 'share-group' },
@@ -597,8 +616,8 @@ function renderAdvancedRows() {
       ...g.items.map((it) => segRow(it, overrides[it.key], false))));
   }
   nodes.push(h('div', { class: 'share-group' },
-    segRow(DEVICE_ID, 'share', true),
-    h('p', { class: 'path-caption', text: '端末識別のため、端末 ID は常に共有されます。' })));
+    segRow(DEVICE_ID, 'isolate', true),
+    h('p', { class: 'path-caption', text: '2つのアカウントが同じ端末として結び付かないよう、端末 ID は常に分離します。' })));
   el.advancedGroups.replaceChildren(...nodes);
 }
 
@@ -651,7 +670,7 @@ function validateName(name) {
 
 async function submitCreate() {
   const name = el.inputName.value.trim();
-  const iconVal = createIcon || el.inputIcon.value.trim();
+  const iconVal = createIcon;
   const err = validateName(name);
   if (err) { el.nameError.textContent = err; el.nameError.hidden = false; el.inputName.focus(); return; }
   el.nameError.hidden = true;
@@ -740,10 +759,6 @@ function wireEvents() {
     // kanji conversion) so it never creates; otherwise go to the confirmation step.
     if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); requestCreate(); }
   });
-  el.inputIcon.addEventListener('input', () => { // typing an emoji overrides a glyph; clearing resets
-    createIcon = el.inputIcon.value.trim();
-    syncIconPicker();
-  });
 }
 
 function checkFirstRun() {
@@ -793,6 +808,7 @@ function devInvoke(cmd, args) {
   const sample = {
     default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
     仕事用: { name: '仕事用', icon: 'briefcase', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', sharing: { ...PRESETS.share_settings } },
+    研究用: { name: '研究用', icon: 'graduation-cap', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/研究用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/研究用/cli-data', sharing: { ...PRESETS.share_workspace } },
     検証用: { name: '検証用', icon: 'flask', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', sharing: { ...PRESETS.isolate } },
   };
   switch (cmd) {
@@ -800,6 +816,7 @@ function devInvoke(cmd, args) {
       return Promise.resolve([
         { name: 'default', icon: '', is_default: true },
         { name: '仕事用', icon: 'briefcase', is_default: false },
+        { name: '研究用', icon: 'graduation-cap', is_default: false },
         { name: '検証用', icon: 'flask', is_default: false },
       ]);
     case 'get_active_profile':

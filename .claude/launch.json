@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8181", "--directory", "website"],
       "port": 8181
+    },
+    {
+      "name": "app",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8182", "--directory", "crates/desktop/ui"],
+      "port": 8182
     }
   ]
 }

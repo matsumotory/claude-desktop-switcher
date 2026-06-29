@@ -63,17 +63,13 @@ async fn get_profile_details(
         "desktop_path": p.isolation.desktop_user_data_dir,
         "cli_path": p.isolation.cli_config_dir,
         "sharing": {
-            "desktop_config": format!("{:?}", p.sharing.desktop_config).to_lowercase(),
-            "desktop_app_config": format!("{:?}", p.sharing.desktop_app_config).to_lowercase(),
             "cli_settings": format!("{:?}", p.sharing.cli_settings).to_lowercase(),
             "cli_claude_md": format!("{:?}", p.sharing.cli_claude_md).to_lowercase(),
             "cli_project_memory": format!("{:?}", p.sharing.cli_project_memory).to_lowercase(),
             "cli_plugins": format!("{:?}", p.sharing.cli_plugins).to_lowercase(),
             "cli_skills": format!("{:?}", p.sharing.cli_skills).to_lowercase(),
-            "cli_sessions": format!("{:?}", p.sharing.cli_sessions).to_lowercase(),
             "cli_history": format!("{:?}", p.sharing.cli_history).to_lowercase(),
-            "desktop_worktrees": format!("{:?}", p.sharing.desktop_worktrees).to_lowercase(),
-            "desktop_device_id": format!("{:?}", p.sharing.desktop_device_id).to_lowercase()
+            "desktop_worktrees": format!("{:?}", p.sharing.desktop_worktrees).to_lowercase()
         }
     });
 
@@ -93,44 +89,44 @@ fn parse_sharing_mode(value: &str) -> Option<SharingMode> {
 /// Build the per-component sharing config for a new profile from the chosen mode preset,
 /// then apply any explicit per-component overrides coming from the "advanced settings" UI.
 fn build_sharing_config(mode: &str, overrides: Option<HashMap<String, String>>) -> SharingConfig {
-    // Two-mode model surfaced in the UI:
-    //   "isolate"        — a brand-new, empty environment (= SharingConfig::default()).
-    //   "share_settings" — reuse the settings assets (MCP servers, global rules, skills,
-    //                      plugins, app config, worktrees) from the default profile via
-    //                      symlink, while keeping the account login, conversation sessions,
-    //                      command history and project memory isolated for safety.
-    // "share" is kept as a backward-compatible alias for "share_settings".
-    let mut sharing = SharingConfig::default();
-    if mode == "share_settings" || mode == "share" {
-        sharing.desktop_config = SharingMode::Share; // MCP servers
-        sharing.cli_settings = SharingMode::Share; // permissions / hooks
-        sharing.cli_claude_md = SharingMode::Share; // global rules
-        sharing.cli_plugins = SharingMode::Share;
-        sharing.cli_skills = SharingMode::Share;
-        sharing.desktop_app_config = SharingMode::Share;
-        sharing.desktop_worktrees = SharingMode::Share;
-        // cli_project_memory / cli_sessions / cli_history stay Isolate (safety side).
-        // desktop_device_id is already Share in SharingConfig::default().
-    }
+    // Three modes surfaced in the UI, framed by use case (every account belongs to
+    // the same user, so sharing is a continuity choice, not a cross-tenant leak):
+    //   "isolate"         — すべて分ける: a fully separated environment, nothing
+    //                       carried over (= SharingConfig::default()). For clients,
+    //                       projects, or work-vs-personal that must not mix.
+    //   "share_settings"  — 会話とメモリも分ける: reuse the common setup (CLAUDE.md,
+    //                       plugins, skills shared; settings/worktrees copied) while
+    //                       keeping conversations and login separate.
+    //   "share_workspace" — アカウントだけ分ける: also carry the conversation history,
+    //                       project memory and command history across, separating
+    //                       only the account (billing / resource usage).
+    // In every mode the login, OAuth tokens (config.json), claude_desktop_config.json
+    // and device id stay isolated. "share" is a backward-compatible alias for
+    // "share_settings". See SharingConfig::{share_settings,share_workspace}_preset.
+    let mut sharing = match mode {
+        "share_settings" | "share" => SharingConfig::share_settings_preset(),
+        "share_workspace" => SharingConfig::share_workspace_preset(),
+        _ => SharingConfig::default(),
+    };
 
     // Advanced settings: explicit per-component choices override the mode preset.
+    // The always-isolated files (config.json, claude_desktop_config.json, sessions/,
+    // ant-did) are not SharingConfig fields and have no override key, so neither the
+    // UI nor any caller can share or copy them — the isolation is structural,
+    // enforced unconditionally by the linker.
     if let Some(overrides) = overrides {
         for (key, value) in overrides {
             let Some(m) = parse_sharing_mode(&value) else {
                 continue;
             };
             match key.as_str() {
-                "desktop_config" => sharing.desktop_config = m,
                 "cli_settings" => sharing.cli_settings = m,
                 "cli_claude_md" => sharing.cli_claude_md = m,
                 "cli_project_memory" => sharing.cli_project_memory = m,
                 "cli_plugins" => sharing.cli_plugins = m,
                 "cli_skills" => sharing.cli_skills = m,
-                "cli_sessions" => sharing.cli_sessions = m,
                 "cli_history" => sharing.cli_history = m,
-                "desktop_app_config" => sharing.desktop_app_config = m,
                 "desktop_worktrees" => sharing.desktop_worktrees = m,
-                "desktop_device_id" => sharing.desktop_device_id = m,
                 _ => {}
             }
         }
@@ -203,7 +199,11 @@ async fn switch_profile(
     // Update system tray menu
     update_tray_menu(&app)?;
 
-    if !no_launch && name != "default" {
+    // Auto-launch after switching, including back to the default ("既存の Claude").
+    // For default this resolves to the standard data dirs, so it is equivalent to a
+    // normal Finder/Dock launch; `open -n` starts a fresh LaunchServices process that
+    // inherits no CSW state, and switching is already refused while Claude is running.
+    if !no_launch {
         let profile = state
             .profile_manager
             .get_profile(&name)
@@ -359,10 +359,10 @@ fn main() {
                             eprintln!("Failed to switch profile: {}", e);
                         } else {
                             let _ = update_tray_menu(app);
-                            // Auto-launch if switched (except to default)
-                            if profile_name != "default"
-                                && let Ok(profile) = state.profile_manager.get_profile(profile_name)
-                            {
+                            // Auto-launch the newly active profile, including the
+                            // default ("既存の Claude"): for default this is the
+                            // standard data dir, equivalent to a normal launch.
+                            if let Ok(profile) = state.profile_manager.get_profile(profile_name) {
                                 let _ = csw_core::switcher::desktop::launch_desktop(
                                     &profile,
                                     state.provider.as_ref(),
