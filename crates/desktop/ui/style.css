@@ -536,6 +536,40 @@ code, .code-line { font-family: var(--font-mono); }
 .field-error { font-size: 11.5px; color: var(--danger); margin-top: 6px; }
 .field-error[hidden] { display: none; }
 
+/* Icon picker (create view): pick a designed glyph, or fall back to an emoji. */
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.icon-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-ctl);
+  background: var(--surface);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.icon-tile svg.icon { width: 19px; height: 19px; }
+.icon-tile:hover { border-color: var(--accent); color: var(--ink); }
+.icon-tile.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.icon-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.icon-emoji-row { display: flex; align-items: center; gap: 10px; }
+.icon-emoji-label { flex-shrink: 0; font-size: 12px; color: var(--ink-muted); }
+.input-emoji { width: 96px; text-align: center; }
+/* A chosen designed glyph carries the accent color in avatars (theme-aware). */
+.profile-avatar svg.avatar-glyph,
+.detail-avatar svg.avatar-glyph { color: var(--accent); }
+
 /* Mode cards (2 stacked, never a 3-col row) */
 .mode-cards { display: flex; flex-direction: column; gap: 10px; }
 .mode-card { display: block; cursor: pointer; }

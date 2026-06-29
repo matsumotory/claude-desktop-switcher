@@ -48,7 +48,7 @@ For advanced use cases (such as "I want to share my personal MCP settings and ru
 2. In the settings window, click **"環境を作る" (Create environment)**.
 3. Enter the environment information.
    * **Name**: (e.g., `Work`, `Research`)
-   * **Icon (optional)**: an emoji or a single character
+   * **Icon (optional)**: pick from the prepared icons (or use an emoji if none fit)
 4. **Choose how it should be separated (pick one of two modes first)**
    To keep first-time use simple, there are just two choices. Open **"Configure in detail (11 items)"** only if you want to change individual components.
 
