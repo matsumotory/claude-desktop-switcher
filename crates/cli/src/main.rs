@@ -114,8 +114,9 @@ fn main() -> anyhow::Result<()> {
                     // Mirror the GUI's three modes (build_sharing_config in the desktop
                     // crate). "share" is a backward-compatible alias for "share_settings".
                     // The account-keyed files (config.json, claude_desktop_config.json),
-                    // the device id and sessions/ stay isolated in every preset and are
-                    // clamped again in create_profile, so no CLI mode can share them.
+                    // the device id and sessions/ are not SharingConfig fields, so no
+                    // preset can express sharing them. The linker isolates them
+                    // unconditionally.
                     let sharing = match mode.as_str() {
                         "share_settings" | "share" => SharingConfig::share_settings_preset(),
                         "share_workspace" => SharingConfig::share_workspace_preset(),
