@@ -936,6 +936,17 @@ html[lang="ja"] .terms-item p {
     color: var(--accent);
 }
 
+.footer-link {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: var(--text-primary);
+}
+
 /* Animations */
 .fade-in {
     opacity: 0;
@@ -1048,6 +1059,7 @@ html[lang="ja"] .terms-item p {
     body.nav-open .nav-links > :nth-child(4) { transition-delay: 0.16s; }
     body.nav-open .nav-links > :nth-child(5) { transition-delay: 0.20s; }
     body.nav-open .nav-links > :nth-child(6) { transition-delay: 0.24s; }
+    body.nav-open .nav-links > :nth-child(7) { transition-delay: 0.28s; }
     .nav-links > a:not(.btn),
     .nav-links > .lang-toggle {
         padding: 12px 14px;
