@@ -75,7 +75,7 @@ failed した job だけ再実行したい場合は `gh run rerun "$RUN_ID" --re
 
 ### 3.3 Re-run 完了をハング検出付きで待つ
 
-CSW の Test / Build はコンパイル時間が長いので、houlens よりタイムアウトを長めに取る。**最大 20 分タイムアウト + step 詳細出力**で polling する:
+CSW の Test / Build はコンパイル時間が長いので、タイムアウトを長めに取る。**最大 20 分タイムアウト + step 詳細出力**で polling する:
 
 ```bash
 START=$(date +%s)
