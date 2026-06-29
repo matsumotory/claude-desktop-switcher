@@ -97,6 +97,42 @@ html[lang="ja"] body {
     color: var(--text-primary);
 }
 
+/* Mobile nav toggle (hamburger) — hidden on desktop, shown under 768px. */
+.nav-toggle {
+    display: none;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 61;
+}
+.nav-toggle-bar {
+    position: absolute;
+    left: 9px;
+    right: 9px;
+    height: 1.5px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: transform 0.4s var(--spring-easing), opacity 0.25s ease;
+}
+.nav-toggle-bar:nth-child(1) { top: 15px; }
+.nav-toggle-bar:nth-child(2) { top: 23px; }
+body.nav-open .nav-toggle-bar:nth-child(1) { transform: translateY(4px) rotate(45deg); }
+body.nav-open .nav-toggle-bar:nth-child(2) { transform: translateY(-4px) rotate(-45deg); }
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-toggle-bar,
+    .nav-links,
+    .nav-links > * {
+        transition-duration: 0.001s;
+    }
+}
+
 .lang-toggle {
     display: inline-flex;
     align-items: center;
@@ -962,13 +998,79 @@ html[lang="ja"] .terms-item p {
         padding-right: 20px;
     }
 
-    /* Header: there is no room for in-page anchors without a menu, so drop
-       them on mobile and keep the language toggle + GitHub action. */
+    /* Header on mobile: collapse the nav into a hamburger-triggered glass
+       panel so the in-page section links stay reachable
+       (design-taste-frontend nav guidance / high-end-visual-design 5.A). */
+    .nav-toggle {
+        display: block;
+    }
     .nav-links {
-        gap: 16px;
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 16px;
+        left: 16px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        padding: 10px;
+        background: rgba(10, 10, 10, 0.92);
+        -webkit-backdrop-filter: blur(22px);
+        backdrop-filter: blur(22px);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px) scale(0.985);
+        transform-origin: top right;
+        pointer-events: none;
+        transition: opacity 0.28s ease, transform 0.4s var(--spring-easing), visibility 0.28s;
+        z-index: 60;
+    }
+    body.nav-open .nav-links {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    .nav-links > * {
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 0.35s ease, transform 0.4s var(--spring-easing), background-color 0.2s ease;
+    }
+    body.nav-open .nav-links > * {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    body.nav-open .nav-links > :nth-child(1) { transition-delay: 0.04s; }
+    body.nav-open .nav-links > :nth-child(2) { transition-delay: 0.08s; }
+    body.nav-open .nav-links > :nth-child(3) { transition-delay: 0.12s; }
+    body.nav-open .nav-links > :nth-child(4) { transition-delay: 0.16s; }
+    body.nav-open .nav-links > :nth-child(5) { transition-delay: 0.20s; }
+    body.nav-open .nav-links > :nth-child(6) { transition-delay: 0.24s; }
+    .nav-links > a:not(.btn),
+    .nav-links > .lang-toggle {
+        padding: 12px 14px;
+        border-radius: 11px;
+        font-size: 1rem;
     }
     .nav-links a[href^="#"] {
-        display: none;
+        display: block;
+        color: var(--text-primary);
+    }
+    .nav-links a:not(.btn):hover,
+    .nav-links a:not(.btn):active {
+        background: var(--bg-surface-hover);
+        color: var(--text-primary);
+    }
+    .nav-links .lang-toggle {
+        justify-content: flex-start;
+        color: var(--text-secondary);
+    }
+    .nav-links .btn-ghost {
+        width: 100%;
+        justify-content: center;
+        margin-top: 4px;
     }
     .logo-text {
         font-size: 0.95rem;
