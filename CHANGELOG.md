@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.11.1...v0.12.0) (2026-06-29)
+
+
+### Features
+
+* 環境作成を3つの共有モードに再設計し全層を統一する ([ee27164](https://github.com/matsumotory/claude-desktop-switcher/commit/ee271641db78c11d6f634cba3d740e47e538bf5e))
+
 ## [0.11.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.11.0...v0.11.1) (2026-06-29)
 
 
