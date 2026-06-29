@@ -802,6 +802,34 @@ html[lang="ja"] .tech-note-col p {
     line-height: 2;
 }
 
+/* Disclaimer & terms — secondary fine-print scale, same hairline language as the tech column */
+.terms {
+    padding-bottom: 120px;
+}
+.terms-list {
+    max-width: 820px;
+}
+.terms-item {
+    padding: 22px 0;
+    border-top: 1px solid var(--border-color);
+}
+.terms-item h3 {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+.terms-item p {
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    line-height: 1.8;
+    margin: 0;
+}
+html[lang="ja"] .terms-item p {
+    line-height: 1.9;
+}
+
 /* Footer */
 .site-footer {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
