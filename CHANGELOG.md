@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.12.0...v0.13.0) (2026-06-29)
+
+
+### Features
+
+* **desktop:** サイドバーにヘルプ導線フッターを追加する ([f60d79f](https://github.com/matsumotory/claude-desktop-switcher/commit/f60d79fa52340b91c2aeba3baf4d601ec7e2e39e))
+
 ## [0.12.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.11.1...v0.12.0) (2026-06-29)
 
 
