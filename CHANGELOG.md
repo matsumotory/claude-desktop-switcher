@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.13.0...v0.13.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **desktop:** フッターとアプリ情報の表示を整え、複数アカウント・規約のFAQを追記する ([3cd1d94](https://github.com/matsumotory/claude-desktop-switcher/commit/3cd1d94fdcf561d61d5181fffab1bec66b8c6562))
+
 ## [0.13.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.12.0...v0.13.0) (2026-06-29)
 
 
