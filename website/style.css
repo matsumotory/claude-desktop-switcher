@@ -28,10 +28,16 @@ body {
     overflow-x: hidden;
 }
 
-/* The header is sticky (~73px); offset in-page anchor jumps so a section's heading
-   lands below the header instead of hidden behind it. */
+/* The header is sticky (72px tall + 1px border). Offset in-page anchor jumps so a
+   section heading lands below it instead of behind it. scroll-margin-top on the
+   targets is the robust, scroll-container-independent mechanism; scroll-padding-top
+   on <html> is kept as a fallback. */
 html {
     scroll-padding-top: 88px;
+}
+
+section[id] {
+    scroll-margin-top: 88px;
 }
 
 html[lang="ja"] body {
