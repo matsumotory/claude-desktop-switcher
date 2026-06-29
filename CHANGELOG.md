@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.10.0...v0.11.0) (2026-06-29)
+
+
+### Features
+
+* **desktop,core:** 既存Claudeが標準の場所に無い時は共有モードを抑止 ([d9ebb9f](https://github.com/matsumotory/claude-desktop-switcher/commit/d9ebb9f1ad412da92da11428f405f2b7290dc6af))
+
 ## [0.10.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.9.2...v0.10.0) (2026-06-29)
 
 
