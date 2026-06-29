@@ -155,8 +155,7 @@ const el = {
   advancedState: $('advancedState'),
   advancedReset: $('advancedReset'),
   advancedGroups: $('advancedGroups'),
-  btnCreateCancel: $('btnCreateCancel'),
-  btnCreateSubmit: $('btnCreateSubmit'),
+  createFooter: $('createFooter'),
   emptyScroll: $('emptyScroll'),
   emptyFade: $('emptyFade'),
   detailScroll: $('detailScroll'),
@@ -518,9 +517,36 @@ function showCreate() {
   el.nameError.hidden = true;
   setMode('isolate');
   closeAdvanced();
+  renderCreateFooter();
   setView('create');
   applyRootsStatus();
   setTimeout(() => el.inputName.focus(), 0);
+}
+
+// --- Create-view footer: deliberate two-step (review → confirm) -------------
+// A stray Enter (e.g. confirming a Japanese IME kanji conversion) must never
+// create an environment, so creating always goes through an explicit confirm step.
+function cancelCreate() {
+  withTransition(() => (selectedName ? showDetail(selectedName) : showEmpty()));
+}
+function renderCreateFooter() {
+  el.createFooter.className = 'view-footer';
+  el.createFooter.replaceChildren(
+    h('button', { type: 'button', class: 'btn btn-ghost', onclick: cancelCreate }, 'やめる'),
+    h('button', { type: 'button', class: 'btn btn-primary', onclick: requestCreate }, 'この環境を作る'));
+}
+// Validate the name, then ask for an explicit confirmation before creating.
+function requestCreate() {
+  const name = el.inputName.value.trim();
+  const err = validateName(name);
+  if (err) { el.nameError.textContent = err; el.nameError.hidden = false; el.inputName.focus(); return; }
+  el.nameError.hidden = true;
+  el.createFooter.className = 'view-footer split';
+  el.createFooter.replaceChildren(
+    h('span', { class: 'confirm-text', text: `「${name}」を作成します。` }),
+    h('div', { class: 'footer-group' },
+      h('button', { type: 'button', class: 'btn btn-ghost', onclick: renderCreateFooter }, '戻る'),
+      h('button', { type: 'button', class: 'btn btn-primary', onclick: submitCreate }, '作成する')));
 }
 
 // Gate the "share" mode by what the existing Claude actually has at the standard
@@ -633,7 +659,8 @@ async function submitCreate() {
   const args = { name, mode: currentMode, icon: iconVal || null };
   if (advancedCustomized) args.sharingOverrides = { ...overrides };
 
-  el.btnCreateSubmit.disabled = true;
+  const confirmBtn = el.createFooter.querySelector('.btn-primary');
+  if (confirmBtn) confirmBtn.disabled = true;
   try {
     await invoke('create_profile', args);
     localStorage.setItem('csw_onboarded', '1');
@@ -643,8 +670,7 @@ async function submitCreate() {
     showToast(`${name}を作成しました`);
   } catch (e) {
     showToast('作成できませんでした。同じ名前がすでにあるか確認してください。', true);
-  } finally {
-    el.btnCreateSubmit.disabled = false;
+    renderCreateFooter(); // restore the form footer so the user can fix and retry
   }
 }
 
@@ -685,9 +711,6 @@ async function refreshProfiles() {
 function wireEvents() {
   el.btnCreate.addEventListener('click', () => withTransition(showCreate));
   el.btnCreateEmpty.addEventListener('click', () => withTransition(showCreate));
-  el.btnCreateCancel.addEventListener('click', () => withTransition(() =>
-    selectedName ? showDetail(selectedName) : showEmpty()));
-  el.btnCreateSubmit.addEventListener('click', submitCreate);
 
   document.querySelectorAll('input[name="mode"]').forEach((r) =>
     r.addEventListener('change', () => {
@@ -712,7 +735,11 @@ function wireEvents() {
   el.detailScroll.addEventListener('scroll', () => fadeFor(el.detailScroll, el.detailFade), { passive: true });
   el.createScroll.addEventListener('scroll', () => fadeFor(el.createScroll, el.createFade), { passive: true });
   window.addEventListener('resize', refreshFades);
-  el.inputName.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCreate(); });
+  el.inputName.addEventListener('keydown', (e) => {
+    // Ignore Enter while an IME composition is active (e.g. confirming a Japanese
+    // kanji conversion) so it never creates; otherwise go to the confirmation step.
+    if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); requestCreate(); }
+  });
   el.inputIcon.addEventListener('input', () => { // typing an emoji overrides a glyph; clearing resets
     createIcon = el.inputIcon.value.trim();
     syncIconPicker();
