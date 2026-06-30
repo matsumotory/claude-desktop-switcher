@@ -66,7 +66,7 @@ A terminal you open on your own stays in your usual environment. To use a specif
 eval $(csw env <env-name>)
 ```
 
-**The `csw` CLI is built from source.** The `.dmg` ships the menu-bar app only and does not include the `csw` binary, so the terminal integration above needs the CLI installed separately. From a clone of this repository, run `cargo install --path crates/cli` to put `csw` in `~/.cargo/bin` (usually already on your PATH). The GUI works without this step.
+**Get the `csw` CLI.** The `.dmg` ships the menu-bar app only. Download the signed, notarized `csw` binary from the [latest release](https://github.com/matsumotory/claude-desktop-switcher/releases/latest), make it executable, and move it onto your `PATH` (`chmod +x csw && mv csw /usr/local/bin/`). With a Rust toolchain you can instead run `cargo install --path crates/cli`. The GUI works without this step.
 
 ## Build from Source (.dmg)
 
@@ -172,7 +172,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 eval $(csw env <環境名>)
 ```
 
-**`csw` コマンドはソースからビルドします。** `.dmg` にはメニューバーアプリのみが含まれ、`csw` バイナリは入っていないため、上のターミナル連携には CLI を別途導入する必要があります。本リポジトリのクローンで `cargo install --path crates/cli` を実行すると、`~/.cargo/bin/csw`（通常はパスが通っています）に入ります。GUI だけで使う場合は不要です。
+**`csw` コマンドを入手します。** `.dmg` にはメニューバーアプリのみが含まれます。署名・公証済みの `csw` バイナリを[最新リリース](https://github.com/matsumotory/claude-desktop-switcher/releases/latest)からダウンロードし、実行権を付けて `PATH` の通った場所に置いてください（`chmod +x csw && mv csw /usr/local/bin/`）。Rust の開発環境があれば `cargo install --path crates/cli` でも導入できます。GUI だけで使う場合は不要です。
 
 ### 配布用ビルド（DMGファイルの作成）
 
