@@ -23,6 +23,17 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+  # Attach the signed + notarized csw CLI binary to the release, in the same run so
+  # it works under GITHUB_TOKEN (a release-event trigger would not fire). Reusable
+  # workflow is also workflow_dispatch-able to back-fill an existing tag.
+  publish-csw:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    uses: ./.github/workflows/csw-cli.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
+
   build-mac-dmg:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}

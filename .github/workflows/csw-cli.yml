@@ -1,0 +1,108 @@
+name: Publish csw CLI
+
+# Builds a universal (arm64 + x86_64) `csw` binary, signs it with the Developer ID
+# certificate, notarizes it, and attaches it to a release. csw is the CLI for users
+# who want the terminal integration; it is not bundled in the .dmg (the GUI is for
+# everyone, the CLI is for engineers), so it is published as its own release asset.
+#
+# Triggered two ways:
+#   - workflow_call from the release workflow, so every release gets the binary in
+#     the same run (works under GITHUB_TOKEN, unlike a release-event trigger).
+#   - workflow_dispatch, to attach (or refresh) the binary on an existing tag.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attach the csw binary to (e.g. v0.13.2)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish-csw:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
+      - name: Configure App Store Connect API Key
+        env:
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          echo "$APPLE_API_KEY_CONTENT" | base64 -d > "${{ runner.temp }}/AuthKey_${APPLE_API_KEY}.p8"
+
+      - name: Build, sign, notarize and upload csw
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PATH: ${{ runner.temp }}/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+          TAG_NAME: ${{ inputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Universal csw from the workspace CLI crate (bin name "csw").
+          cargo build --release --bin csw --target aarch64-apple-darwin
+          cargo build --release --bin csw --target x86_64-apple-darwin
+          lipo -create -output csw \
+            target/aarch64-apple-darwin/release/csw \
+            target/x86_64-apple-darwin/release/csw
+          chmod +x csw
+          lipo -info csw
+
+          # Import the Developer ID certificate into a throwaway keychain so codesign
+          # can find the identity (tauri-action's keychain is not reused here).
+          KEYCHAIN="$RUNNER_TEMP/csw-sign.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$APPLE_CERTIFICATE" | base64 -d > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -k "$KEYCHAIN" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | sed s/\"//g)
+
+          # Developer ID signature + hardened runtime + secure timestamp.
+          codesign --force --options runtime --timestamp \
+            --sign "$APPLE_SIGNING_IDENTITY" csw
+          codesign --verify --strict --verbose=2 csw
+
+          # Notarize. notarytool needs an archive; a bare Mach-O cannot be stapled,
+          # so the first run relies on the online notarization check.
+          ditto -c -k --keepParent csw csw.zip
+          xcrun notarytool submit csw.zip \
+            --key "$APPLE_API_KEY_PATH" \
+            --key-id "$APPLE_API_KEY" \
+            --issuer "$APPLE_API_ISSUER" \
+            --wait
+
+          # Attach the signed + notarized binary to the release.
+          gh release upload "$TAG_NAME" csw --clobber
+
+          rm -f "$RUNNER_TEMP/cert.p12" csw.zip
+          security delete-keychain "$KEYCHAIN" || true
+
+      - name: Clean up App Store Connect API Key
+        if: always()
+        run: rm -f "${{ runner.temp }}"/AuthKey_*.p8
