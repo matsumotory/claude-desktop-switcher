@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.13.1...v0.13.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* **core,desktop:** 停止後の環境を再起動できるよう「利用中」を実起動状態で判定する ([b5f21e2](https://github.com/matsumotory/claude-desktop-switcher/commit/b5f21e2662d1ecc6d0af74c577ada9a3c01bc6a4))
+
 ## [0.13.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.13.0...v0.13.1) (2026-06-29)
 
 
