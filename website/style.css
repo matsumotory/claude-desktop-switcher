@@ -804,20 +804,21 @@ html[lang="ja"] .faq-header h2 {
 }
 
 .faq-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 64px;
-}
-
-@media (max-width: 900px) {
-    .faq-grid {
-        grid-template-columns: 1fr;
-    }
+    /* Single column. A 2-column grid coupled row heights, so a short answer next
+       to a long one left a big gap and the hairlines fell at different heights.
+       One column makes each item's height depend only on its own content, so the
+       separators are evenly spaced and the read order matches the DOM. Width is
+       capped (left-aligned under the header, matching the engineering notes). */
+    max-width: 820px;
 }
 
 .faq-item {
     padding: 28px 0;
     border-top: 1px solid var(--border-color);
+}
+.faq-item:first-child {
+    border-top: none;
+    padding-top: 0;
 }
 
 .faq-q {
@@ -832,6 +833,10 @@ html[lang="ja"] .faq-header h2 {
     color: var(--text-secondary);
     line-height: 1.7;
     font-size: 1.0625rem;
+}
+html[lang="ja"] .faq-a {
+    line-height: 1.8; /* JP body (japanese-typography-qa §3) */
+    overflow-wrap: anywhere; /* long URLs / paths never overflow */
 }
 
 /* Engineering notes: a few hairline-separated columns near the foot of the page.
@@ -1252,9 +1257,14 @@ html[lang="ja"] .screens-header h2 {
     line-height: 1.6;
 }
 .screens-bento {
+    /* Three equal portrait cards. The screenshots have different aspect ratios,
+       so align-items:start lets each card take its natural height instead of
+       stretching the shortest to match the tallest (which left a ragged gap
+       above its caption). No object-fit cropping: the full window stays visible. */
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    align-items: start;
 }
 .screen-card {
     margin: 0;
@@ -1263,9 +1273,6 @@ html[lang="ja"] .screens-header h2 {
     overflow: hidden;
     background: var(--bg-surface);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-}
-.screen-card.screen-wide {
-    grid-column: 1 / -1;
 }
 .screen-card img {
     width: 100%;
@@ -1278,6 +1285,14 @@ html[lang="ja"] .screens-header h2 {
     font-size: 0.95rem;
     color: var(--text-secondary);
     line-height: 1.5;
+}
+html[lang="ja"] .screen-card figcaption {
+    line-height: 1.8; /* JP body breathes wider (japanese-typography-qa §3) */
+}
+@media (max-width: 1024px) {
+    .screens-bento {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 @media (max-width: 768px) {
     .screens-bento {
