@@ -101,7 +101,7 @@ When you switch to an environment and launch it from CSW, any terminal you open 
 **2. A separate terminal you open yourself (external, e.g. iTerm2 or the standard Terminal)**
 A terminal you open on your own stays in your usual environment. To use a specific environment, run the sync command.
 
-This command needs the `csw` CLI. The `csw` binary is not yet bundled in the `.dmg`, so install it from source only if you use the terminal integration (run `cargo install --path crates/cli` from this repository to put `csw` in `~/.cargo/bin`; a Rust toolchain is required). You do not need it if you only use the desktop app.
+This command needs the `csw` CLI. The `csw` binary is not bundled in the `.dmg`, so install it from source only if you use the terminal integration (run `cargo install --path crates/cli` from this repository to put `csw` in `~/.cargo/bin`; a Rust toolchain is required). You do not need it if you only use the desktop app.
 
 1. Open your terminal (iTerm2, the standard Terminal, etc.).
 2. Run `eval $(csw env Work)` (replace `Work` with the target environment name).
