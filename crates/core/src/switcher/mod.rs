@@ -60,6 +60,21 @@ impl ContextSwitcher {
     }
 }
 
+/// Whether `name` is the environment currently *in use* — i.e. Claude Desktop is
+/// actually running for it.
+///
+/// "In use" (利用中) is a live runtime state, not a stored preference. Only the
+/// active environment can be running (switching is refused while Claude Desktop is
+/// up, and only one environment runs at a time), so an environment is in use only
+/// when it is both the active one and Claude Desktop is currently running.
+///
+/// The corollary the GUI/tray rely on: once the user quits Claude Desktop, the
+/// (still-recorded) active environment is no longer in use, so it can be launched
+/// again instead of staying stuck as "利用中" with a disabled action.
+pub fn is_in_use(name: &str, active_profile: &str, desktop_running: bool) -> bool {
+    desktop_running && name == active_profile
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,5 +127,29 @@ mod tests {
         let switcher = ContextSwitcher::new(provider, pm.clone());
         switcher.switch_to("Work").unwrap();
         assert_eq!(pm.active_profile_name(), "Work");
+    }
+
+    /// Spec: "利用中" means Claude Desktop is actually running for the environment.
+    /// After the user quits Claude Desktop, the still-active environment must no
+    /// longer count as in use, so the GUI lets the user launch it again instead of
+    /// leaving the action disabled. This is the regression reported: an environment
+    /// launched from the app stayed "利用中" with a dead button after Claude quit.
+    #[test]
+    fn active_environment_is_not_in_use_after_desktop_quits() {
+        assert!(!is_in_use("Work", "Work", false));
+    }
+
+    /// While Claude Desktop is running, the active environment is the one in use.
+    #[test]
+    fn active_environment_is_in_use_while_desktop_runs() {
+        assert!(is_in_use("Work", "Work", true));
+    }
+
+    /// A non-active environment is never in use, regardless of running state: only
+    /// one environment runs at a time and it is always the active one.
+    #[test]
+    fn non_active_environment_is_never_in_use() {
+        assert!(!is_in_use("Work", "default", true));
+        assert!(!is_in_use("Work", "default", false));
     }
 }

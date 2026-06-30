@@ -71,6 +71,7 @@ const PRESETS = {
 // --- App state --------------------------------------------------------------
 let profiles = [];
 let activeName = 'default';
+let desktopRunning = false; // whether Claude Desktop is actually running right now
 let selectedName = null;
 let currentMode = 'isolate';
 let overrides = { ...PRESETS.isolate };
@@ -203,6 +204,12 @@ function setView(view) {
   requestAnimationFrame(refreshFades);
 }
 
+// An environment is "in use" (利用中) only when Claude Desktop is actually running
+// for it: only the active environment can be running, and only one runs at a time.
+// Mirrors csw_core::switcher::is_in_use. Quitting Claude clears this, so the active
+// environment can be launched again instead of staying stuck with a disabled action.
+const inUse = (name) => desktopRunning && name === activeName;
+
 // --- Sidebar ----------------------------------------------------------------
 function renderSidebar() {
   // One rail: "既存の Claude" (default) pinned first, then created environments.
@@ -214,19 +221,19 @@ function renderSidebar() {
 
   const rows = ordered.map((p) => {
     const isDefault = p.name === 'default';
-    const isActive = p.name === activeName;
+    const isInUse = inUse(p.name);
     const open = () => withTransition(() => showDetail(p.name));
-    // One pill at most: the active ("利用中") row. The default row needs no extra
-    // marker — its name ("既存の Claude") + monitor icon + first position already
-    // signal the baseline.
-    const pill = isActive
+    // One pill at most: the "利用中" row, shown only while Claude Desktop is
+    // actually running for it. The default row needs no extra marker — its name
+    // ("既存の Claude") + monitor icon + first position already signal the baseline.
+    const pill = isInUse
       ? h('span', { class: 'pill pill-active', text: '利用中' })
       : null;
     return h('li', {
       class: 'profile-item' + (p.name === selectedName ? ' selected' : ''),
       role: 'button', tabindex: '0', onclick: open,
       'aria-label': isDefault ? '既存の Claude（標準環境）' : null,
-      'aria-current': isActive ? 'true' : null, // current = in-use target
+      'aria-current': isInUse ? 'true' : null, // current = the running environment
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
       h('span', { class: 'profile-avatar' }, isDefault ? icon('i-monitor') : avatarContent(p.icon, p.name)),
@@ -248,15 +255,15 @@ async function showDetail(name) {
   }
   renderSidebar();
   const isDefault = !!d.is_default;
-  const isActive = name === activeName;
+  const isInUse = inUse(name);
 
   const header = h('div', { class: 'detail-header' },
     h('div', { class: 'detail-bezel' },
       h('div', { class: 'detail-avatar' }, isDefault ? icon('i-monitor') : avatarContent(d.icon, name))),
     h('div', { class: 'detail-titles' },
       h('div', { class: 'detail-name', text: isDefault ? '既存の Claude' : name }),
-      h('div', { class: 'detail-tagline', text: isDefault ? 'あなた自身の環境' : (isActive ? '利用中の環境' : '作成した環境') })),
-    isActive ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', 'aria-label': '利用中', text: '利用中' }) : null);
+      h('div', { class: 'detail-tagline', text: isDefault ? 'あなた自身の環境' : (isInUse ? '利用中の環境' : '作成した環境') })),
+    isInUse ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', 'aria-label': '利用中', text: '利用中' }) : null);
 
   const nodes = [header];
 
@@ -278,14 +285,17 @@ async function showDetail(name) {
     nodes.push(sharingDisclosure(d.sharing));
     nodes.push(pathsSection(d, false));
     nodes.push(terminalSection(name));
-    if (!isActive) {
+    // Only warn about quitting first when another environment's Claude is actually
+    // running: that is the case where launching this one is blocked. When nothing
+    // is running, the action launches directly with no need to quit anything.
+    if (desktopRunning && !isInUse) {
       nodes.push(h('p', { class: 'detail-switch-hint', text:
         '先に起動中の Claude を終了してから押すと、この環境の Claude が開きます。' }));
     }
   }
 
   el.detailContent.replaceChildren(...nodes);
-  renderDetailFooter(name, isDefault, isActive);
+  renderDetailFooter(name, isDefault, isInUse);
   setView('detail');
 }
 
@@ -394,12 +404,15 @@ function badge(mode) {
   return h('span', { class: 'badge badge-isolate' }, icon('i-lock'), '分離');
 }
 
-function renderDetailFooter(name, isDefault, isActive) {
+function renderDetailFooter(name, isDefault, isInUse) {
   el.detailFooter.className = 'view-footer split';
+  // Disable the action only while this environment's Claude is actually running
+  // (nothing to launch). When it is not running, the action stays available so the
+  // active environment can be relaunched after Claude was quit.
   const switchBtn = h('button', {
-    type: 'button', class: 'btn btn-primary', disabled: isActive,
-    onclick: () => { if (!isActive) doSwitch(name); },
-  }, icon('i-switch'), h('span', { text: isActive ? '利用中の環境' : (isDefault ? '既存の Claude に切り替える' : 'この環境で Claude を起動') }));
+    type: 'button', class: 'btn btn-primary', disabled: isInUse,
+    onclick: () => { if (!isInUse) doSwitch(name); },
+  }, icon('i-switch'), h('span', { text: isInUse ? '利用中の環境' : (isDefault ? '既存の Claude に切り替える' : 'この環境で Claude を起動') }));
 
   if (isDefault) {
     el.detailFooter.replaceChildren(
@@ -725,7 +738,27 @@ async function refreshProfiles() {
     profiles = [{ name: 'default', icon: '', is_default: true }];
     activeName = 'default';
   }
+  await refreshRunning();
   renderSidebar();
+}
+
+// Re-read whether Claude Desktop is running. Kept separate so it can refresh on
+// window focus without re-listing profiles, since the user typically quits Claude
+// in another app and returns to CSW expecting the action to be available again.
+async function refreshRunning() {
+  try { desktopRunning = await invoke('get_desktop_running_status'); }
+  catch (e) { desktopRunning = false; }
+}
+
+// When the window regains focus or becomes visible again, the user may have just
+// quit (or started) Claude Desktop elsewhere. Re-check the running state and
+// re-render so "利用中" and the launch action reflect reality without a restart.
+async function revalidateRunning() {
+  const before = desktopRunning;
+  await refreshRunning();
+  if (desktopRunning === before) return;
+  renderSidebar();
+  if (!el.viewDetail.hidden && selectedName) showDetail(selectedName);
 }
 
 // --- Init -------------------------------------------------------------------
@@ -751,6 +784,9 @@ function wireEvents() {
     advancedCustomized = ALL_KEYS.some((k) => overrides[k] !== PRESETS[currentMode][k]);
     updateAdvancedState();
   });
+
+  window.addEventListener('focus', revalidateRunning);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) revalidateRunning(); });
 
   el.emptyScroll.addEventListener('scroll', () => fadeFor(el.emptyScroll, el.emptyFade), { passive: true });
   el.detailScroll.addEventListener('scroll', () => fadeFor(el.detailScroll, el.detailFade), { passive: true });
@@ -880,7 +916,9 @@ function devInvoke(cmd, args) {
     case 'get_profile_details':
       return Promise.resolve(sample[args.name] || sample['検証用']);
     case 'get_desktop_running_status':
-      return Promise.resolve(false);
+      // Depict the active environment as actually running so screenshots show the
+      // "利用中" marker (the realistic state when Claude is open for that account).
+      return Promise.resolve(true);
     case 'get_default_roots_status':
       return Promise.resolve({ desktop_present: true, cli_present: true });
     case 'app_version':

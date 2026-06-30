@@ -10,7 +10,7 @@ use tauri::{
 
 use csw_core::platform::create_provider;
 use csw_core::profile::{ProfileManager, SharingConfig, SharingMode};
-use csw_core::switcher::ContextSwitcher;
+use csw_core::switcher::{ContextSwitcher, is_in_use};
 
 // Global state holding our components
 struct AppState {
@@ -241,6 +241,11 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
         .list_profiles()
         .map_err(|e| e.to_string())?;
     let active_name = state.profile_manager.active_profile_name();
+    // "利用中" reflects whether Claude Desktop is actually running, not merely which
+    // environment is recorded as active. Quitting Claude clears the marker so the
+    // environment can be relaunched. If the running check fails, treat as not
+    // running so the menu never locks an environment as permanently in use.
+    let desktop_running = state.provider.is_claude_desktop_running().unwrap_or(false);
 
     let mut menu_items = Vec::new();
 
@@ -262,7 +267,7 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
         } else {
             p_name.as_str()
         };
-        let label = if p_name == active_name {
+        let label = if is_in_use(&p_name, &active_name, desktop_running) {
             format!("● {} (利用中)", display)
         } else {
             format!("○ {}", display)
@@ -398,6 +403,31 @@ fn main() {
 
             // Initial tray update
             let _ = update_tray_menu(app.handle());
+
+            // Keep the tray's "利用中" marker honest when Claude Desktop is started
+            // or quit outside CSW. The menu is otherwise rebuilt only on explicit
+            // profile actions, so without this it would show a stale marker (e.g.
+            // keep "利用中" after the user quit Claude). Poll the running state and
+            // rebuild only when it actually changes.
+            let watch_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                let mut last_running: Option<bool> = None;
+                loop {
+                    std::thread::sleep(std::time::Duration::from_secs(3));
+                    let running = watch_handle
+                        .state::<AppState>()
+                        .provider
+                        .is_claude_desktop_running()
+                        .unwrap_or(false);
+                    if last_running != Some(running) {
+                        last_running = Some(running);
+                        let rebuild_handle = watch_handle.clone();
+                        let _ = watch_handle.run_on_main_thread(move || {
+                            let _ = update_tray_menu(&rebuild_handle);
+                        });
+                    }
+                }
+            });
 
             // Show the settings window on launch so the app is usable even when
             // the menu-bar tray icon is hidden behind a crowded menu bar / notch.
