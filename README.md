@@ -66,6 +66,8 @@ A terminal you open on your own stays in your usual environment. To use a specif
 eval $(csw env <env-name>)
 ```
 
+**The `csw` CLI is built from source.** The `.dmg` ships the menu-bar app only and does not include the `csw` binary, so the terminal integration above needs the CLI installed separately. From a clone of this repository, run `cargo install --path crates/cli` to put `csw` in `~/.cargo/bin` (usually already on your PATH). The GUI works without this step.
+
 ## Build from Source (.dmg)
 
 You can easily build the macOS installer (`.dmg`) using Tauri.
@@ -169,6 +171,8 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 ```bash
 eval $(csw env <環境名>)
 ```
+
+**`csw` コマンドはソースからビルドします。** `.dmg` にはメニューバーアプリのみが含まれ、`csw` バイナリは入っていないため、上のターミナル連携には CLI を別途導入する必要があります。本リポジトリのクローンで `cargo install --path crates/cli` を実行すると、`~/.cargo/bin/csw`（通常はパスが通っています）に入ります。GUI だけで使う場合は不要です。
 
 ### 配布用ビルド（DMGファイルの作成）
 
