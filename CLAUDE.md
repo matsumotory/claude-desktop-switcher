@@ -32,9 +32,11 @@ cargo clippy --workspace --all-targets -- -D warnings   # lint
 cargo fmt --all                    # フォーマット
 ```
 
-GUI の実機確認は `cargo tauri dev` (要 `cargo install tauri-cli`)。デスクトップ署名/公証/DMG は GitHub Actions の `Release Please` ワークフローが担う。リリースの実施手順 (release-please の release PR を `--admin` を使わずマージし、署名・公証つき DMG と `csw` の公開まで監視する正規手順) は [.agents/skills/core_pr_merge_checklist/SKILL.md](.agents/skills/core_pr_merge_checklist/SKILL.md) の「リリース PR (release-please) のマージ」節を参照する。ユーザーの明示指示があってから行う。
+GUI の実機確認は `cargo tauri dev` (要 `cargo install tauri-cli`)。デスクトップ署名/公証/DMG は GitHub Actions の `Release Please` ワークフローが担う。リリースの実施手順 (release-please の release PR を `--admin` を使わずマージし、署名・公証つき DMG と `csw` の公開まで監視する正規手順) は [.agents/skills/core_pr_merge_checklist/SKILL.md](.agents/skills/core_pr_merge_checklist/SKILL.md) の「リリース PR (release-please) のマージ」節を参照する。リリースは同節の「リリース前の正しさ検証」を通した上で、確認を取らず自律的に行う。
 
 LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launch.json` の `lp` を起動する (preview_start で `website/` を `python3 -m http.server` 配信、EN は `/`、日本語は `/ja/`)。`website/` をルートに配信しないと相対パス (`../style.css` 等) が解決しないので、単体 HTML を file:// で開くのではなくこの設定で見る。
+
+**LP (GitHub Pages) の公開は恒久許可済み**: `website/` の変更が `main` に入ったら、公開の確認を取らずに公開してよい。`pages.yml` は `workflow_dispatch` のみで push では自動反映されないため、マージ後に `gh workflow run pages.yml` を実行し、run が success になるまで監視する。公開後はライブサイト (`curl` 等) で反映を実地確認する (GitHub Pages / ブラウザキャッシュがあるため「デプロイ成功」だけで済ませない)。この恒久許可は CSW の LP に限る。
 
 ## Skill トリガーテーブル
 
@@ -67,13 +69,16 @@ LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launc
 
 ## コーディング規約・制約 (Coding Standards & Constraints)
 
-1. **Multi-language Sync**: `website/ja/index.html` に構造・レイアウト変更を加えたら、必ず同時に `website/index.html`（およびその逆）へ同じ変更を当てる。ローカライズ版を構造的に乖離させない。
+1. **Multi-language Sync**: `website/ja/index.html` に構造・レイアウト変更を加えたら、必ず同時に `website/index.html`（およびその逆）へ同じ変更を当てる。ローカライズ版を構造的に乖離させない。docs/LP が日英対応を謳うなら、アプリ本体 (`crates/desktop/ui`) も実際に日英対応させる。スクリーンショットだけ英訳した「見た目だけの対応」にしない。
+   - **アプリ本体 (`crates/desktop/ui`) の i18n 実装原則**: (1) `navigator.language` でロケール判定し、`?lang=ja|en` のクエリ上書き（スクリーンショット生成等の決定的テスト用）を許容する。(2) ユーザー可視文字列は日英の対訳を `data-en` 属性で埋め込み、静的な要素はロード時に全置換、アプリが後から構築する動的な要素は `MutationObserver` で描画後に翻訳する。(3) **ユーザーデータ（環境名・パス・コマンド例の実値）は翻訳対象から除外する**。全文一致の辞書処理に通すと、ユーザーが付けた環境名などを勝手に英訳してしまう。除外対象は専用のセレクタ/属性で明示し、既定名など翻訳してよい文字列だけを対訳関数に通す。
+   - 相手言語のレイアウトは実測で検証する。英語は日本語より文量・語幅が変わり、日本語向けに詰めた固定幅レイアウトを溢れさせることがある。着手前に該当デザインスキル（`minimalist-ui` / `japanese-typography-qa`）を読み、ヘッドレスブラウザの実寸で日英両方のはみ出しがないか確認する。
+   - **スクリーンショットは各ロケールの実アプリから生成する** (`scripts/appshot` で `?lang=ja|en` を指定し実アプリを撮影)。翻訳加工した偽スクリーンショットを作らない。
 2. **Repository Architecture（関心の構造的分離）**:
    - `website/` または `public/`: 公開向け Web ファイル専用。
    - `docs/`: 人間が読む Markdown ドキュメント専用 (例: `USER_GUIDE.md`)。
    - `.agents/`: AI エージェントの設定・スキル・タスク・仕様専用。
    - 公開 Web アセット (LP) と内部ドキュメント・エージェントファイルを決して混同しない。
-3. **Asset Generation**: 画像内テキストの翻訳に生成 AI を使い、元の視覚デザインを変えてしまうことを禁止。ピクセル等価の翻訳が要るときは正確なプログラム処理 (例: Python + Pillow) を使う。
+3. **Asset Generation**: アプリのスクリーンショットは上記の通り実アプリから各ロケールで撮影する（本項の対象外）。OG 画像等、スクリーンショット以外の画像内テキストを翻訳するときは生成 AI を使わず、元の視覚デザインを変えてしまうことを禁止する。ピクセル等価の翻訳が要るときは正確なプログラム処理 (例: Python + Pillow) を使う。
 4. **CI/CD Feedback Loops**: commit 後は必ず GitHub Actions を監視する。ワークフローが落ちたら緑になるまでデバッグして push する。成功を仮定しない。
 
 ## 5. フィードバックの教訓化 (Feedback Memory Protocol / Self-Correction Mandate)
