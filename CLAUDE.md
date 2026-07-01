@@ -10,6 +10,7 @@
 - **「小さい/自明だから」は免除理由にならない**。フッターの寄せ・スウォッチの形・選択ハイライト・左バー——まさにこの「小さい変更」を雰囲気でやって繰り返し外している。サイズや明白さに関係なくゲートを通す。
 - **自己捕捉**: スキルを引かずに着手してしまったと気づいたら、即停止・違反を自己申告し、スキルを Read して引用したルールでやり直す。ユーザーに指摘される前に自分で直す。
 - **選び方**: 日本語の UI/LP/見出しは `japanese-typography-qa`、フロント/LP デザインは `design-taste-frontend` / `high-end-visual-design` / `minimalist-ui` 等。用途別の選び方はグローバル `~/.claude/CLAUDE.md` と各スキルの説明を参照。
+- **強制の仕組み（意志力に頼らない）**: `.claude/settings.json` の PreToolUse フック `.claude/hooks/skill-first-reminder.sh` が、`website/`・`docs/`・`README`・`crates/desktop/ui/`・`*.html/*.css/*.md` を Edit/Write する直前に、本ゲート（該当スキルを読む）と全サーフェス伝播（`propagate-changes-to-all-surfaces`）・変更後の `/audit-consistency`・スクショ再生成（`scripts/appshot`）を自動リマインドする。フックの注意が出たら従う。指摘される前に自分でゲートを通す。
 - この Gate はグローバル `~/.claude/CLAUDE.md` を一次正典とし、本ファイルで二重化する。
 
 ## プロジェクト概要

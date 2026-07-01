@@ -27,6 +27,15 @@
             "command": "CMD=\"$CLAUDE_TOOL_INPUT_COMMAND\"; if echo \"$CMD\" | grep -qE '^(\\s*)git\\s+push'; then echo '[hook] git push detected. Enforcing core_ai_workflow: ensuring tests pass.' >&2 && cargo test; fi"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/skill-first-reminder.sh\""
+          }
+        ]
       }
     ]
   }
