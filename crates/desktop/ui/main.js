@@ -83,6 +83,8 @@ const EN = {
     'This is your own Claude Desktop App and Claude Code setup. CSW only displays it; it never changes or deletes your settings, history, or sign-in.',
   // Buttons / actions
   '複製': 'Duplicate', '削除': 'Delete',
+  'この環境の複製': 'Duplicate this environment',
+  '設定をそのままコピーして、別の名前の環境を作ります。元の環境は変わりません。': 'Copies the settings as they are to create a new environment under a different name. The original is left unchanged.',
   '起動のしかた': 'How to launch',
   '切り替えて起動': 'Switch and launch', '重複して起動': 'Launch alongside',
   'この環境に切り替えて Claude を開きます。ほかの環境の Claude が起動しているときは切り替えられないので、先に終了してください。':
@@ -507,12 +509,16 @@ async function showDetail(name) {
   setView('detail');
 }
 
-// Clone is a quiet, infrequent action shown in the detail body (not the footer),
-// so the footer's prominent slots stay reserved for launching this environment.
+// Clone is a quiet, infrequent management action. It is presented as a labeled row
+// in a flat bordered card (minimalist-ui: clear hierarchy, no orphan button) with a
+// one-line explanation of what it does, so it never reads as a mystery button. It
+// stays out of the footer so the footer's slots are reserved for launching.
 function cloneSection(name) {
-  return section('', [
-    h('button', { type: 'button', class: 'btn btn-ghost detail-inline-action', onclick: () => showCloneRow(name) },
-      icon('i-duplicate'), h('span', { text: '複製' })),
+  return section('この環境の複製', [
+    h('div', { class: 'manage-row' },
+      h('p', { class: 'firstrun-body manage-text', text: '設定をそのままコピーして、別の名前の環境を作ります。元の環境は変わりません。' }),
+      h('button', { type: 'button', class: 'btn btn-ghost manage-action', onclick: () => showCloneRow(name) },
+        icon('i-duplicate'), h('span', { text: '複製' }))),
   ]);
 }
 
