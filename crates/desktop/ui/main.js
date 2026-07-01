@@ -287,28 +287,44 @@ async function showDetail(name) {
     nodes.push(sharingDisclosure(d.sharing));
     nodes.push(pathsSection(d, false));
     nodes.push(terminalSection(name));
-    if (d.supports_concurrent_windows) {
-      // Fully-isolated environments share nothing, so they can run alongside any
-      // other Claude. Offer a dedicated, clearly-labeled way to open one more
-      // window, without switching the active environment or quitting anything.
-      nodes.push(section('', [
-        h('p', { class: 'share-basis', text:
-          'この環境は他と混ざらないため、起動中の Claude を終了せずに、新しいウィンドウで並べて開けます。' }),
-        h('button', { type: 'button', class: 'btn btn-ghost concurrent-launch',
-          onclick: () => doLaunchNewWindow(name) },
-          icon('i-monitor'), h('span', { text: '新しいウィンドウで起動' })),
-      ]));
-    } else if (desktopRunning && !isInUse) {
-      // Shared environments stay one-at-a-time: warn to quit first only when another
-      // Claude is actually running (the case where launching this one is blocked).
-      nodes.push(h('p', { class: 'detail-switch-hint', text:
-        '先に起動中の Claude を終了してから押すと、この環境の Claude が開きます。' }));
-    }
+    // Cloning is a rare management action, so it sits here as a quiet button rather
+    // than taking a prominent footer slot next to the launch actions.
+    nodes.push(cloneSection(name));
+    // Explain the footer's launch buttons, right above them (last content block), so
+    // each short-label button reads unambiguously.
+    nodes.push(launchHelp(!!d.supports_concurrent_windows));
   }
 
   el.detailContent.replaceChildren(...nodes);
   renderDetailFooter(name, isDefault, isInUse, !!d.supports_concurrent_windows);
   setView('detail');
+}
+
+// Clone is a quiet, infrequent action shown in the detail body (not the footer),
+// so the footer's prominent slots stay reserved for launching this environment.
+function cloneSection(name) {
+  return section('', [
+    h('button', { type: 'button', class: 'btn btn-ghost detail-inline-action', onclick: () => showCloneRow(name) },
+      icon('i-duplicate'), h('span', { text: '複製' })),
+  ]);
+}
+
+// Describe the footer's launch buttons just above them. Uses the same bordered
+// head+body card the onboarding uses to explain multiple items (minimalist-ui:
+// flat, 1px border, clear hierarchy) rather than a bare muted paragraph. Copy is
+// plain prose with the reason before the instruction, not a term:definition list.
+// "重複して起動" only appears for fully-isolated environments (they run concurrently).
+function launchHelp(supportsConcurrent) {
+  const way = (head, body) => h('div', { class: 'launch-way' },
+    h('p', { class: 'firstrun-head', text: head }),
+    h('p', { class: 'firstrun-body', text: body }));
+  const ways = [
+    way('切り替えて起動', 'この環境に切り替えて Claude を開きます。ほかの環境の Claude が起動しているときは切り替えられないので、先に終了してください。'),
+  ];
+  if (supportsConcurrent) {
+    ways.push(way('重複して起動', '起動中の Claude を終了せずに、この環境を新しいウィンドウで同時に開きます。'));
+  }
+  return section('起動のしかた', [h('div', { class: 'firstrun-card' }, ...ways)]);
 }
 
 function section(label, children) {
@@ -421,10 +437,12 @@ function renderDetailFooter(name, isDefault, isInUse, supportsConcurrent) {
   // Disable the action only while this environment's Claude is actually running
   // (nothing to launch). When it is not running, the action stays available so the
   // active environment can be relaunched after Claude was quit.
+  // Text-only: a switch/arrow glyph on a launch action only added noise. The
+  // meaning of each short label is spelled out by launchHelp() in the body above.
   const switchBtn = h('button', {
     type: 'button', class: 'btn btn-primary', disabled: isInUse,
     onclick: () => { if (!isInUse) doSwitch(name, supportsConcurrent); },
-  }, icon('i-switch'), h('span', { text: isInUse ? '利用中の環境' : (isDefault ? '既存の Claude に切り替える' : 'この環境で Claude を起動') }));
+  }, h('span', { text: isInUse ? '利用中の環境' : (isDefault ? '既存の Claude に切り替える' : '切り替えて起動') }));
 
   if (isDefault) {
     el.detailFooter.replaceChildren(
@@ -432,11 +450,17 @@ function renderDetailFooter(name, isDefault, isInUse, supportsConcurrent) {
       switchBtn);
     return;
   }
+  // Footer holds the launch actions. For fully-isolated environments the dedicated
+  // "重複して起動" sits right next to the primary launch (a frequent action for these);
+  // clone/delete are management actions kept out of this row.
+  const launchGroup = h('div', { class: 'footer-group' }, switchBtn);
+  if (supportsConcurrent) {
+    launchGroup.appendChild(h('button', {
+      type: 'button', class: 'btn btn-ghost', onclick: () => doLaunchNewWindow(name),
+    }, h('span', { text: '重複して起動' })));
+  }
   el.detailFooter.replaceChildren(
-    h('div', { class: 'footer-group' },
-      switchBtn,
-      h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showCloneRow(name) },
-        icon('i-duplicate'), h('span', { text: '複製' }))),
+    launchGroup,
     h('button', { type: 'button', class: 'btn btn-danger', onclick: () => showDeleteRow(name) },
       icon('i-trash'), h('span', { text: '削除' })));
 }
@@ -482,7 +506,7 @@ function showSwitchBlocked(name, supportsConcurrent) {
       h('div', { class: 'footer-group' },
         h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, '閉じる'),
         h('button', { type: 'button', class: 'btn btn-primary', onclick: () => doLaunchNewWindow(name) },
-          icon('i-monitor'), h('span', { text: '新しいウィンドウで起動' }))));
+          h('span', { text: '重複して起動' }))));
     return;
   }
   el.detailFooter.replaceChildren(

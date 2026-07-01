@@ -90,7 +90,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
    （This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.）
 
 > **Note: running environments at the same time**
-> Environments that share settings ("separate conversations & memory too", "separate the account only") open one at a time, to avoid configuration conflicts. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual. An environment set to "separate everything" shares nothing, so you can open it alongside a running Claude with "Launch in a new window" in the detail view, without quitting.
+> Environments that share settings ("separate conversations & memory too", "separate the account only") open one at a time, to avoid configuration conflicts. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual. An environment set to "separate everything" shares nothing, so you can open it alongside a running Claude with "Launch alongside" in the detail view, without quitting.
 
 ### Scenario B: Using the Terminal (Claude Code)
 There are two kinds of terminal, and they need different steps. In either case, the first time you use Claude Code in an environment, you need to sign in to the CLI once (see "First time only: signing in to Claude Code" below).
