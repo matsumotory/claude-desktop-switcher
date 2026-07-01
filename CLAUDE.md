@@ -55,6 +55,8 @@ LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launc
 | git commit する直前 | `core_commit_standard` |
 | PR 完成時のレビューサイクル | `core_pr_review_cycle` |
 | リリース前、または LP / docs / 実装を変えた後の整合性点検 (用語・アーキ・CLI 表面・機能主張・ja-en・トーン) | `docs_impl_consistency_audit` (`/audit-consistency`) |
+| 用語・UI・コピーを変えたとき (全サーフェス ja/en・スクショ・OG へ伝播し、旧表現を全リポ grep で残存ゼロ確認) | `propagate-changes-to-all-surfaces` |
+| アプリ UI / LP / docs のラベル・モード名・説明文・マイクロコピーを作る/変えるとき (ユーザー向け語彙・記号規律) | `csw_product_canon` |
 
 ## Claude Code セッションでの運用
 
@@ -84,7 +86,7 @@ LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launc
 - **Branch Strategy Enforcement**: いかなる場合も `main` へ直接 push しない。軽微なドキュメント・テスト・ホットフィックスでも例外なし。専用トピックブランチ (`feat/*`, `fix/*`, `docs/*`) で作業し、CI が全て通ってから PR でのみマージする。
 - **Anti-Slop Design**: `high-end-visual-design` / `design-taste-frontend` スキルを厳守。デフォルトの「AI テンプレ」見た目は禁止。
 - **Anti-Slop Images**: 雑な「AI フローチャート」、無意味な文字の偽ダッシュボード、光るオーブ図を生成しない。フィーチャーグラフィックは超ミニマル・構造的に正確・角丸の不揃いなし。図が要るなら、生成フローチャート風スロップより、シンプルな抽象幾何やクリーンな UI クロップを優先。
-- **Anti-Slop Typography (Japanese)**: 注記・免責・補足に `※`（米印）や `*`（アスタリスク）を使わない。これは旧来の企業 Web のアンチパターンで、プレミアム感を即座に損なう。従属情報は視覚階層（フォントサイズ・色・不透明度・レイアウト）で表す。
+- **Anti-Slop Typography (Japanese)**: 注記・免責・補足に `※`（米印）や `*`（アスタリスク）を使わない。これは旧来の企業 Web のアンチパターンで、プレミアム感を即座に損なう。従属情報は視覚階層（フォントサイズ・色・不透明度・レイアウト）で表す。あわせて、ユーザー可視コピー（LP / docs / UI / 画像内文字）に em-dash（`—` / `——`）を使わない。多用は「AI が書いた」印象の兆候になる。挿入句は読点「、」・コロン「：」・括弧「（）」・文の分割で表し、英語も em-dash でなくカンマ・コロン・括弧を使う。出荷前に `—`・`※`・`＊` を grep して残存ゼロを確認する。詳細は `csw_product_canon` §8。
 - **User-Centric Copywriting**: 生の技術用語（例: 'Application Support', 'Keychain'）を説明なしにマーケコピーへ出さない。技術機構を明確なユーザー利益に翻訳する（例: 'チャット履歴とログインを分離'）。
 - **External Documentation Links**: LP の「ドキュメントを読む」CTA は常に外部の GitHub リポ/docs（例: `https://github.com/matsumotory/claude-desktop-switcher`）を指す。内部アンカー（`#guide`）を使わない。
 - **Respect for Software Ecosystem**: 既存の OSS/CLI ツールに対し、貶めたり「不可能」と断じる表現を使わない。差異は事実に基づき、敬意を持って、加点的に述べる。
@@ -104,6 +106,7 @@ LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launc
 4. **Git History Hygiene & Sensitive File Removal**: 内部・管理・機微ファイル（CI セットアップ手引き、証明書等）を公開リポに誤コミットしたら、単なる `git rm` で済ませない。浅い削除では公開コミット履歴に永久に残る。ローカルで履歴を書き換え（例 `git reset --soft`）て force-push する。リモートが保護され `push -f` を弾く場合は、解決したふりをせず、履歴汚染をリポオーナーに明示的に伝える。
 5. **Premature Cleanup Prohibition (Key Management)**: デプロイ用シークレット・秘密鍵・証明書の生成を自動化するとき、下流システム（GitHub Actions CI/CD 等）が消費・検証し終えるまでローカル元ファイルを削除（`rm -rf`）しない。早すぎる削除は、上流エラー時に手動生成のやり直しを強いる。CI が GREEN を返してから一時鍵をローカル削除する。
 6. **No AI Artifacts in Git**: 引き継ぎメモ・内部 AI トラッキング文書・AI が生成した一時スクラッチを、プロジェクトの Git リポに **絶対に** コミットしない。ハーネス提供の session-local scratchpad / 一時ディレクトリに留め、リポツリー内には置かない。
+7. **No Cross-Project Private Names in the Public Repo**: 本リポは公開リポで、tracked ファイルだけでなく commit メッセージ・git 履歴・PR ページも永続的に公開される。**他プロジェクトの私的名称（非公開リポの開発名・コードネーム・公開前のプロダクト名・サイト名）を、コード・ドキュメント・commit メッセージのどこにも書かない。** 他所からスキル・設定・ルールを移植するときは、出元プロジェクト名・絶対パス（`/Users/...` 等）・コードネームを scrub してから commit する（commit 件名も「migrate from X」ではなく成果物だけを述べる）。公開 push の前に `git grep` と `git log --all` で私的名称・ホームディレクトリの絶対パスの混入がゼロであることを確認する。既に履歴へ入れてしまった場合、削除内容をそのまま diff や commit 件名に書くと、かえって「ここに秘密があった」という記録を新たに公開へ焼き付ける。掃除専用コミットを立てず、対処範囲をリポオーナーに示して判断を仰ぐ。
 
 ## 8. 徹底した正直さと秘密情報の適正管理 (Radical Honesty & Proper Secret Management, Absolute Rule)
 
