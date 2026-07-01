@@ -56,6 +56,12 @@ pub trait PlatformProvider: Send + Sync {
 
     /// Get the PID(s) of running Claude Desktop processes.
     fn claude_desktop_pids(&self) -> Result<Vec<u32>>;
+
+    /// The argument strings of running Claude Desktop *main* processes (Electron
+    /// renderer / GPU / utility helpers excluded). Each entry is one instance's
+    /// command line, used to tell which environment (`--user-data-dir`) is running.
+    /// Empty when no Claude is running.
+    fn running_desktop_args(&self) -> Result<Vec<String>>;
 }
 
 /// Create the platform provider for the current OS.

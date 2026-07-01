@@ -11,6 +11,8 @@ pub struct MockPlatformProvider {
     desktop_running: AtomicBool,
     /// Test knob: make `create_symlink` fail (to exercise rollback paths).
     fail_symlink: AtomicBool,
+    /// Test knob: arg lines returned by `running_desktop_args` (running main procs).
+    running_args: std::sync::Mutex<Vec<String>>,
 }
 
 impl MockPlatformProvider {
@@ -21,12 +23,20 @@ impl MockPlatformProvider {
             app_data,
             desktop_running: AtomicBool::new(false),
             fail_symlink: AtomicBool::new(false),
+            running_args: std::sync::Mutex::new(Vec::new()),
         }
     }
 
     /// Builder: make `is_claude_desktop_running` report `running`.
     pub fn with_desktop_running(self, running: bool) -> Self {
         self.desktop_running.store(running, Ordering::SeqCst);
+        self
+    }
+
+    /// Builder: set the command-line arg strings returned by `running_desktop_args`
+    /// (the running Claude main processes), for per-environment "in use" tests.
+    pub fn with_running_args(self, args: Vec<String>) -> Self {
+        *self.running_args.lock().unwrap() = args;
         self
     }
 
@@ -94,5 +104,9 @@ impl PlatformProvider for MockPlatformProvider {
 
     fn claude_desktop_pids(&self) -> Result<Vec<u32>> {
         Ok(vec![])
+    }
+
+    fn running_desktop_args(&self) -> Result<Vec<String>> {
+        Ok(self.running_args.lock().unwrap().clone())
     }
 }

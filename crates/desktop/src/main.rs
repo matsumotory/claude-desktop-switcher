@@ -10,7 +10,7 @@ use tauri::{
 
 use csw_core::platform::create_provider;
 use csw_core::profile::{ProfileManager, SharingConfig, SharingMode};
-use csw_core::switcher::{ContextSwitcher, is_in_use};
+use csw_core::switcher::{ContextSwitcher, desktop_dir_running};
 
 // Global state holding our components
 struct AppState {
@@ -62,6 +62,11 @@ async fn get_profile_details(
         "is_default": p.profile.is_default,
         "desktop_path": p.isolation.desktop_user_data_dir,
         "cli_path": p.isolation.cli_config_dir,
+        // Only fully-isolated (すべて分ける) non-default environments may be opened
+        // in additional concurrent windows: they share nothing, so parallel
+        // instances cannot race on a shared file. The UI shows the dedicated
+        // "新しいウィンドウで起動" button only when this is true.
+        "supports_concurrent_windows": !p.profile.is_default && p.sharing.is_fully_isolated(),
         "sharing": {
             "cli_settings": format!("{:?}", p.sharing.cli_settings).to_lowercase(),
             "cli_claude_md": format!("{:?}", p.sharing.cli_claude_md).to_lowercase(),
@@ -222,6 +227,64 @@ async fn get_desktop_running_status(state: State<'_, AppState>) -> Result<bool, 
         .map_err(|e| e.to_string())
 }
 
+/// Launch a fully-isolated environment in an additional window, alongside whatever
+/// Claude is already running. Unlike `switch_profile`, this neither changes the
+/// active environment nor requires quitting a running Claude first: fully-isolated
+/// environments share nothing, so concurrent instances cannot race on a shared
+/// file. Refused for the default environment and for any environment that shares
+/// or copies a component, keeping the unsafe concurrent case unrepresentable.
+#[tauri::command]
+async fn launch_additional_window(
+    name: String,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<(), String> {
+    let profile = state
+        .profile_manager
+        .get_profile(&name)
+        .map_err(|e| e.to_string())?;
+    if profile.profile.is_default || !profile.sharing.is_fully_isolated() {
+        return Err(
+            "この環境は完全分離ではないため、複数のウィンドウで同時に開けません。".to_string(),
+        );
+    }
+    csw_core::switcher::desktop::launch_desktop(&profile, state.provider.as_ref())
+        .map_err(|e| e.to_string())?;
+    // Best-effort: the new process may not appear in the process list instantly,
+    // so the 3s running-state watcher is what ultimately refreshes the "利用中"
+    // markers; rebuild now anyway so an already-visible change is reflected early.
+    update_tray_menu(&app)?;
+    Ok(())
+}
+
+/// Names of environments whose Claude Desktop is currently running. With
+/// fully-isolated environments able to run side by side, this can be more than one.
+/// Each profile's `--user-data-dir` is matched against the live main processes.
+#[tauri::command]
+async fn get_running_profiles(state: State<'_, AppState>) -> Result<Vec<String>, String> {
+    Ok(running_profile_names(&state))
+}
+
+/// Shared by the tray and `get_running_profiles`: resolve which environments are
+/// running from the live Claude main processes' `--user-data-dir`.
+fn running_profile_names(state: &AppState) -> Vec<String> {
+    let args = state.provider.running_desktop_args().unwrap_or_default();
+    let default_dir = state.provider.claude_desktop_default_dir();
+    let names = state.profile_manager.list_profiles().unwrap_or_default();
+    names
+        .into_iter()
+        .filter(|name| {
+            state
+                .profile_manager
+                .get_profile(name)
+                .map(|p| {
+                    desktop_dir_running(&p.isolation.desktop_user_data_dir, &args, &default_dir)
+                })
+                .unwrap_or(false)
+        })
+        .collect()
+}
+
 /// Report whether the standard existing-Claude data dirs (Desktop / CLI) hold
 /// data. The create flow gates the "share" mode when there is nothing to share.
 #[tauri::command]
@@ -240,12 +303,11 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
         .profile_manager
         .list_profiles()
         .map_err(|e| e.to_string())?;
-    let active_name = state.profile_manager.active_profile_name();
-    // "利用中" reflects whether Claude Desktop is actually running, not merely which
-    // environment is recorded as active. Quitting Claude clears the marker so the
-    // environment can be relaunched. If the running check fails, treat as not
-    // running so the menu never locks an environment as permanently in use.
-    let desktop_running = state.provider.is_claude_desktop_running().unwrap_or(false);
+    // "利用中" reflects which environments' Claude are actually running, resolved
+    // per environment from the live processes' --user-data-dir. Fully-isolated
+    // environments can run side by side, so more than one may be in use at once.
+    // Quitting a Claude clears its marker so that environment can be relaunched.
+    let running = running_profile_names(&state);
 
     let mut menu_items = Vec::new();
 
@@ -267,7 +329,7 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
         } else {
             p_name.as_str()
         };
-        let label = if is_in_use(&p_name, &active_name, desktop_running) {
+        let label = if running.iter().any(|n| n == &p_name) {
             format!("● {} (利用中)", display)
         } else {
             format!("○ {}", display)
@@ -446,7 +508,9 @@ fn main() {
             delete_profile,
             clone_profile,
             switch_profile,
+            launch_additional_window,
             get_desktop_running_status,
+            get_running_profiles,
             get_default_roots_status,
             app_version,
             open_url

@@ -1,6 +1,7 @@
 pub mod desktop;
 pub mod shell;
 
+use std::path::Path;
 use std::sync::Arc;
 
 use crate::error::{CswError, Result};
@@ -60,19 +61,40 @@ impl ContextSwitcher {
     }
 }
 
-/// Whether `name` is the environment currently *in use* — i.e. Claude Desktop is
-/// actually running for it.
+/// Whether a Claude Desktop instance for `target_dir` is currently running.
 ///
-/// "In use" (利用中) is a live runtime state, not a stored preference. Only the
-/// active environment can be running (switching is refused while Claude Desktop is
-/// up, and only one environment runs at a time), so an environment is in use only
-/// when it is both the active one and Claude Desktop is currently running.
-///
-/// The corollary the GUI/tray rely on: once the user quits Claude Desktop, the
-/// (still-recorded) active environment is no longer in use, so it can be launched
-/// again instead of staying stuck as "利用中" with a disabled action.
-pub fn is_in_use(name: &str, active_profile: &str, desktop_running: bool) -> bool {
-    desktop_running && name == active_profile
+/// "In use" (利用中) is a live runtime state. Because fully-isolated environments
+/// can now run side by side, it can no longer be derived from "the active
+/// environment while Claude runs" (that would mislabel which environment is up).
+/// Instead it is read from the live processes: `running_args` are the argument
+/// strings of the running Claude *main* processes (helpers are filtered out by the
+/// platform layer). An environment is in use when a main process was launched with
+/// its `--user-data-dir`. A main process launched without the flag (a plain
+/// Finder/Dock launch) uses the default data dir, so it counts as the existing
+/// Claude (`default`).
+pub fn desktop_dir_running(target_dir: &Path, running_args: &[String], default_dir: &Path) -> bool {
+    let needle = format!("--user-data-dir={}", target_dir.display());
+    if running_args.iter().any(|a| flag_value_present(a, &needle)) {
+        return true;
+    }
+    // No explicit --user-data-dir means the default location.
+    target_dir == default_dir && running_args.iter().any(|a| !a.contains("--user-data-dir="))
+}
+
+/// True if `args` contains `needle` as a whole token: followed by a space or the
+/// end of the string. This keeps a value like `.../Claude` from matching a longer
+/// sibling `.../Claude2`, while still allowing the value itself to contain spaces
+/// (the default dir lives under "Application Support").
+fn flag_value_present(args: &str, needle: &str) -> bool {
+    let mut from = 0;
+    while let Some(rel) = args[from..].find(needle) {
+        let end = from + rel + needle.len();
+        if end == args.len() || args.as_bytes()[end] == b' ' {
+            return true;
+        }
+        from = end;
+    }
+    false
 }
 
 #[cfg(test)]
@@ -129,27 +151,69 @@ mod tests {
         assert_eq!(pm.active_profile_name(), "Work");
     }
 
-    /// Spec: "利用中" means Claude Desktop is actually running for the environment.
-    /// After the user quits Claude Desktop, the still-active environment must no
-    /// longer count as in use, so the GUI lets the user launch it again instead of
-    /// leaving the action disabled. This is the regression reported: an environment
-    /// launched from the app stayed "利用中" with a dead button after Claude quit.
+    use std::path::Path;
+
+    /// An environment is running when a live Claude main process was launched with
+    /// its `--user-data-dir`.
     #[test]
-    fn active_environment_is_not_in_use_after_desktop_quits() {
-        assert!(!is_in_use("Work", "Work", false));
+    fn desktop_dir_running_matches_user_data_dir_arg() {
+        let default_dir = Path::new("/Users/x/Library/Application Support/Claude");
+        let work = Path::new("/Users/x/.context-switcher-claude/profiles/Work/desktop-data");
+        let args = vec![format!(
+            "/Applications/Claude.app/Contents/MacOS/Claude --user-data-dir={}",
+            work.display()
+        )];
+        assert!(desktop_dir_running(work, &args, default_dir));
+        assert!(!desktop_dir_running(default_dir, &args, default_dir));
     }
 
-    /// While Claude Desktop is running, the active environment is the one in use.
+    /// A plain Finder/Dock launch carries no `--user-data-dir`, so it maps to the
+    /// default data dir (the existing Claude), not to any created environment.
     #[test]
-    fn active_environment_is_in_use_while_desktop_runs() {
-        assert!(is_in_use("Work", "Work", true));
+    fn desktop_dir_running_no_flag_counts_as_default() {
+        let default_dir = Path::new("/Users/x/Library/Application Support/Claude");
+        let work = Path::new("/Users/x/.context-switcher-claude/profiles/Work/desktop-data");
+        let args = vec!["/Applications/Claude.app/Contents/MacOS/Claude".to_string()];
+        assert!(desktop_dir_running(default_dir, &args, default_dir));
+        assert!(!desktop_dir_running(work, &args, default_dir));
     }
 
-    /// A non-active environment is never in use, regardless of running state: only
-    /// one environment runs at a time and it is always the active one.
+    /// CSW launches even the default profile with an explicit `--user-data-dir`
+    /// that contains spaces ("Application Support"); the match must still work and
+    /// must not spuriously match a longer sibling path ("Claude2").
     #[test]
-    fn non_active_environment_is_never_in_use() {
-        assert!(!is_in_use("Work", "default", true));
-        assert!(!is_in_use("Work", "default", false));
+    fn desktop_dir_running_handles_spaces_and_prefix_siblings() {
+        let default_dir = Path::new("/Users/x/Library/Application Support/Claude");
+        let sibling = "/Applications/Claude.app/Contents/MacOS/Claude --user-data-dir=/Users/x/Library/Application Support/Claude2".to_string();
+        assert!(!desktop_dir_running(default_dir, &[sibling], default_dir));
+
+        let exact = format!(
+            "/Applications/Claude.app/Contents/MacOS/Claude --user-data-dir={} --enable-logging",
+            default_dir.display()
+        );
+        assert!(desktop_dir_running(default_dir, &[exact], default_dir));
+    }
+
+    /// Two fully-isolated environments can run at once; both count as running.
+    #[test]
+    fn desktop_dir_running_supports_multiple_concurrent() {
+        let default_dir = Path::new("/d/Application Support/Claude");
+        let a = Path::new("/p/A/desktop-data");
+        let b = Path::new("/p/B/desktop-data");
+        let args = vec![
+            format!("...MacOS/Claude --user-data-dir={}", a.display()),
+            format!("...MacOS/Claude --user-data-dir={}", b.display()),
+        ];
+        assert!(desktop_dir_running(a, &args, default_dir));
+        assert!(desktop_dir_running(b, &args, default_dir));
+        assert!(!desktop_dir_running(default_dir, &args, default_dir));
+    }
+
+    #[test]
+    fn desktop_dir_running_false_when_nothing_running() {
+        let default_dir = Path::new("/d");
+        let work = Path::new("/w");
+        assert!(!desktop_dir_running(work, &[], default_dir));
+        assert!(!desktop_dir_running(default_dir, &[], default_dir));
     }
 }

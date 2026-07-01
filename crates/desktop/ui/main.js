@@ -71,7 +71,8 @@ const PRESETS = {
 // --- App state --------------------------------------------------------------
 let profiles = [];
 let activeName = 'default';
-let desktopRunning = false; // whether Claude Desktop is actually running right now
+let desktopRunning = false; // whether any Claude Desktop is running right now
+let runningProfiles = []; // names of environments whose Claude is running (can be several)
 let selectedName = null;
 let currentMode = 'isolate';
 let overrides = { ...PRESETS.isolate };
@@ -204,11 +205,12 @@ function setView(view) {
   requestAnimationFrame(refreshFades);
 }
 
-// An environment is "in use" (利用中) only when Claude Desktop is actually running
-// for it: only the active environment can be running, and only one runs at a time.
-// Mirrors csw_core::switcher::is_in_use. Quitting Claude clears this, so the active
-// environment can be launched again instead of staying stuck with a disabled action.
-const inUse = (name) => desktopRunning && name === activeName;
+// An environment is "in use" (利用中) when a Claude Desktop instance is actually
+// running for it. Fully-isolated environments can run side by side, so several may
+// be in use at once. Resolved per environment by the backend from the live
+// processes' --user-data-dir (csw_core::switcher::desktop_dir_running); quitting a
+// Claude clears its marker so that environment can be launched again.
+const inUse = (name) => runningProfiles.includes(name);
 
 // --- Sidebar ----------------------------------------------------------------
 function renderSidebar() {
@@ -285,17 +287,27 @@ async function showDetail(name) {
     nodes.push(sharingDisclosure(d.sharing));
     nodes.push(pathsSection(d, false));
     nodes.push(terminalSection(name));
-    // Only warn about quitting first when another environment's Claude is actually
-    // running: that is the case where launching this one is blocked. When nothing
-    // is running, the action launches directly with no need to quit anything.
-    if (desktopRunning && !isInUse) {
+    if (d.supports_concurrent_windows) {
+      // Fully-isolated environments share nothing, so they can run alongside any
+      // other Claude. Offer a dedicated, clearly-labeled way to open one more
+      // window, without switching the active environment or quitting anything.
+      nodes.push(section('', [
+        h('p', { class: 'share-basis', text:
+          'この環境は他と混ざらないため、起動中の Claude を終了せずに、新しいウィンドウで並べて開けます。' }),
+        h('button', { type: 'button', class: 'btn btn-ghost concurrent-launch',
+          onclick: () => doLaunchNewWindow(name) },
+          icon('i-monitor'), h('span', { text: '新しいウィンドウで起動' })),
+      ]));
+    } else if (desktopRunning && !isInUse) {
+      // Shared environments stay one-at-a-time: warn to quit first only when another
+      // Claude is actually running (the case where launching this one is blocked).
       nodes.push(h('p', { class: 'detail-switch-hint', text:
         '先に起動中の Claude を終了してから押すと、この環境の Claude が開きます。' }));
     }
   }
 
   el.detailContent.replaceChildren(...nodes);
-  renderDetailFooter(name, isDefault, isInUse);
+  renderDetailFooter(name, isDefault, isInUse, !!d.supports_concurrent_windows);
   setView('detail');
 }
 
@@ -404,14 +416,14 @@ function badge(mode) {
   return h('span', { class: 'badge badge-isolate' }, icon('i-lock'), '分離');
 }
 
-function renderDetailFooter(name, isDefault, isInUse) {
+function renderDetailFooter(name, isDefault, isInUse, supportsConcurrent) {
   el.detailFooter.className = 'view-footer split';
   // Disable the action only while this environment's Claude is actually running
   // (nothing to launch). When it is not running, the action stays available so the
   // active environment can be relaunched after Claude was quit.
   const switchBtn = h('button', {
     type: 'button', class: 'btn btn-primary', disabled: isInUse,
-    onclick: () => { if (!isInUse) doSwitch(name); },
+    onclick: () => { if (!isInUse) doSwitch(name, supportsConcurrent); },
   }, icon('i-switch'), h('span', { text: isInUse ? '利用中の環境' : (isDefault ? '既存の Claude に切り替える' : 'この環境で Claude を起動') }));
 
   if (isDefault) {
@@ -460,25 +472,49 @@ function showCloneRow(name) {
 // Claude. The core refuses to switch while Claude Desktop is running (to avoid
 // config write-back races), so only one environment's Claude runs at a time.
 // Guide the user to quit the running one first instead of showing a dead end.
-function showSwitchBlocked(name) {
+function showSwitchBlocked(name, supportsConcurrent) {
   el.detailFooter.className = 'view-footer split';
+  // Fully-isolated environments never need the running Claude quit: point straight
+  // at opening a new window instead of a dead "quit first" instruction.
+  if (supportsConcurrent) {
+    el.detailFooter.replaceChildren(
+      h('span', { class: 'confirm-text', text: 'この環境は、起動中の Claude を終了せずに開けます。' }),
+      h('div', { class: 'footer-group' },
+        h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, '閉じる'),
+        h('button', { type: 'button', class: 'btn btn-primary', onclick: () => doLaunchNewWindow(name) },
+          icon('i-monitor'), h('span', { text: '新しいウィンドウで起動' }))));
+    return;
+  }
   el.detailFooter.replaceChildren(
-    h('span', { class: 'confirm-text', text: '起動中の Claude を終了してから、もう一度押してください。設定の衝突を防ぐため、複数の環境の Claude は同時に開けません。' }),
+    h('span', { class: 'confirm-text', text: '起動中の Claude を終了してから、もう一度押してください。設定の衝突を防ぐため、共有を含む環境の Claude は同時に開けません。' }),
     h('div', { class: 'footer-group' },
       h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, '閉じる'),
-      h('button', { type: 'button', class: 'btn btn-primary', onclick: () => doSwitch(name) }, 'もう一度試す')));
+      h('button', { type: 'button', class: 'btn btn-primary', onclick: () => doSwitch(name, false) }, 'もう一度試す')));
 }
 
-async function doSwitch(name) {
+async function doSwitch(name, supportsConcurrent) {
   try {
-    if (await invoke('get_desktop_running_status')) { showSwitchBlocked(name); return; }
+    if (await invoke('get_desktop_running_status')) { showSwitchBlocked(name, supportsConcurrent); return; }
     await invoke('switch_profile', { name, noLaunch: false });
     await refreshProfiles();
     withTransition(() => showDetail(name));
     showToast(name === 'default' ? '既存の Claude に切り替えました' : `${name} の Claude を起動しました`);
   } catch (err) {
-    if (String(err || '').includes('Claude Desktop is running')) { showSwitchBlocked(name); return; }
+    if (String(err || '').includes('Claude Desktop is running')) { showSwitchBlocked(name, supportsConcurrent); return; }
     showToast('切り替えできませんでした。もう一度お試しください。', true);
+  }
+}
+
+// Open a fully-isolated environment in an additional window, alongside whatever is
+// already running. Does not switch the active environment or require quitting.
+async function doLaunchNewWindow(name) {
+  try {
+    await invoke('launch_additional_window', { name });
+    await refreshProfiles();
+    withTransition(() => showDetail(name));
+    showToast(`${name} を新しいウィンドウで起動しました`);
+  } catch (err) {
+    showToast('起動できませんでした。もう一度お試しください。', true);
   }
 }
 
@@ -742,21 +778,24 @@ async function refreshProfiles() {
   renderSidebar();
 }
 
-// Re-read whether Claude Desktop is running. Kept separate so it can refresh on
-// window focus without re-listing profiles, since the user typically quits Claude
-// in another app and returns to CSW expecting the action to be available again.
+// Re-read which environments are running (per environment) and whether any Claude
+// is running at all. Kept separate so it can refresh on window focus without
+// re-listing profiles, since the user typically quits/starts Claude in another app
+// and returns to CSW expecting the markers and actions to reflect reality.
 async function refreshRunning() {
+  try { runningProfiles = await invoke('get_running_profiles'); }
+  catch (e) { runningProfiles = []; }
   try { desktopRunning = await invoke('get_desktop_running_status'); }
   catch (e) { desktopRunning = false; }
 }
 
 // When the window regains focus or becomes visible again, the user may have just
-// quit (or started) Claude Desktop elsewhere. Re-check the running state and
-// re-render so "利用中" and the launch action reflect reality without a restart.
+// quit (or started) a Claude Desktop elsewhere. Re-check the running state and
+// re-render so "利用中" and the launch actions reflect reality without a restart.
 async function revalidateRunning() {
-  const before = desktopRunning;
+  const before = JSON.stringify([desktopRunning, runningProfiles]);
   await refreshRunning();
-  if (desktopRunning === before) return;
+  if (JSON.stringify([desktopRunning, runningProfiles]) === before) return;
   renderSidebar();
   if (!el.viewDetail.hidden && selectedName) showDetail(selectedName);
 }
@@ -898,10 +937,10 @@ document.addEventListener('DOMContentLoaded', init);
 // ============================================================================
 function devInvoke(cmd, args) {
   const sample = {
-    default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
-    仕事用: { name: '仕事用', icon: 'briefcase', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', sharing: { ...PRESETS.share_settings } },
-    研究用: { name: '研究用', icon: 'graduation-cap', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/研究用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/研究用/cli-data', sharing: { ...PRESETS.share_workspace } },
-    検証用: { name: '検証用', icon: 'flask', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', sharing: { ...PRESETS.isolate } },
+    default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', supports_concurrent_windows: false, sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
+    仕事用: { name: '仕事用', icon: 'briefcase', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', supports_concurrent_windows: false, sharing: { ...PRESETS.share_settings } },
+    研究用: { name: '研究用', icon: 'graduation-cap', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/研究用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/研究用/cli-data', supports_concurrent_windows: false, sharing: { ...PRESETS.share_workspace } },
+    検証用: { name: '検証用', icon: 'flask', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', supports_concurrent_windows: true, sharing: { ...PRESETS.isolate } },
   };
   switch (cmd) {
     case 'list_profiles':
@@ -919,6 +958,11 @@ function devInvoke(cmd, args) {
       // Depict the active environment as actually running so screenshots show the
       // "利用中" marker (the realistic state when Claude is open for that account).
       return Promise.resolve(true);
+    case 'get_running_profiles':
+      // The existing Claude is depicted as running (mirrors get_desktop_running_status).
+      return Promise.resolve(['default']);
+    case 'launch_additional_window':
+      return Promise.resolve(null);
     case 'get_default_roots_status':
       return Promise.resolve({ desktop_present: true, cli_present: true });
     case 'app_version':

@@ -390,3 +390,37 @@ fn always_isolated_files_are_never_linked_in_any_mode() {
     assert_eq!(profile.sharing.cli_project_memory, SharingMode::Share);
     assert_eq!(profile.sharing.cli_claude_md, SharingMode::Share);
 }
+
+// Spec: 完全分離環境の同時起動 — an environment may be launched in additional
+// concurrent windows only when it shares nothing. is_fully_isolated() is the
+// single source of truth: true iff every sharing component is Isolate (the
+// "すべて分ける" preset). Any Share or Copy component disqualifies it.
+#[test]
+fn is_fully_isolated_only_when_every_component_is_isolate() {
+    assert!(SharingConfig::default().is_fully_isolated());
+    assert!(!SharingConfig::share_settings_preset().is_fully_isolated());
+    assert!(!SharingConfig::share_workspace_preset().is_fully_isolated());
+
+    // A single Share component disqualifies it.
+    let one_share = SharingConfig {
+        cli_skills: SharingMode::Share,
+        ..SharingConfig::default()
+    };
+    assert!(!one_share.is_fully_isolated());
+
+    // Even a one-time Copy (independent after creation, but still a carry-over)
+    // disqualifies it: the button is offered strictly for "すべて分ける".
+    let one_copy = SharingConfig {
+        cli_settings: SharingMode::Copy,
+        ..SharingConfig::default()
+    };
+    assert!(!one_copy.is_fully_isolated());
+}
+
+// The default profile ("既存の Claude") shares everything, so it is never eligible.
+#[test]
+fn default_profile_is_not_fully_isolated() {
+    let (_, manager, _tmp) = setup_test_manager();
+    let default_profile = manager.get_profile("default").unwrap();
+    assert!(!default_profile.sharing.is_fully_isolated());
+}
