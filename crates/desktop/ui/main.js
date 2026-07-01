@@ -12,6 +12,213 @@
 const HAS_TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
 const invoke = HAS_TAURI ? window.__TAURI__.core.invoke : devInvoke;
 
+// --- Internationalization (ja default, en fallback) -------------------------
+// The app ships Japanese copy inline. When the OS/browser locale is not Japanese
+// we render English. Standalone strings are translated by matching the exact
+// Japanese text against EN below (applied to the static HTML at load and to every
+// node the app builds afterwards, via a MutationObserver). Strings that embed a
+// name or a number are translated at construction with T(ja, en).
+// Locale detection: Japanese when the OS/browser locale is Japanese, else English.
+// A ?lang=ja|en query override makes screenshot capture deterministic regardless of
+// the headless browser locale; the shipped app is loaded without query params.
+const LANG = (() => {
+  const forced = new URLSearchParams(location.search).get('lang');
+  if (forced === 'ja' || forced === 'en') return forced;
+  return String(navigator.language || navigator.userLanguage || 'en').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+})();
+const T = (ja, en) => (LANG === 'ja' ? ja : en);
+// Japanese -> English for every standalone visible string. Keys must match the
+// rendered text exactly (trimmed). Terminology follows the shipped EN landing page
+// and the established English screenshots (Existing Claude / In use / Work etc.).
+const EN = {
+  // Sidebar / chrome
+  'Claude Desktop Switcher': 'Claude Desktop Switcher',
+  '既存の Claude': 'Existing Claude',
+  '既存の Claude（標準環境）': 'Existing Claude (standard environment)',
+  '利用中': 'In use',
+  '環境を作る': 'New environment',
+  'テーマ': 'Theme',
+  'ユーザーガイド': 'User guide',
+  '問題を報告': 'Report an issue',
+  'このアプリについて': 'About',
+  '更新を確認': 'Check for updates',
+  'ブルー': 'Blue', 'ティール': 'Teal', 'インディゴ': 'Indigo', 'テラコッタ': 'Terracotta',
+  // Empty / onboarding
+  'はじめまして': 'Welcome',
+  '環境を分けて、混ぜない。': 'Separate environments. Never mixed.',
+  '既存の Claude はそのまま。そこを基準に、何を引き継ぎ何を分けるかを決めて、新しい環境を作ります。':
+    'Your existing Claude stays untouched. Starting from it, decide what to carry over and what to separate, then create a new environment.',
+  'いまの環境はそのまま残ります': 'Your current setup stays intact',
+  'あなたが普段使っている Claudeデスクトップアプリと Claude Code の環境は「既存の Claude」として保護され、設定・履歴・ログインは変更されません。':
+    'Your everyday Claude Desktop App and Claude Code setup is protected as "Existing Claude"; its settings, history, and sign-in are never changed.',
+  '環境を切り替えて使えます': 'Switch between environments',
+  '「利用中」は、いま Claude が起動している環境です。Claude を終了すれば「利用中」は外れ、その環境はまた「切り替えて起動」から開き直せます。設定を共有する環境は衝突を防ぐため一度に1つずつ開くので、別の環境に切り替えるときは先に起動中の Claude を終了します。「すべて分ける」で作った環境は何も共有しないので、起動中の Claude を終了せず、新しいウィンドウで並べて開けます。':
+    '"In use" marks the environment Claude is currently running for. Quit Claude and it clears, so you can reopen that environment from "Switch and launch". Environments that share settings open one at a time to avoid conflicts, so quit the running Claude before switching to another. An environment set to "separate everything" shares nothing, so you can open it in a new window alongside a running Claude, without quitting.',
+  'ターミナル（Claude Code）も同じ環境で使えます': 'Use the terminal (Claude Code) in the same environment',
+  // Detail: taglines, sections, sharing
+  'あなた自身の環境': 'Your own setup',
+  '利用中の環境': 'Environment in use',
+  '作成した環境': 'Created environment',
+  'Claudeデスクトップアプリ': 'Claude Desktop App',
+  'Claude Code': 'Claude Code',
+  'この環境が引き継いでいるもの': 'What this environment inherits',
+  '「共有」は既存の Claude と中身を共通にすること、「コピー」は作成時に一度だけ写して以後は別々、「分離」はこの環境だけで持つことです。':
+    '"Shared" keeps the contents in common with your existing Claude; "Copied" duplicates once at creation and they diverge after; "Isolated" means this environment keeps its own.',
+  'ワークツリー一覧': 'Worktrees', 'Git ワークツリーと repo の対応': 'Mapping of Git worktrees to repos',
+  '共通ルール': 'Global rules', 'CLAUDE.md に書いた常時ルール': 'Always-on rules in CLAUDE.md',
+  'プラグイン': 'Plugins', '導入したプラグイン': 'Installed plugins',
+  'スキル': 'Skills', 'カスタムスキル': 'Custom skills',
+  'ツール権限・フック': 'Tool permissions & hooks', 'ツールの実行可否とフック': 'Whether tools may run, and hooks',
+  'プロジェクトの会話・メモリ': 'Project conversations & memory', 'プロジェクトごとの会話履歴と自動メモリ': 'Per-project conversation history and auto-memory',
+  '入力履歴': 'Input history', '入力したプロンプトの履歴': 'History of entered prompts',
+  '端末 ID': 'Device ID', '端末を識別するための ID': 'ID that identifies your device',
+  '共有': 'Shared', 'コピー': 'Copied', '分離': 'Isolated',
+  '場所（この環境のデータ）': "Location (this environment's data)",
+  '場所（あなたの Claude フォルダ）': 'Location (your Claude folder)',
+  'これは CSW が作った場所ではなく、あなた自身の Claude フォルダです。': 'This is not a folder CSW created; it is your own Claude folder.',
+  'ターミナル（Claude Code）で使う': 'Use in the terminal (Claude Code)',
+  'CSW から開いたアプリの中で使うターミナルは、最初からこの環境です。コマンドは要りません。自分で別に開いた iTerm2 などのターミナルで対象の環境に揃えるには、環境名を渡して次を実行します。この設定はそのタブだけに効き、普段の環境には影響しません。':
+    "A terminal opened inside the app you launched from CSW is already in this environment, so no command is needed. To switch a terminal you opened yourself, such as iTerm2, to a target environment, pass the environment name and run the command below. It applies to that tab only and never affects your usual environment.",
+  'あなた自身の Claudeデスクトップアプリと Claude Code の環境です。CSW はここを表示しているだけで、設定・履歴・ログインを変更したり削除したりしません。':
+    'This is your own Claude Desktop App and Claude Code setup. CSW only displays it; it never changes or deletes your settings, history, or sign-in.',
+  // Buttons / actions
+  '複製': 'Duplicate', '削除': 'Delete',
+  '起動のしかた': 'How to launch',
+  '切り替えて起動': 'Switch and launch', '重複して起動': 'Launch alongside',
+  'この環境に切り替えて Claude を開きます。ほかの環境の Claude が起動しているときは切り替えられないので、先に終了してください。':
+    'Opens this environment and switches to it. If another environment’s Claude is running you cannot switch, so quit it first.',
+  '起動中の Claude を終了せずに、この環境を新しいウィンドウで同時に開きます。':
+    'Opens this environment in a new window at the same time, without quitting a running Claude.',
+  '既存の Claude に切り替える': 'Switch to Existing Claude',
+  '既存の Claude は変更・削除できません': 'Existing Claude cannot be changed or deleted',
+  'この環境を削除します。共有リンクと分離データが消えます。既存の Claude には影響しません。':
+    'This deletes the environment. Its shared links and isolated data are removed. Existing Claude is not affected.',
+  'やめる': 'Cancel', '削除する': 'Delete', '複製を作る': 'Duplicate', '戻る': 'Back',
+  'この環境は、起動中の Claude を終了せずに開けます。': 'You can open this environment without quitting a running Claude.',
+  '起動中の Claude を終了してから、もう一度押してください。設定の衝突を防ぐため、共有を含む環境の Claude は同時に開けません。':
+    'Quit the running Claude, then press this again. To avoid configuration conflicts, environments that share settings cannot be open at once.',
+  '閉じる': 'Close', 'もう一度試す': 'Try again',
+  // Create flow
+  '新しい環境を作る': 'Create a new environment',
+  'この環境を作る': 'Create this environment', '作成する': 'Create',
+  '各項目を、既存の Claude と共有するか、この環境だけにするかを選びます。': 'For each item, choose whether to share it with your existing Claude or keep it only in this environment.',
+  '共有 = いまのを使う ／ 分離 = この環境だけ ／ コピー = 最初だけ写す': 'Shared = use the current one / Isolated = only this environment / Copied = copied once at the start',
+  'アカウントのサインイン情報（config.json）と、コネクタ・アプリ設定（claude_desktop_config.json）は、アカウント別の情報を含むため、どのモードでも必ずこの環境だけに分離します。':
+    'The account sign-in (config.json) and the connector/app settings (claude_desktop_config.json) contain per-account data, so they are always isolated to this environment in every mode.',
+  '2つのアカウントが同じ端末として結び付かないよう、端末 ID は常に分離します。': 'The device ID is always isolated so two accounts are not linked as the same device.',
+  'カスタム設定': 'Custom', 'モードの既定どおり': 'Mode defaults',
+  // Misc / toasts (standalone)
+  'コピーしました': 'Copied', 'コピーできませんでした。': 'Could not copy.',
+  '環境を読み込めませんでした。': 'Could not load the environment.',
+  '切り替えできませんでした。もう一度お試しください。': 'Could not switch. Please try again.',
+  '起動できませんでした。もう一度お試しください。': 'Could not launch. Please try again.',
+  '削除できませんでした。利用中の環境は切り替えてから削除してください。': 'Could not delete. Switch away from an in-use environment before deleting it.',
+  '複製できませんでした。同じ名前がすでにあるか確認してください。': 'Could not duplicate. Check whether the same name already exists.',
+  '作成できませんでした。同じ名前がすでにあるか確認してください。': 'Could not create. Check whether the same name already exists.',
+  'モードを変えたので高度設定をリセットしました': 'Changed the mode, so advanced settings were reset',
+  'リンクを開けませんでした。': 'Could not open the link.',
+  '既存の Claude に切り替えました': 'Switched to Existing Claude',
+  'パスをコピー': 'Copy path', 'コマンドをコピー': 'Copy command',
+  '複製先の名前（例: 仕事用-控え）': 'Name for the copy (e.g. Work-backup)',
+  '名前を入力してください。': 'Enter a name.',
+  '"default" は使えません。いまの環境を指す予約名です。': '"default" is reserved for the current environment and cannot be used.',
+  '名前は64文字までにしてください。': 'Use at most 64 characters.',
+  '文字・数字・ハイフン・アンダースコアだけ使えます（空白や記号は使えません）。': 'Use letters, digits, hyphens and underscores only (no spaces or symbols).',
+  // About dialog
+  'このアプリについて（免責）': 'About',
+  '非公式のオープンソースのコミュニティプロジェクトです。': 'An unofficial, open-source community project.',
+  '無保証': 'No warranty',
+  '本ソフトウェアは MIT ライセンスのもとで、そのままの状態で提供されます。動作や品質について、いかなる保証もありません。': 'This software is provided as is under the MIT License, with no warranty of any kind as to operation or quality.',
+  '自己責任でのご利用': 'Use at your own risk',
+  'ご利用は自己責任でお願いします。データの損失や不具合などについて、作者は責任を負いません。大切なデータは、お試しになる前にバックアップしておくことをおすすめします。': 'Use at your own risk. The author is not responsible for data loss or malfunctions. Back up important data before trying it.',
+  'プライバシー': 'Privacy',
+  'CSW はインターネット通信も、利用状況の送信も行いません。パスワードを保管する macOS のキーチェーンにも触れず、すべて手元のフォルダと設定の操作だけで動きます。': 'CSW makes no network requests and sends no usage data. It never touches the macOS Keychain that stores your passwords; it works only with local folders and settings.',
+  '非公式プロジェクト': 'Unofficial project',
+  '本プロジェクトは非公式のコミュニティ製で、Anthropic 社とは関係ありません。「Claude」は Anthropic の商標です。': 'This is an unofficial community project, not affiliated with Anthropic. "Claude" is a trademark of Anthropic.',
+  // Avatar picker labels
+  '仕事': 'Work', '個人': 'Personal', '検証': 'Testing', '開発': 'Dev', '会社': 'Company',
+  '学習': 'Study', 'デザイン': 'Design', 'ローンチ': 'Launch', 'プロジェクト': 'Project',
+  'お気に入り': 'Favorite', 'グローバル': 'Global', 'ハート': 'Heart', 'ツール': 'Tool',
+  'アイデア': 'Idea', '資料': 'Docs', '会話': 'Chat',
+  // Static create-view strings and chrome aria-labels.
+  '環境一覧': 'Environments', 'テーマカラー': 'Accent color', 'ヘルプ': 'Help', 'アイコンを選ぶ': 'Choose an icon', '分け方': 'How to separate',
+  '名前': 'Name', '例: 仕事用、検証用': 'e.g. Work, Testing', 'アイコン（任意）': 'Icon (optional)',
+  '既存の Claude から、どう分けますか?': 'How do you want to separate this from your existing Claude?',
+  'どのモードでも、サインインするアカウントは環境ごとに分かれます。課金や利用量はそのアカウントにひも付きます。違いは、会話・メモリ・設定をどこまで引き継ぐかです。':
+    'In every mode the signed-in account is separate per environment, and billing and usage follow that account. What differs is how much of your conversations, memory, and settings carry over.',
+  'アカウントだけ分ける': 'Separate the account only',
+  '会話履歴も自動メモリも、共通ルールやスキルもそのまま引き継ぎます。分けるのは課金アカウントだけなので、研究と開発で利用量を分けつつ作業を続けられます。':
+    'Conversation history, auto-memory, global rules and skills all carry over. Only the billing account is separated, so you can keep working while splitting usage between, say, research and development.',
+  'アカウント': 'Account', '会話・メモリ': 'Conversations & memory',
+  '会話とメモリも分ける': 'Separate conversations and memory too',
+  '共通ルール・スキル・プラグインとツール権限は引き継ぎ、会話履歴と自動メモリはこの環境だけにします。慣れた設定はそのままに、用途ごとに会話を分けたいときに向いています。':
+    'Global rules, skills, plugins and tool permissions carry over, while conversation history and auto-memory stay in this environment only. Good when you want your familiar setup but separate conversations per purpose.',
+  'ルール・設定': 'Rules & settings',
+  'すべて分ける': 'Separate everything', '推奨': 'Recommended',
+  'ルールも設定も会話履歴もメモリも、何も引き継がずにまっさらな環境を作ります。既存の Claude には一切触れないので、案件やクライアント、仕事と個人を完全に分けられます。':
+    'Creates a blank environment that carries nothing over: no rules, settings, conversation history, or memory. It never touches your existing Claude, so you can fully separate projects, clients, or work and personal use.',
+  '設定・会話': 'Settings & conversations',
+  '詳しく設定する（項目ごとに）': 'Configure in detail, item by item',
+  'モードの既定に戻す': 'Reset to mode defaults',
+};
+
+// Elements holding user data (environment names, filesystem paths, shell command)
+// must never be run through the dictionary: a user could name an environment
+// "仕事" and it must not become "Work". The default row's "既存の Claude" is
+// translated at construction with T() instead, so these can be skipped wholesale.
+const I18N_SKIP = '.profile-name, .detail-name, .path-code, .code-line, code';
+const setEN = (v) => (Object.prototype.hasOwnProperty.call(EN, v) ? EN[v] : null);
+
+function applyI18nText(node) {
+  if (LANG === 'ja') return;
+  if (node.nodeType === 3) {
+    if (node.parentElement && node.parentElement.closest(I18N_SKIP)) return;
+    const en = setEN(node.textContent.trim());
+    if (en != null) node.textContent = node.textContent.replace(node.textContent.trim(), en);
+    return;
+  }
+  if (node.nodeType !== 1) return;
+  // Elements carrying an explicit English phrase (composed markup: <strong>+text,
+  // inline <code>) are replaced whole and not descended into.
+  const whole = [];
+  if (node.hasAttribute('data-en')) whole.push(node);
+  node.querySelectorAll('[data-en]').forEach((e) => whole.push(e));
+  for (const e of whole) e.textContent = e.getAttribute('data-en');
+  // Attributes that surface as visible text, on this node and every descendant.
+  const attrEls = [node, ...node.querySelectorAll('[placeholder], [aria-label], [title]')];
+  for (const e of attrEls) {
+    for (const attr of ['placeholder', 'aria-label', 'title']) {
+      if (!e.hasAttribute || !e.hasAttribute(attr)) continue;
+      const en = setEN(e.getAttribute(attr).trim());
+      if (en != null) e.setAttribute(attr, en);
+    }
+  }
+  // Remaining text nodes, skipping user-data containers and data-en subtrees.
+  const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+    acceptNode: (tn) =>
+      tn.parentElement && tn.parentElement.closest(I18N_SKIP + ', [data-en]')
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
+  });
+  const texts = [];
+  let n;
+  while ((n = walker.nextNode())) texts.push(n);
+  for (const tn of texts) {
+    const en = setEN(tn.textContent.trim());
+    if (en != null) tn.textContent = tn.textContent.replace(tn.textContent.trim(), en);
+  }
+}
+
+if (LANG === 'en') {
+  document.documentElement.lang = 'en';
+  // main.js runs at end of <body>, so the static HTML already exists: translate it,
+  // then observe for everything the app builds afterwards.
+  applyI18nText(document.body);
+  new MutationObserver((muts) => {
+    for (const m of muts) for (const added of m.addedNodes) applyI18nText(added);
+  }).observe(document.body, { childList: true, subtree: true });
+}
+
 // --- The sharing components the user can tune, grouped and described in plain
 // language. config.json (OAuth tokens) and claude_desktop_config.json (account
 // state, rewritten on launch) are deliberately absent: they are always isolated
@@ -239,7 +446,7 @@ function renderSidebar() {
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
       h('span', { class: 'profile-avatar' }, isDefault ? icon('i-monitor') : avatarContent(p.icon, p.name)),
-      h('span', { class: 'profile-name', text: isDefault ? '既存の Claude' : p.name }),
+      h('span', { class: 'profile-name', text: isDefault ? T('既存の Claude', 'Existing Claude') : p.name }),
       pill);
   });
   el.profileList.replaceChildren(...rows);
@@ -263,7 +470,7 @@ async function showDetail(name) {
     h('div', { class: 'detail-bezel' },
       h('div', { class: 'detail-avatar' }, isDefault ? icon('i-monitor') : avatarContent(d.icon, name))),
     h('div', { class: 'detail-titles' },
-      h('div', { class: 'detail-name', text: isDefault ? '既存の Claude' : name }),
+      h('div', { class: 'detail-name', text: isDefault ? T('既存の Claude', 'Existing Claude') : name }),
       h('div', { class: 'detail-tagline', text: isDefault ? 'あなた自身の環境' : (isInUse ? '利用中の環境' : '作成した環境') })),
     isInUse ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', 'aria-label': '利用中', text: '利用中' }) : null);
 
@@ -274,7 +481,7 @@ async function showDetail(name) {
     // setup?"). The paths are collapsed; the "all 11 shared" line is dropped as
     // self-evident for the baseline.
     nodes.push(section('', [
-      h('div', { class: 'note-card' },
+      h('div', { class: 'note-card', dataset: { en: 'This is your own Claude Desktop App and Claude Code setup. CSW only displays it; it never changes or deletes your settings, history, or sign-in.' } },
         'あなたが普段使っている ', h('strong', { text: 'Claudeデスクトップアプリ' }), 'と ',
         h('strong', { text: 'Claude Code' }),
         ' の環境です。CSW はここを表示しているだけで、設定・履歴・ログインを変更したり削除したりしません。'),
@@ -362,8 +569,9 @@ function terminalSection(name) {
   // Collapsed by default: most users drive everything from the GUI; the CLI
   // command is only needed when opening a separate terminal yourself.
   const inner = [
-    h('p', { class: 'share-basis', text:
-      'CSW から開いたターミナルは、最初からこの環境です。別に開く iTerm2 などのターミナルでは、次を実行します（そのタブだけに適用されます）。' }),
+    h('p', { class: 'share-basis', text: T(
+      'CSW から開いた Claudeデスクトップアプリの中のターミナルは、最初からこの環境です。コマンドは要りません。自分で別に開いた iTerm2 などのターミナルでこの環境に揃えるには、次を実行します。この指定はそのタブだけに効き、普段の環境には影響しません。',
+      'A terminal inside the Claude Desktop App you opened from CSW is already in this environment, so no command is needed. To match a terminal you opened yourself, such as iTerm2, run the command below. It applies to that tab only and never affects your usual environment.') }),
     h('div', { class: 'path-row' },
       h('div', { class: 'path-meta' }, h('code', { class: 'path-code', text: cmd })),
       copyButton(cmd, 'コマンドをコピー')),
@@ -400,8 +608,8 @@ function sharingDisclosure(sharing) {
   const copyCount = ALL_KEYS.filter((k) => sharing[k] === 'copy').length;
   const isoCount = ALL_KEYS.length - shareCount - copyCount;
   const summary = copyCount
-    ? `共有 ${shareCount}・コピー ${copyCount}・分離 ${isoCount} 件`
-    : `共有 ${shareCount}・分離 ${isoCount} 件`;
+    ? T(`共有 ${shareCount}・コピー ${copyCount}・分離 ${isoCount} 件`, `${shareCount} shared · ${copyCount} copied · ${isoCount} isolated`)
+    : T(`共有 ${shareCount}・分離 ${isoCount} 件`, `${shareCount} shared · ${isoCount} isolated`);
 
   const inner = [
     // Name the reference point so "shared/copied/isolated" is never ambiguous.
@@ -415,7 +623,7 @@ function sharingDisclosure(sharing) {
   inner.push(h('div', { class: 'share-group' }, sharingReadRow(DEVICE_ID, sharing[DEVICE_ID.key])));
 
   return section('この環境が引き継いでいるもの',
-    [disclosure(summary, ' ／ アカウントは常に分離', inner)]);
+    [disclosure(summary, T(' ／ アカウントは常に分離', ' · Account always separate'), inner)]);
 }
 
 function sharingReadRow(item, mode) {
@@ -522,7 +730,7 @@ async function doSwitch(name, supportsConcurrent) {
     await invoke('switch_profile', { name, noLaunch: false });
     await refreshProfiles();
     withTransition(() => showDetail(name));
-    showToast(name === 'default' ? '既存の Claude に切り替えました' : `${name} の Claude を起動しました`);
+    showToast(name === 'default' ? T('既存の Claude に切り替えました', 'Switched to Existing Claude') : T(`${name} の Claude を起動しました`, `Launched Claude for ${name}`));
   } catch (err) {
     if (String(err || '').includes('Claude Desktop is running')) { showSwitchBlocked(name, supportsConcurrent); return; }
     showToast('切り替えできませんでした。もう一度お試しください。', true);
@@ -536,7 +744,7 @@ async function doLaunchNewWindow(name) {
     await invoke('launch_additional_window', { name });
     await refreshProfiles();
     withTransition(() => showDetail(name));
-    showToast(`${name} を新しいウィンドウで起動しました`);
+    showToast(T(`${name} を新しいウィンドウで起動しました`, `Launched ${name} in a new window`));
   } catch (err) {
     showToast('起動できませんでした。もう一度お試しください。', true);
   }
@@ -549,7 +757,7 @@ async function doDelete(name) {
     await refreshProfiles();
     const remaining = profiles.filter((p) => p.name !== 'default');
     withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
-    showToast(`${name}を削除しました`);
+    showToast(T(`${name}を削除しました`, `Deleted ${name}`));
   } catch (err) {
     showToast('削除できませんでした。利用中の環境は切り替えてから削除してください。', true);
   }
@@ -563,7 +771,7 @@ async function doClone(source, target) {
     selectedName = target;
     await refreshProfiles();
     withTransition(() => showDetail(target));
-    showToast(`${target}を複製しました（元の環境はそのまま）`);
+    showToast(T(`${target}を複製しました。元の環境はそのままです。`, `Duplicated ${target}. The original is unchanged.`));
   } catch (e) {
     showToast('複製できませんでした。同じ名前がすでにあるか確認してください。', true);
   }
@@ -634,7 +842,7 @@ function requestCreate() {
   el.nameError.hidden = true;
   el.createFooter.className = 'view-footer split';
   el.createFooter.replaceChildren(
-    h('span', { class: 'confirm-text', text: `「${name}」を作成します。` }),
+    h('span', { class: 'confirm-text', text: T(`「${name}」を作成します。`, `Create "${name}".`) }),
     h('div', { class: 'footer-group' },
       h('button', { type: 'button', class: 'btn btn-ghost', onclick: renderCreateFooter }, '戻る'),
       h('button', { type: 'button', class: 'btn btn-primary', onclick: submitCreate }, '作成する')));
@@ -761,7 +969,7 @@ async function submitCreate() {
     selectedName = name;
     await refreshProfiles();
     withTransition(() => showDetail(name));
-    showToast(`${name}を作成しました`);
+    showToast(T(`${name}を作成しました`, `Created ${name}`));
   } catch (e) {
     showToast('作成できませんでした。同じ名前がすでにあるか確認してください。', true);
     renderCreateFooter(); // restore the form footer so the user can fix and retry
@@ -960,24 +1168,33 @@ document.addEventListener('DOMContentLoaded', init);
 // The shipped app sets withGlobalTauri:true and never reaches this path.
 // ============================================================================
 function devInvoke(cmd, args) {
+  // Locale-aware sample names so English screenshots read naturally. Real user
+  // environment names are never translated (they are not run through the dictionary).
+  const NM = LANG === 'ja' ? { work: '仕事用', research: '研究用', testing: '検証用' } : { work: 'Work', research: 'Research', testing: 'Testing' };
+  const prof = (name, iconVal, concurrent, sharing) => ({
+    name, icon: iconVal, is_default: false, supports_concurrent_windows: concurrent,
+    desktop_path: `~/.context-switcher-claude/profiles/${name}/desktop-data`,
+    cli_path: `~/.context-switcher-claude/profiles/${name}/cli-data`,
+    sharing,
+  });
   const sample = {
     default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', supports_concurrent_windows: false, sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
-    仕事用: { name: '仕事用', icon: 'briefcase', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/仕事用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/仕事用/cli-data', supports_concurrent_windows: false, sharing: { ...PRESETS.share_settings } },
-    研究用: { name: '研究用', icon: 'graduation-cap', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/研究用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/研究用/cli-data', supports_concurrent_windows: false, sharing: { ...PRESETS.share_workspace } },
-    検証用: { name: '検証用', icon: 'flask', is_default: false, desktop_path: '~/.context-switcher-claude/profiles/検証用/desktop-data', cli_path: '~/.context-switcher-claude/profiles/検証用/cli-data', supports_concurrent_windows: true, sharing: { ...PRESETS.isolate } },
+    [NM.work]: prof(NM.work, 'briefcase', false, { ...PRESETS.share_settings }),
+    [NM.research]: prof(NM.research, 'graduation-cap', false, { ...PRESETS.share_workspace }),
+    [NM.testing]: prof(NM.testing, 'flask', true, { ...PRESETS.isolate }),
   };
   switch (cmd) {
     case 'list_profiles':
       return Promise.resolve([
         { name: 'default', icon: '', is_default: true },
-        { name: '仕事用', icon: 'briefcase', is_default: false },
-        { name: '研究用', icon: 'graduation-cap', is_default: false },
-        { name: '検証用', icon: 'flask', is_default: false },
+        { name: NM.work, icon: 'briefcase', is_default: false },
+        { name: NM.research, icon: 'graduation-cap', is_default: false },
+        { name: NM.testing, icon: 'flask', is_default: false },
       ]);
     case 'get_active_profile':
       return Promise.resolve('default');
     case 'get_profile_details':
-      return Promise.resolve(sample[args.name] || sample['検証用']);
+      return Promise.resolve(sample[args.name] || sample[NM.testing]);
     case 'get_desktop_running_status':
       // Depict the active environment as actually running so screenshots show the
       // "利用中" marker (the realistic state when Claude is open for that account).
@@ -990,7 +1207,7 @@ function devInvoke(cmd, args) {
     case 'get_default_roots_status':
       return Promise.resolve({ desktop_present: true, cli_present: true });
     case 'app_version':
-      return Promise.resolve('0.13.1');
+      return Promise.resolve('0.14.0');
     case 'open_url':
       return Promise.resolve(null);
     default:

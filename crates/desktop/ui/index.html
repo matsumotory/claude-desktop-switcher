@@ -107,9 +107,9 @@
               <p class="empty-lead">既存の Claude はそのまま。そこを基準に、何を引き継ぎ何を分けるかを決めて、新しい環境を作ります。</p>
 
               <ol class="steps">
-                <li class="step"><span class="step-num">1</span><span class="step-text"><strong>環境を作る</strong> を押す</span></li>
-                <li class="step"><span class="step-num">2</span><span class="step-text">用途に合わせて <strong>分け方</strong> を選ぶ</span></li>
-                <li class="step"><span class="step-num">3</span><span class="step-text">メニューバーから切り替える</span></li>
+                <li class="step"><span class="step-num">1</span><span class="step-text" data-en="Press New environment"><strong>環境を作る</strong> を押す</span></li>
+                <li class="step"><span class="step-num">2</span><span class="step-text" data-en="Choose how to separate for your use case">用途に合わせて <strong>分け方</strong> を選ぶ</span></li>
+                <li class="step"><span class="step-num">3</span><span class="step-text" data-en="Switch and launch">切り替えて起動する</span></li>
               </ol>
 
               <button type="button" class="btn btn-primary" id="btnCreateEmpty">
@@ -137,8 +137,8 @@
                     <span class="firstrun-icon"><svg class="icon"><use href="#i-terminal"/></svg></span>
                     <div>
                       <p class="firstrun-head">ターミナル（Claude Code）も同じ環境で使えます</p>
-                      <p class="firstrun-body">CSW から開いた Claudeデスクトップアプリの中で開くターミナルは、最初からこの環境です。そのまま <code>claude</code> で始められます。別に開く iTerm2 などのターミナルでこの環境を使うときだけ、次のコマンドを実行します（そのタブだけに適用され、普段の環境には影響しません）。</p>
-                      <code class="code-line">eval $(csw env &lt;環境名&gt;)</code>
+                      <p class="firstrun-body" data-en="A terminal inside the Claude Desktop App you opened from CSW is already in this environment, so you can just start with claude. Only when you use this environment in a terminal you opened yourself, such as iTerm2, run the command below. It applies to that tab only and never affects your usual environment.">CSW から開いた Claudeデスクトップアプリの中のターミナルは、最初からこの環境なので、そのまま <code>claude</code> で始められます。自分で別に開いた iTerm2 などのターミナルでこの環境を使うときは、次のコマンドを実行します。この指定はそのタブだけに効き、普段の環境には影響しません。</p>
+                      <code class="code-line" data-en="eval $(csw env &lt;environment&gt;)">eval $(csw env &lt;環境名&gt;)</code>
                     </div>
                   </div>
                 </div>

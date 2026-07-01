@@ -105,7 +105,7 @@ This command needs the `csw` CLI. Download the signed, notarized `csw` binary fr
 
 1. Open your terminal (iTerm2, the standard Terminal, etc.).
 2. Run `eval $(csw env Work)` (replace `Work` with the target environment name).
-3. That tab's environment variables switch to the target environment. Type `claude` to start (it applies to that tab only and never affects your usual environment).
+3. That tab's environment variables switch to the target environment. It applies to that tab only and never affects your usual environment, so type `claude` to start.
 
 **First time only: signing in to Claude Code**
 The Claude Code (CLI) sign-in is managed separately from the desktop app's sign-in, and it is needed once per environment. In either terminal above, running `claude` in an environment you haven't signed into yet will prompt you to sign in. Follow the prompts and, from the sign-in options, choose the subscription account (your Claude account); this is different from the API-billed account. Once you sign in, it persists for that environment, so you don't need to sign in again on later runs or when you switch environments. The built-in terminal and an external terminal switched into the same environment share the same sign-in.
@@ -147,7 +147,7 @@ No. Each new environment is created in its own dedicated directory, physically s
 No. Each environment keeps its own account sign-in info (`config.json`) inside its own directory. Sign in once per environment and it persists across switches (items set to "isolate" start empty in the new environment).
 
 **Q. Does switching the desktop app also switch the terminal (Claude Code)?**
-The terminal you open inside the app launched from CSW (built-in) is already in the same environment as that app, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run `eval $(csw env Work)` to sync it explicitly (it applies to that tab only and never affects your usual environment). Note that the environment (the config directory) is synced automatically, but the first time you use Claude Code in that environment you still need to sign in to the CLI once (see the next Q).
+A terminal inside the app you launched from CSW is already in the same environment as that app, so no command is needed. A terminal you open separately stays in your usual environment, so pass the target environment name and run `eval $(csw env Work)` to sync it. It applies to that tab only and never affects your usual environment. The environment's config directory is synced automatically, but the first time you use Claude Code in that environment you still need to sign in to the CLI once. See the next Q for details.
 
 **Q. If I'm signed in to the desktop app, is the terminal (Claude Code) signed in too?**
 No. The desktop app's sign-in and the Claude Code (CLI) sign-in are managed separately. The first time you run `claude` in a terminal for a given environment, you need to sign in to the CLI once for that environment (choose the subscription account as the sign-in method). Once signed in, it persists for that environment, so you don't need to sign in again when you switch. The built-in terminal and an external terminal switched into the same environment share the same sign-in. See Scenario B under "Daily Workflow" for details.
