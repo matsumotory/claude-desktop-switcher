@@ -32,7 +32,7 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 ### Step 1: Install the Application
 1. Download the latest `.dmg` file from the [Releases](https://github.com/matsumotory/claude-desktop-switcher/releases/latest) page.
 2. Drag and drop the downloaded `Claude-Desktop-Switcher.app` into your macOS `Applications` folder.
-3. Launch the app. A blue icon will appear in your macOS menu bar.
+3. Launch the app. The settings window opens, and a menu bar icon also appears (it can be hidden when the menu bar is crowded, but you can always reopen the settings window from the Dock icon).
 4. On first launch only, the welcome screen shows a few helper cards (your Existing Claude is protected, you can switch between environments, and the terminal (Claude Code) shares the same environment). They appear once and then go away.
 
 ![First-run onboarding](../website/assets/screen_onboarding.png)
@@ -46,8 +46,8 @@ Create a new isolated environment for work or research.
 
 For other cases (such as "I want to reuse my common rules and skills, but route usage to my Work account"), you can adjust what carries over.
 
-1. Click the Claude Desktop Switcher icon in the menu bar and select **"Settings..."**.
-2. In the settings window, click **"環境を作る" (Create environment)**.
+1. Use the settings window, which opens automatically on launch (if you closed it, reopen it from the Dock icon or via **"Settings..."** on the menu bar icon).
+2. Click **"環境を作る" (Create environment)**.
 3. Enter the environment information.
    * **Name**: (e.g., `Work`, `Research`)
    * **Icon (optional)**: pick from the prepared icons (or use an emoji if none fit)
@@ -56,7 +56,7 @@ For other cases (such as "I want to reuse my common rules and skills, but route 
 
    * **Separate the account only**: Carry over conversation history and auto-memory too; only the account is separate. Run research and development on separate billing while keeping one continuous workspace.
    * **Separate conversations & memory too**: Carry over your common rules, skills, plugins and tool permissions; keep conversation history and auto-memory to this environment. Split by purpose while reusing your setup.
-   * **Separate everything (recommended, default)**: Nothing carries over — the new environment is fully independent. For clients and projects, or work-vs-personal, that must not mix. Your existing Claude is never touched.
+   * **Separate everything (recommended, default)**: Nothing carries over. The new environment is fully independent. For clients and projects, or work-vs-personal, that must not mix. Your existing Claude is never touched.
 
    The difference between "Separate conversations & memory too" and "Separate the account only" is the single point of whether conversation history and auto-memory carry over.
 
@@ -85,7 +85,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
 
 ### Scenario A: Starting work with your Work account
 1. If another Claude Desktop app is running, quit it first. (To avoid configuration conflicts, you cannot run more than one environment's Claude at once.)
-2. Click the Claude Desktop Switcher icon in the menu bar and select the "Work" environment you created.
+2. In the settings window, select the "Work" environment you created (you can also open the settings window from the menu bar or Dock icon).
 3. **Press "Launch Claude for this environment", and that environment's dedicated Claude Desktop app launches.**
    （This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.）
 
@@ -108,7 +108,7 @@ This command needs the `csw` CLI. Download the signed, notarized `csw` binary fr
 3. That tab's environment variables switch to the target environment. Type `claude` to start (it applies to that tab only and never affects your usual environment).
 
 ### Scenario C: Returning to your usual (Personal) environment
-* **Desktop**: Select "Existing Claude" from the menu bar, or simply launch `Claude.app` normally via Spotlight. It will always open your standard personal environment.
+* **Desktop**: Select "Existing Claude" in the settings window (or from the menu bar icon), or simply launch `Claude.app` normally via Spotlight. It will always open your standard personal environment.
 * **CLI**: If you open a standard terminal and type `claude`, it will always operate as your Existing Claude (personal) environment.
 
 ---
