@@ -93,10 +93,10 @@ Here is the daily usage flow after setup. No manual configuration is required.
 > To avoid configuration conflicts, you cannot run more than one environment's Claude simultaneously. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual.
 
 ### Scenario B: Using the Terminal (Claude Code)
-There are two kinds of terminal, and they need different steps.
+There are two kinds of terminal, and they need different steps. In either case, the first time you use Claude Code in an environment, you need to sign in to the CLI once (see "First time only: signing in to Claude Code" below).
 
 **1. The terminal inside the Claude Desktop App you launched from CSW (built-in)**
-When you switch to an environment and launch it from CSW, any terminal you open inside that app is already in that environment. No extra command is needed; just type `claude` and start working.
+When you switch to an environment and launch it from CSW, any terminal you open inside that app is already in that environment. No command to switch environment variables is needed; just type `claude` and start working.
 
 **2. A separate terminal you open yourself (external, e.g. iTerm2 or the standard Terminal)**
 A terminal you open on your own stays in your usual environment. To use a specific environment, run the sync command.
@@ -106,6 +106,9 @@ This command needs the `csw` CLI. Download the signed, notarized `csw` binary fr
 1. Open your terminal (iTerm2, the standard Terminal, etc.).
 2. Run `eval $(csw env Work)` (replace `Work` with the target environment name).
 3. That tab's environment variables switch to the target environment. Type `claude` to start (it applies to that tab only and never affects your usual environment).
+
+**First time only: signing in to Claude Code**
+The Claude Code (CLI) sign-in is managed separately from the desktop app's sign-in, and it is needed once per environment. In either terminal above, running `claude` in an environment you haven't signed into yet will prompt you to sign in. Follow the prompts and, from the sign-in options, choose the subscription account (your Claude account); this is different from the API-billed account. Once you sign in, it persists for that environment, so you don't need to sign in again on later runs or when you switch environments. The built-in terminal and an external terminal switched into the same environment share the same sign-in.
 
 ### Scenario C: Returning to your usual (Personal) environment
 * **Desktop**: Select "Existing Claude" in the settings window (or from the menu bar icon), or simply launch `Claude.app` normally via Spotlight. It will always open your standard personal environment.
@@ -144,7 +147,10 @@ No. Each new environment is created in its own dedicated directory, physically s
 No. Each environment keeps its own account sign-in info (`config.json`) inside its own directory. Sign in once per environment and it persists across switches (items set to "isolate" start empty in the new environment).
 
 **Q. Does switching the desktop app also switch the terminal (Claude Code)?**
-The terminal you open inside the app launched from CSW (built-in) is already in the same environment as that app, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run `eval $(csw env Work)` to sync it explicitly (it applies to that tab only and never affects your usual environment).
+The terminal you open inside the app launched from CSW (built-in) is already in the same environment as that app, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run `eval $(csw env Work)` to sync it explicitly (it applies to that tab only and never affects your usual environment). Note that the environment (the config directory) is synced automatically, but the first time you use Claude Code in that environment you still need to sign in to the CLI once (see the next Q).
+
+**Q. If I'm signed in to the desktop app, is the terminal (Claude Code) signed in too?**
+No. The desktop app's sign-in and the Claude Code (CLI) sign-in are managed separately. The first time you run `claude` in a terminal for a given environment, you need to sign in to the CLI once for that environment (choose the subscription account as the sign-in method). Once signed in, it persists for that environment, so you don't need to sign in again when you switch. The built-in terminal and an external terminal switched into the same environment share the same sign-in. See Scenario B under "Daily Workflow" for details.
 
 **Q. What exactly carries over with "Separate conversations & memory too"?**
 Your common rules (CLAUDE.md), tool permissions and hooks (settings.json), plugins, and skills carry over from "Existing Claude". Conversation history and auto-memory (projects/), prompt history (history.jsonl), and the account sign-in info (config.json) stay separate. The connector and app settings (claude_desktop_config.json, which is where MCP connectors live) and the session state (sessions/) are always separate as well. To fine-tune, use "Configure in detail (per item)" on the create screen.
