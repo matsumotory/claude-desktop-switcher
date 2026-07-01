@@ -90,7 +90,7 @@
             <div class="features-grid">
                 <div class="feature-intro fade-in">
                     <h2>Separate the whole<br>Desktop App suite</h2>
-                    <p>Switching CLI profiles is already well handled by existing tools like direnv and claude-swap. Claude Desktop Switcher (CSW) is for the rest of your Claude work: keep chat, Projects, Cowork, Artifacts, and Claude Design separated by account and use case, whether you live entirely in the desktop app, pair Cowork with Claude Code and Claude Design, or mainly use Cowork and chat. Claude Code links to the same environment when you want it: switch the GUI from the menu bar, and sync a separate terminal with one command.</p>
+                    <p>Switching CLI profiles is already well handled by existing tools like direnv and claude-swap. Claude Desktop Switcher (CSW) is for the rest of your Claude work: keep chat, Projects, Cowork, Artifacts, and Claude Design separated by account and use case, whether you live entirely in the desktop app, pair Cowork with Claude Code and Claude Design, or mainly use Cowork and chat. Claude Code links to the same environment when you want it: switch the GUI by picking an environment, and sync a separate terminal with one command.</p>
                 </div>
                 
                 <div class="feature-cards-stack">
@@ -115,7 +115,7 @@
         <section id="screens" class="screens container fade-in">
             <div class="screens-header">
                 <h2>See it in action.</h2>
-                <p>The whole environment system lives in one settings window. Create an environment by choosing how much carries over, inspect exactly what each environment carries over, and switch from the menu bar.</p>
+                <p>The whole environment system lives in one settings window. Create an environment by choosing how much carries over, inspect exactly what each environment carries over, and switch environments right there.</p>
             </div>
             <div class="screens-bento">
                 <figure class="screen-card fade-in delay-1">
@@ -153,7 +153,7 @@
                         <span class="usecase-num">02</span>
                         <h3 class="usecase-title">Work and personal on one Mac (no terminal)</h3>
                         <p class="usecase-text">You want to keep your business and personal accounts apart without touching the terminal.</p>
-                        <p class="usecase-solution">Pick an environment from the menu bar to switch to that account's Claude Desktop App without signing in again. No terminal needed; it is complete in the GUI.</p>
+                        <p class="usecase-solution">Just pick an environment and that account's Claude Desktop App launches without signing in again. No terminal needed; it is complete in the GUI.</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
@@ -187,14 +187,14 @@
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
                 <h2>GUI Workflow.</h2>
-                <p>Everything for the Desktop app happens from the menu bar, with no terminal or scripts to manage. Link Claude Code (the CLI) to the same environment with one command only when you want it.</p>
+                <p>Everything for the Desktop app is just a few clicks, with no terminal or scripts to manage. Link Claude Code (the CLI) to the same environment with one command only when you want it.</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
                     <div class="step-num">01</div>
                     <div class="step-body">
                         <h3>Install & Launch</h3>
-                        <p>Drag to Applications and run. A quiet menu bar icon appears.</p>
+                        <p>Drag to Applications and run. Setup is complete.</p>
                     </div>
                 </div>
                 <div class="step-item border-top">
@@ -207,7 +207,7 @@
                 <div class="step-item border-top">
                     <div class="step-num">03</div>
                     <div class="step-body">
-                        <h3>Switch from the Menu Bar</h3>
+                        <h3>Launch in an Isolated Environment</h3>
                         <p>Select an environment, and its Claude Desktop App launches against its own isolated directory. One environment runs at a time, so quit the running Claude before switching to another.</p>
                     </div>
                 </div>
@@ -304,7 +304,7 @@
             <div class="tech-note-cols">
                 <div class="tech-note-col">
                     <h3>Rust and Tauri, chosen to avoid breaking anything</h3>
-                    <p>What CSW cares about most is not breaking the Claude data you already have. Switching accounts means swapping configuration files, so if that ever fails midway, your chat history or account sign-in could be lost. To contain that risk, the operations that could break something all live in one place: separating each environment's data, deciding where files belong, and protecting the data currently in use. All of this sits in one shared Rust component (<code>crates/core</code>), and both the command-line tool (<code>csw</code>) and the menu-bar app (<code>crates/desktop</code>) simply call into that same component. With the risky work in a single place, there is only one place to review.</p>
+                    <p>What CSW cares about most is not breaking the Claude data you already have. Switching accounts means swapping configuration files, so if that ever fails midway, your chat history or account sign-in could be lost. To contain that risk, the operations that could break something all live in one place: separating each environment's data, deciding where files belong, and protecting the data currently in use. All of this sits in one shared Rust component (<code>crates/core</code>), and both the command-line tool (<code>csw</code>) and the desktop app (<code>crates/desktop</code>) simply call into that same component. With the risky work in a single place, there is only one place to review.</p>
                     <p>On deletion paths, the directory currently in use is always excluded from what gets removed. When swapping a shared configuration file, the original is moved to a backup first, then replaced. We chose Rust because these promises can be checked automatically, by the machine, before the program even runs, at compile time. Write code that breaks a promise and it stops with an error at that stage and never reaches the step that builds the distributable. In other words, a mistake that violates a defined promise is caught before it ships. We pair this with tests and err on the side of safety.</p>
                     <p>The GUI is built with Tauri v2. It renders through WebKit, the display engine already built into macOS, so the app does not bundle a whole browser engine of its own. That keeps the distributable small: the build covering both Intel and Apple Silicon is about 7 MB as a DMG. Code signing and notarization, where Apple confirms the app's identity, also run through Tauri's standard distribution flow.</p>
                     <p>For native macOS UI, Apple's Swift and SwiftUI would be the first choice. But CSW's heart is the systems work of swapping files and settings safely, not the screens, and there is not much UI. So we prioritized being able to check that underlying logic with the compiler and tests, and chose Rust and Tauri. A different kind of app would call for a different choice.</p>

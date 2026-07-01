@@ -28,7 +28,7 @@ How should you partition your environments on a single PC? You can flexibly adju
   When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts. Selecting the "Isolated" configuration allocates a separate data directory for each environment (each keeping its own login), structurally preventing information from leaking across the desktop suite.
 
 - **02. Separate work and personal on one Mac (no terminal needed)**
-  Keep your business and personal accounts apart without touching the terminal. Pick an environment from the menu bar and the Claude Desktop App switches without signing in again. It is complete in the GUI.
+  Keep your business and personal accounts apart without touching the terminal. Just pick an environment and the Claude Desktop App switches without signing in again. It is complete in the GUI.
 
 - **03. Separate by use case while sharing common rules**
   When you want separate accounts but want to reuse common rules and settings. A "Shared" configuration synchronizes specific files (such as `CLAUDE.md`) across environments while keeping history and logins separate.
@@ -38,7 +38,7 @@ How should you partition your environments on a single PC? You can flexibly adju
 
 ## Features
 
-- **Integrated Management for GUI & CLI**: Centrally manages the environments behind the Claude Desktop App and Claude Code (CLI). Switch GUI environments from the menu bar; sync the CLI to the same isolated environment by running a command in a separate terminal.
+- **Integrated Management for GUI & CLI**: Centrally manages the environments behind the Claude Desktop App and Claude Code (CLI). Switch GUI environments by selecting one; sync the CLI to the same isolated environment by running a command in a separate terminal.
 - **Customizable Isolation**: You can choose which settings to share and which data to separate based on your use case.
 - **Zero-Impact Isolation**: It does not arbitrarily overwrite your Mac's global system settings. Settings are applied locally only to the apps or specific terminal tabs launched by this tool. It makes absolutely no changes to your existing default Claude environment.
 
@@ -46,10 +46,10 @@ How should you partition your environments on a single PC? You can flexibly adju
 
 ### GUI Workflow
 
-Managing the desktop app requires no complex configuration. Everything can be operated intuitively from the menu bar.
+Managing the desktop app requires no complex configuration. Everything is done in the settings window, with no terminal or scripts.
 
-1. **Install & Launch**: Place `Claude-Desktop-Switcher.app` in your Applications folder and launch it. It will reside in the menu bar.
-2. **Create Environments**: From `Settings...` in the menu, create independent environments such as "Work" or "Research" with a single click.
+1. **Install & Launch**: Place `Claude-Desktop-Switcher.app` in your Applications folder and launch it. The settings window opens.
+2. **Create Environments**: In the settings window, create independent environments such as "Work" or "Research" with a single click.
 3. **Launch in Isolated Environment**: Select an environment and press "Launch Claude for this environment" (`この環境で Claude を起動`); that environment's Claude Desktop App launches against its own isolated directory. Quit any running Claude first — one environment runs at a time.
 
 ### Terminal (Claude Code) Integration
@@ -134,7 +134,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
   複数のクライアント案件やプロジェクトを並行する際、チャット履歴・Projects のメモリ・Cowork の作業フォルダ・Artifacts が混ざる懸念を避けたい場合に。「完全隔離」構成を選ぶと、環境ごとに独立したデータディレクトリ（各々が自分のログインを保持）が割り当てられ、別案件の文脈へ漏れる事故を構造的に防ぎます。
 
 - **02. 仕事用と個人用を 1 台で分ける（非エンジニア向け）**
-  業務アカウントと個人アカウントを混ぜたくないが、ターミナル操作はしたくない場合に。メニューバーから環境を選ぶだけで、再ログインなしに別アカウントのデスクトップアプリへ切り替わります。GUI だけで完結します。
+  業務アカウントと個人アカウントを混ぜたくないが、ターミナル操作はしたくない場合に。環境を選ぶだけで、再ログインなしに別アカウントのデスクトップアプリへ切り替わります。GUI だけで完結します。
 
 - **03. 用途ごとに分けつつ共通ルールは共有する**
   アカウントは用途別に分けたいが、共通の運用ルールや設定は使い回したい場合に。特定の設定ファイル（CLAUDE.md 等）だけを全環境で共有する構成に対応し、履歴やログインは分離したまま設定の二重管理を防ぎます。
@@ -144,7 +144,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 
 ### アプリの特徴
 
-- **GUIとCLIの統合環境管理**: ClaudeデスクトップアプリとClaude Code（CLI）の背後の環境を一元管理します。メニューバーからGUIの環境を切り替えるほか、別に開いたターミナルでコマンドを実行すれば、CLIも同じ隔離環境へ同期できます。
+- **GUIとCLIの統合環境管理**: ClaudeデスクトップアプリとClaude Code（CLI）の背後の環境を一元管理します。GUI の環境を選んで切り替えるほか、別に開いたターミナルでコマンドを実行すれば、CLIも同じ隔離環境へ同期できます。
 - **分離度のカスタマイズ**: 共有したい設定と分けたいデータを用途に合わせて選択可能です。
 - **局所的な環境の適用 (Zero-Impact Isolation)**: Mac本体のシステム設定を無差別に上書きすることはありません。設定は本ツールから起動したアプリや特定のターミナルタブに対してのみ局所的に適用されます。既存のClaude環境には一切変更を加えません。
 
@@ -152,10 +152,10 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 
 #### GUI ワークフロー
 
-デスクトップアプリの管理に複雑な設定は不要です。すべてメニューバーから直感的に操作できます。
+デスクトップアプリの管理に複雑な設定は不要です。すべて設定ウインドウで操作できます。
 
-1. **インストール＆起動**: `Claude-Desktop-Switcher.app` をアプリケーションフォルダに入れて起動。メニューバーに常駐します。
-2. **環境の作成**: メニューの `Settings...` から、ワンクリックで「業務」「研究」など、独立した環境を作成。
+1. **インストール＆起動**: `Claude-Desktop-Switcher.app` をアプリケーションフォルダに入れて起動。設定ウインドウが開きます。
+2. **環境の作成**: 設定ウインドウで、ワンクリックで「業務」「研究」など、独立した環境を作成。
 3. **分離環境での起動**: 環境を選んで「この環境で Claude を起動」を押すと、その環境専用の隔離ディレクトリで Claudeデスクトップアプリが起動します。起動中の Claude は先に終了してください（同時に開けるのは1環境）。
 
 #### ターミナル（Claude Code）連携
