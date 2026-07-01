@@ -137,3 +137,36 @@ PR の一部だけが有用な場合:
 2. PR にクローズ理由をコメントで明記する
 3. 取り込んだ変更 / 除外した変更を区別して記述する
 
+## リリース PR (release-please) のマージ
+
+`fix:` / `feat:` / 破壊的変更が main に入ると、release-please が `chore(main): release X.Y.Z` という PR を自動起票する。これは版更新 (`Cargo.toml` / `crates/desktop/tauri.conf.json` / `.release-please-manifest.json`) と `CHANGELOG.md` だけで、**コードは含まない** (機能は各 `feat`/`fix` PR で CI 済み)。
+
+> [!IMPORTANT]
+> **リリースはユーザーの明示指示 (「リリースして」等) があってから行う。** 公開・巻き戻し困難な操作なので、勝手に走らせない。
+
+### なぜ通常マージが BLOCKED になるか
+
+このリリース PR は GitHub の bot (`GITHUB_TOKEN`) が作るため、GitHub のループ防止で `pull_request` ワークフローが発火しない。結果、必須チェック (Build / Test / Lint / Secret scan) が一つも付かず、`mergeStateStatus` が `BLOCKED` になる (`mergeable` は `MERGEABLE` のまま)。
+
+### 正しい手順 (`--admin` を使わない)
+
+`main` の branch protection は `enforce_admins:false` なので `--admin` で押し込むことは可能だが、**使わない** (standing rule、auto モードの classifier もブロックする)。代わりに必須チェックを実際に走らせてから通常マージする:
+
+1. `git fetch origin release-please--branches--main`
+2. worktree を切り、release ブランチ (`release-please--branches--main`) に **空コミットを 1 つ** push する:
+   `git commit --allow-empty -m "chore: 必須チェックを発火させる"` → `git push origin HEAD:release-please--branches--main`
+   (CI ワークフローは `on: pull_request` で paths フィルタが無いため、実ユーザーの push が `synchronize` で必須チェックを発火させる。取りこぼした CHANGELOG エントリがあればこの commit で追記してもよい。)
+3. `gh pr checks <PR番号>` で 4 チェックが全 green・`mergeStateStatus` が `CLEAN` になるのを待つ。
+4. `gh pr merge <PR番号> --squash` (**`--admin` なし**、`--subject "chore(main): release X.Y.Z"` でメッセージを明示)。
+5. マージ後の後始末 (worktree/branch 撤去、primary で `git pull origin main`)。
+
+### マージ後のリリースビルド監視
+
+マージすると `Release Please` (`release.yml`, `on: push main`) が走り、`release-please` ジョブが tag `vX.Y.Z` と GitHub Release を作成し、続けて `build-mac-dmg` (署名・公証つき universal DMG) と `publish-csw` (署名・公証つき `csw` バイナリ添付) が走る。
+
+- [ ] `gh run view <id>` で全ジョブ green を確認する。
+- [ ] `gh release view vX.Y.Z` で Release が draft/prerelease でなく、`*_universal.dmg` と `csw` が添付されていることを確認する。
+- [ ] 署名・公証やアセット添付が落ちたら green になるまでデバッグする (成功を仮定しない)。
+
+技術背景 (squash とメッセージのパース注意) は個人メモリ `release-please-squash-parse-pitfall` / `autonomous-merge-after-ci` も参照。
+

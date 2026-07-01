@@ -31,7 +31,7 @@ cargo clippy --workspace --all-targets -- -D warnings   # lint
 cargo fmt --all                    # フォーマット
 ```
 
-GUI の実機確認は `cargo tauri dev` (要 `cargo install tauri-cli`)。デスクトップ署名/公証/DMG は GitHub Actions の `Release Please` ワークフローが担う。
+GUI の実機確認は `cargo tauri dev` (要 `cargo install tauri-cli`)。デスクトップ署名/公証/DMG は GitHub Actions の `Release Please` ワークフローが担う。リリースの実施手順 (release-please の release PR を `--admin` を使わずマージし、署名・公証つき DMG と `csw` の公開まで監視する正規手順) は [.agents/skills/core_pr_merge_checklist/SKILL.md](.agents/skills/core_pr_merge_checklist/SKILL.md) の「リリース PR (release-please) のマージ」節を参照する。ユーザーの明示指示があってから行う。
 
 LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launch.json` の `lp` を起動する (preview_start で `website/` を `python3 -m http.server` 配信、EN は `/`、日本語は `/ja/`)。`website/` をルートに配信しないと相対パス (`../style.css` 等) が解決しないので、単体 HTML を file:// で開くのではなくこの設定で見る。
 
