@@ -65,7 +65,7 @@ async fn get_profile_details(
         // Only fully-isolated (すべて分ける) non-default environments may be opened
         // in additional concurrent windows: they share nothing, so parallel
         // instances cannot race on a shared file. The UI shows the dedicated
-        // "新しいウィンドウで起動" button only when this is true.
+        // "重複して起動" button only when this is true.
         "supports_concurrent_windows": !p.profile.is_default && p.sharing.is_fully_isolated(),
         "sharing": {
             "cli_settings": format!("{:?}", p.sharing.cli_settings).to_lowercase(),
