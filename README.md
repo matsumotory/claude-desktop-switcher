@@ -50,7 +50,7 @@ Managing the desktop app requires no complex configuration. Everything is done i
 
 1. **Install & Launch**: Place `Claude-Desktop-Switcher.app` in your Applications folder and launch it. The settings window opens.
 2. **Create Environments**: In the settings window, create independent environments such as "Work" or "Research" with a single click.
-3. **Launch in Isolated Environment**: Select an environment and press "Launch Claude for this environment" (`この環境で Claude を起動`); that environment's Claude Desktop App launches against its own isolated directory. Quit any running Claude first — one environment runs at a time.
+3. **Launch in Isolated Environment**: Select an environment and press "Switch and launch" (`切り替えて起動`); that environment's Claude Desktop App launches against its own isolated directory. Environments that share settings open one at a time, so quit a running Claude before switching. An environment set to "separate everything" shares nothing, so you can open it alongside a running Claude with "Launch alongside" (`重複して起動`), without quitting.
 
 ### Terminal (Claude Code) Integration
 
@@ -156,7 +156,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 
 1. **インストール＆起動**: `Claude-Desktop-Switcher.app` をアプリケーションフォルダに入れて起動。設定ウインドウが開きます。
 2. **環境の作成**: 設定ウインドウで、ワンクリックで「業務」「研究」など、独立した環境を作成。
-3. **分離環境での起動**: 環境を選んで「この環境で Claude を起動」を押すと、その環境専用の隔離ディレクトリで Claudeデスクトップアプリが起動します。起動中の Claude は先に終了してください（同時に開けるのは1環境）。
+3. **分離環境での起動**: 環境を選んで「切り替えて起動」を押すと、その環境専用の隔離ディレクトリで Claudeデスクトップアプリが起動します。設定を共有する環境は衝突を防ぐため一度に1つずつなので、切り替える前に起動中の Claude を終了してください。「すべて分ける」で作った環境は何も共有しないため、起動中の Claude を終了せず「重複して起動」で並べて開けます。
 
 #### ターミナル（Claude Code）連携
 
