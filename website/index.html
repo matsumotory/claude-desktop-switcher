@@ -274,7 +274,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
-                    <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env &lt;env-name&gt;)</code> (the name of the environment you want) to sync it (it applies to that tab only).</p>
+                    <p class="faq-a">A terminal inside the app you launched from CSW is already in the same environment, so no command is needed. A terminal you open separately stays in your usual environment, so pass the target environment name and run <code>eval $(csw env &lt;env-name&gt;)</code> to sync it. It applies to that tab only and never affects your usual environment.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Can I open more than one environment at the same time?</p>
