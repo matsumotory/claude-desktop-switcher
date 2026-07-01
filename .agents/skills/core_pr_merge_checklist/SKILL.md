@@ -170,3 +170,35 @@ PR の一部だけが有用な場合:
 
 技術背景 (squash とメッセージのパース注意) は個人メモリ `release-please-squash-parse-pitfall` / `autonomous-merge-after-ci` も参照。
 
+
+## 追記: 自律マージ・release-please・CI 課金
+
+このセクションは、上記の手順を運用する際に踏み外しやすい 2 点 (squash メッセージのパース事故 / macOS CI の課金事故) を規則として補う。マージ実行そのものの手順は「マージ実行手順 (自律)」節、release PR の扱いは「リリース PR (release-please) のマージ」節を一次情報とする。
+
+### squash マージのメッセージが release-please のパースを壊す
+
+squash マージは、PR のタイトルと本文をそのまま `main` の commit メッセージにする。この commit メッセージは release-please が Conventional Commits としてパースし、CHANGELOG とリリース PR を生成する入力になる。したがって PR 本文に装飾的な markdown が含まれると、パーサが壊れてその commit が changelog / release から取りこぼされ、最悪の場合リリース PR が 1 件も起票されない。
+
+壊す要因になる装飾:
+
+- バッククォート (`` ` ``) で囲んだ inline code
+- コマンド置換 `$(...)` やバッククォート実行構文
+- 引用符 (`"` / `'`) を含む一行
+- 三連バッククォートのコードブロック
+
+規則:
+
+- **予防**: リリースに関わる (`fix:` / `feat:` / 破壊的変更を含む) PR を squash するときは、commit メッセージを本文まかせにしない。`gh pr merge <PR番号> --squash --subject "<type>(<scope>): <要約>" --body "<装飾なしの本文>"` で Conventional Commits に沿ったクリーンなメッセージを明示する。装飾つきの詳しい説明を残したいときは、GitHub 上の PR 本文にだけ置き、commit メッセージには持ち込まない。
+- **検証**: マージ後は release-please のワークフローが起票したリリース PR を確認し、対象の commit が CHANGELOG に反映されているかを見る。反映されていなければパース事故を疑う。
+- **復旧**: 取りこぼしが起きたら、クリーンなメッセージの `fix:` commit を 1 本足してリリース PR を起票させ、取りこぼした変更点を `CHANGELOG.md` に手動で追記する。壊れた commit を書き換えるのではなく、正しい入力を 1 本足して前に進める。
+
+### macOS CI runner の課金と一律失敗の切り分け
+
+GitHub Actions の macOS runner は、分単価が Linux runner の約 10 倍である。CSW は署名・公証つき DMG のビルドに macOS runner を使うため、CI 実行時間がそのまま費用に直結する。
+
+- **一律失敗はまず課金を疑う**: 全ジョブが例外なく数秒で failure になる場合、コードの誤りやマージ順を疑う前に、まず利用枠 (spending limit) の枯渇を疑う。ジョブが起動直後に一斉に落ちるのは、コンパイルやテストの失敗ではなく、実行そのものが課金上の理由で拒否されている兆候であることが多い。ログにコンパイル出力が全く出ていないかを確認する。
+- **CI コスト削減の定石** (ワークフロー / branch protection を触るときに適用する):
+  - `concurrency` に `cancel-in-progress: true` を設定し、同一ブランチへの連続 push で古い実行を止める。
+  - ビルドキャッシュ (`Swatinem/rust-cache` 等) を効かせ、依存の再ビルドを避ける。
+  - 重い macOS ジョブは `on: pull_request` のみに限定し、push ごとの二重実行を避ける。
+  - branch protection の "Require branches to be up to date before merging" (strict) は基本 `false` にする。strict を `true` にして多数の PR を逐次マージすると、rebase のたびに全チェックが再実行され、macOS の分を焼き続ける。逐次マージが必要な事情がない限り strict にしない。
