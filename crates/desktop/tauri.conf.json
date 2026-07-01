@@ -1,6 +1,6 @@
 {
   "productName": "Claude-Desktop-Switcher",
-  "version": "0.13.2",
+  "version": "0.14.0",
   "identifier": "com.matsumotory.claude-desktop-switcher",
   "build": {
     "frontendDist": "./ui"

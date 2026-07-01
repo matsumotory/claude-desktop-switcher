@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.14.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.13.2...v0.14.0) (2026-07-01)
+
+
+### Features
+
+* **desktop:** 完全分離環境を複数ウィンドウで同時起動できるようにする ([#121](https://github.com/matsumotory/claude-desktop-switcher/issues/121)) ([9309e4c](https://github.com/matsumotory/claude-desktop-switcher/commit/9309e4cd130113cf5ca3ea60bd1c031914310719))
+
+
+### Bug Fixes
+
+* **desktop:** 詳細画面のボタンを起動優先に整理し説明を加える ([#123](https://github.com/matsumotory/claude-desktop-switcher/issues/123)) ([46a1470](https://github.com/matsumotory/claude-desktop-switcher/commit/46a14706ff85a12a44fe6b0abc5f68f909955c18))
+
 ## [0.13.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.13.1...v0.13.2) (2026-06-30)
 
 
