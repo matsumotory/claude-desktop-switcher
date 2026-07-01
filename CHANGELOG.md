@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.15.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.14.0...v0.15.0) (2026-07-01)
+
+
+### Features
+
+* **desktop:** アプリ本体を日英対応（i18n）にする ([#128](https://github.com/matsumotory/claude-desktop-switcher/issues/128)) ([1f1af41](https://github.com/matsumotory/claude-desktop-switcher/commit/1f1af41d012701503b2de3c6959b96729e861e93))
+
+
+### Bug Fixes
+
+* **desktop:** 全サーフェスを現行仕様に同期（ボタン名・同時起動・スクショ） ([#125](https://github.com/matsumotory/claude-desktop-switcher/issues/125)) ([eb3c89b](https://github.com/matsumotory/claude-desktop-switcher/commit/eb3c89b120ee45ce7c620dab55c4449e8fa0c392))
+
 ## [0.14.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.13.2...v0.14.0) (2026-07-01)
 
 
