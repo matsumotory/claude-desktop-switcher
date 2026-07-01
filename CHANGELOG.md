@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.15.0...v0.15.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* **desktop:** 詳細画面の「複製」を説明つきカードに作り替える ([#130](https://github.com/matsumotory/claude-desktop-switcher/issues/130)) ([c7e8426](https://github.com/matsumotory/claude-desktop-switcher/commit/c7e8426eb2a46ea12796b88be50d8bae2d05838b))
+
 ## [0.15.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.14.0...v0.15.0) (2026-07-01)
 
 
