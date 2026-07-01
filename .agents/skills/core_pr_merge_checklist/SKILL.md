@@ -136,7 +136,7 @@ LP / docs / README / UI コピーのみを変える PR は、CI (cargo のビル
 - **変更が純粋な文言/コピーである**: ロジック・事実関係・プロダクトポジショニングの転換を含まない。
 - **該当スキルの出荷前チェックを実測エビデンス付きで通す**: 眺めただけでは不可。
   - レンダリングされる LP/UI コピー: `japanese-typography-qa` / `design-taste-frontend` の出荷前チェックリストを、ヘッドレスブラウザの実寸 (desktop + モバイル幅) で数値確認する (横溢れなし・孤立行なし等)。
-  - Markdown の docs/README: `docs_impl_consistency_audit` (実装との整合) を通し、全サーフェスへの伝播 (`propagate-changes-to-all-surfaces`) を確認する。
+  - Markdown の docs/README: `docs_impl_consistency_audit` (実装との整合) と日本語の自然さ校正 (`japanese-typography-qa` §8.1 の校正パス) を通し、全サーフェスへの伝播 (`propagate-changes-to-all-surfaces`) を確認する。
 
 どちらか一方でも欠けるとき (スキル QA が通らない・検証できない、ロジック/事実/ポジショニングに踏み込む、不可逆で影響が大きい) は自律を止めて確認する。確認するときも推奨を先に添える。
 
@@ -154,6 +154,16 @@ PR の一部だけが有用な場合:
 
 > [!IMPORTANT]
 > **リリースも確認を取らず自律的に行う。** ただし公開・巻き戻し困難な操作なので、実行前に必ず正しさを検証する (下記「リリース前の正しさ検証」)。検証を飛ばして機械的に進めることはしない。
+
+### リリース前の正しさ検証 (実行前に必ず検証)
+
+release PR をマージする前に以下を必ず検証する。「ジョブが green だった」だけでは正しさの証明にならない。
+
+- [ ] release PR の版更新 (`Cargo.toml` / `tauri.conf.json` / `.release-please-manifest.json`) と `CHANGELOG.md` が、対象コミットを正しく反映しているか。
+- [ ] 版の semver 昇格が妥当か (`feat` → minor, `fix` → patch, 破壊的変更 → major)。
+- [ ] release PR が直近の main の内容を取り込んでいるか (`release.yml` の実行成功・PR の `updatedAt` を確認)。
+
+これらを満たさない疑義が見つかったら、その場でマージを止めて原因を確認する。それ以外の通常経路では確認を挟まない。
 
 ### なぜ通常マージが BLOCKED になるか
 
@@ -178,17 +188,7 @@ PR の一部だけが有用な場合:
 - [ ] `gh run view <id>` で全ジョブ green を確認する。
 - [ ] `gh release view vX.Y.Z` で Release が draft/prerelease でなく、`*_universal.dmg` と `csw` が添付されていることを確認する。
 - [ ] 署名・公証やアセット添付が落ちたら green になるまでデバッグする (成功を仮定しない)。
-
-### リリース前の正しさ検証 (自律実行の前提)
-
-リリースは確認を取らず自律で進めるが、実行前に以下を必ず検証する。「ジョブが green だった」だけでは正しさの証明にならない。
-
-- [ ] release PR の版更新 (`Cargo.toml` / `tauri.conf.json` / `.release-please-manifest.json`) と `CHANGELOG.md` が、対象コミットを正しく反映しているか。
-- [ ] 版の semver 昇格が妥当か (`feat` → minor, `fix` → patch, 破壊的変更 → major)。
-- [ ] release PR が直近の main の内容を取り込んでいるか (`release.yml` の実行成功・PR の `updatedAt` を確認)。
-- [ ] マージ後、DMG と `csw` バイナリを実際にダウンロードして署名・公証・staple を実機検証する (`stapler validate` / `spctl` / `codesign --verify --deep --strict` + hardened runtime。CLI バイナリは `spctl -t exec` が "not an app" と返るのが正常)。「ジョブ green = 公証済み」と仮定しない。
-
-これらを満たさない疑義が見つかったら、その場でマージを止めて原因を確認する。それ以外の通常経路では確認を挟まない。
+- [ ] DMG と `csw` バイナリを実際にダウンロードして署名・公証・staple を実機検証する (`stapler validate` / `spctl` / `codesign --verify --deep --strict` + hardened runtime。CLI バイナリは `spctl -t exec` が "not an app" と返るのが正常)。「ジョブ green = 公証済み」と仮定しない。
 
 技術背景 (squash とメッセージのパース注意) は個人メモリ `release-please-squash-parse-pitfall` / `autonomous-merge-after-ci` も参照。
 
