@@ -86,7 +86,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
 ### Scenario A: Starting work with your Work account
 1. If the environment you are about to open shares settings and another Claude Desktop app is running, quit it first (to avoid configuration conflicts, environments that share settings open one at a time). An environment set to "separate everything" can be opened in a new window without quitting.
 2. In the settings window, select the "Work" environment you created (you can also open the settings window from the menu bar or Dock icon).
-3. **Press "Launch Claude for this environment", and that environment's dedicated Claude Desktop app launches.**
+3. **Press "Switch and launch" (`切り替えて起動`), and that environment's dedicated Claude Desktop app launches.**
    （This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.）
 
 > **Note: running environments at the same time**
