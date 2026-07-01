@@ -187,7 +187,7 @@
         <section id="how-it-works" class="workflow container fade-in">
             <div class="workflow-header">
                 <h2>GUI Workflow.</h2>
-                <p>Manage Desktop environments from the menu bar. Link CLI environments via terminal commands.</p>
+                <p>Everything for the Desktop app happens from the menu bar, with no terminal or scripts to manage. Link Claude Code (the CLI) to the same environment with one command only when you want it.</p>
             </div>
             <div class="workflow-steps">
                 <div class="step-item">
@@ -275,6 +275,10 @@
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
                     <p class="faq-a">The terminal inside the app launched from CSW (built-in) is already in the same environment, so no command is needed. A terminal you open separately (external) stays in your usual environment, so run <code>eval $(csw env &lt;env-name&gt;)</code> (the name of the environment you want) to sync it (it applies to that tab only).</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">Can I open more than one environment at the same time?</p>
+                    <p class="faq-a">For now, one environment's Claude opens at a time. When environments share settings, a running instance can write back to a shared file and clash with the switch, so CSW asks you to quit the running Claude first. Environments set to "separate everything" share nothing, so there is no such clash, and running those side by side is a planned addition.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does using multiple accounts go against Anthropic's terms?</p>
