@@ -209,6 +209,24 @@ impl SharingConfig {
             ..Self::share_settings_preset()
         }
     }
+
+    /// Whether this environment shares nothing with any other: every tunable
+    /// component is [`SharingMode::Isolate`] (the "すべて分ける" preset). Only such
+    /// environments are safe to launch in additional concurrent windows, because
+    /// they hold no symlink into another profile that two live instances could
+    /// race on, and each instance writes only inside its own `--user-data-dir`.
+    /// A single Share or Copy component makes this false. The always-isolated,
+    /// non-tunable files (config.json, claude_desktop_config.json, sessions/,
+    /// device id) are not fields here, so they never affect the result.
+    pub fn is_fully_isolated(&self) -> bool {
+        self.cli_settings == SharingMode::Isolate
+            && self.cli_claude_md == SharingMode::Isolate
+            && self.cli_project_memory == SharingMode::Isolate
+            && self.cli_plugins == SharingMode::Isolate
+            && self.cli_skills == SharingMode::Isolate
+            && self.cli_history == SharingMode::Isolate
+            && self.desktop_worktrees == SharingMode::Isolate
+    }
 }
 
 /// Whether the user's existing Claude data is present at the standard locations.

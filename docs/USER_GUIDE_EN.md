@@ -84,13 +84,13 @@ For other cases (such as "I want to reuse my common rules and skills, but route 
 Here is the daily usage flow after setup. No manual configuration is required.
 
 ### Scenario A: Starting work with your Work account
-1. If another Claude Desktop app is running, quit it first. (To avoid configuration conflicts, you cannot run more than one environment's Claude at once.)
+1. If the environment you are about to open shares settings and another Claude Desktop app is running, quit it first (to avoid configuration conflicts, environments that share settings open one at a time). An environment set to "separate everything" can be opened in a new window without quitting.
 2. In the settings window, select the "Work" environment you created (you can also open the settings window from the menu bar or Dock icon).
 3. **Press "Launch Claude for this environment", and that environment's dedicated Claude Desktop app launches.**
    （This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.）
 
-> **Note: one environment at a time**
-> To avoid configuration conflicts, you cannot run more than one environment's Claude simultaneously. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual.
+> **Note: running environments at the same time**
+> Environments that share settings ("separate conversations & memory too", "separate the account only") open one at a time, to avoid configuration conflicts. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual. An environment set to "separate everything" shares nothing, so you can open it alongside a running Claude with "Launch in a new window" in the detail view, without quitting.
 
 ### Scenario B: Using the Terminal (Claude Code)
 There are two kinds of terminal, and they need different steps. In either case, the first time you use Claude Code in an environment, you need to sign in to the CLI once (see "First time only: signing in to Claude Code" below).

@@ -208,7 +208,7 @@
                     <div class="step-num">03</div>
                     <div class="step-body">
                         <h3>Launch in an Isolated Environment</h3>
-                        <p>Select an environment, and its Claude Desktop App launches against its own isolated directory. One environment runs at a time, so quit the running Claude before switching to another.</p>
+                        <p>Select an environment, and its Claude Desktop App launches against its own isolated directory. Environments that share settings open one at a time, so quit the running Claude before switching to another. Environments set to "separate everything" share nothing, so you can open them in a new window alongside a running Claude, without quitting.</p>
                     </div>
                 </div>
             </div>
@@ -278,7 +278,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Can I open more than one environment at the same time?</p>
-                    <p class="faq-a">For now, one environment's Claude opens at a time. When environments share settings, a running instance can write back to a shared file and clash with the switch, so CSW asks you to quit the running Claude first. Environments set to "separate everything" share nothing, so there is no such clash, and running those side by side is a planned addition.</p>
+                    <p class="faq-a">Environments set to "separate everything" can be opened side by side in a new window, without quitting a running Claude: they share nothing, so concurrent instances cannot clash over the same file. The detail view shows a dedicated "Launch in a new window" button for them. Environments that share settings ("separate conversations & memory too", "separate the account only") open one at a time, because a running instance can write back to a shared file and clash with the switch; quit the running Claude before switching to one of those.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does using multiple accounts go against Anthropic's terms?</p>
@@ -321,7 +321,7 @@
                     <p>The look and the words on this site and in the app are not decided on a whim; they follow standards we keep as text in the repository, which we call "skills." They branch out from one root file (<code>CLAUDE.md</code>) into a skill file per topic, so whoever, or whichever AI, does the work can return to the same standard.</p>
                     <p>Japanese typesetting, for instance, is gathered in a skill called <code>japanese-typography-qa</code>. Before we applied it, the top headline broke across three lines with only one or two characters left on the last, the font was too large, and the section heading below it looked bigger than the headline above. Applying the skill's rules, breaking lines at phrase boundaries and putting every text size on a single ratio, gave it the fit it has now.</p>
                     <p>The overall look is judged by skills like <code>design-taste-frontend</code> and <code>minimalist-ui</code>. This column, for example, first wrapped each of its three topics in its own box; but the more boxes there are, the busier the screen gets and the more the eye wanders over where to read. Following the skill's guidance to not box things in needlessly and to keep body text to a width the eye can follow across one line, we dropped the boxes and divide with just the thin line above. The text you are reading now is held to a width your eye can flow across.</p>
-                    <p>Mismatches between the writing and the app are caught by an audit called <code>/audit-consistency</code>, which cross-checks the app's screens against the documentation and this landing page in both directions. Earlier, for example, the landing page said you could use several environments at the same time, while the app, to prevent settings from colliding, was built so that several Claude instances cannot be open at once. The description and the actual behavior disagreed, so we aligned both to "not open at the same time."</p>
+                    <p>Mismatches between the writing and the app are caught by an audit called <code>/audit-consistency</code>, which cross-checks the app's screens against the documentation and this landing page in both directions. Earlier, for example, the landing page said you could use several environments at the same time, while the app, to prevent settings from colliding, was built so that several Claude instances cannot be open at once. The description and the actual behavior disagreed, so we first aligned both to "one at a time." Later we worked out that a "separate everything" environment shares nothing and can run side by side safely, so we enabled concurrent windows for fully-isolated environments and brought the description back in line with the implementation.</p>
                     <p>These skills are a way to write down why we build things the way we do, so that when someone else, or another AI, picks up the work later, they can return to the same approach. They are not magic that raises quality on its own; they are the foundation for setting a standard and then staying with it.</p>
                 </div>
             </div>

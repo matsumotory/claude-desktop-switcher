@@ -134,11 +134,64 @@ impl PlatformProvider for MacOsProvider {
 
         Ok(pids)
     }
+
+    fn running_desktop_args(&self) -> Result<Vec<String>> {
+        let pids = self.claude_desktop_pids()?;
+        if pids.is_empty() {
+            return Ok(vec![]);
+        }
+        let pid_list = pids
+            .iter()
+            .map(|p| p.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        // `ps -o args=` prints one full command line per pid, no header.
+        let output = Command::new("ps")
+            .arg("-p")
+            .arg(pid_list)
+            .arg("-o")
+            .arg("args=")
+            .output()?;
+        if !output.status.success() {
+            return Ok(vec![]);
+        }
+        Ok(main_process_arg_lines(&String::from_utf8_lossy(
+            &output.stdout,
+        )))
+    }
+}
+
+/// Keep only the Claude Desktop *main* process lines from `ps -o args=` output.
+/// Electron spawns helper processes (`--type=renderer`, `--type=gpu-process`, …)
+/// that do not represent a running environment; only the main process carries the
+/// meaningful `--user-data-dir`. Lines that are not the Claude binary are dropped.
+fn main_process_arg_lines(ps_output: &str) -> Vec<String> {
+    ps_output
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .filter(|l| l.contains("Claude.app/Contents/MacOS/Claude"))
+        .filter(|l| !l.contains("--type="))
+        .map(str::to_string)
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn main_process_arg_lines_keeps_main_drops_helpers_and_others() {
+        let ps = "/Applications/Claude.app/Contents/MacOS/Claude --user-data-dir=/p/A/desktop-data\n\
+                  /Applications/Claude.app/Contents/MacOS/Claude --type=renderer --user-data-dir=/p/A/desktop-data\n\
+                  /Applications/Claude.app/Contents/MacOS/Claude --type=gpu-process\n\
+                  /usr/bin/some-unrelated-process\n\
+                  \n";
+        let lines = main_process_arg_lines(ps);
+        assert_eq!(lines.len(), 1, "only the main Claude process survives");
+        assert!(lines[0].contains("--user-data-dir=/p/A/desktop-data"));
+        assert!(!lines[0].contains("--type="));
+    }
 
     #[test]
     fn test_default_paths() {

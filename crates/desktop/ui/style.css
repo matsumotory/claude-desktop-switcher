@@ -527,6 +527,9 @@ code, .code-line { font-family: var(--font-mono); }
 .path-caption { font-size: 11.5px; color: var(--ink-muted); margin-top: 6px; }
 /* One-line, contextual hint next to the switch action (not a persistent block) */
 .detail-switch-hint { font-size: 12px; color: var(--ink-muted); line-height: 1.55; margin-top: 20px; }
+/* Dedicated launch button for fully-isolated environments, sitting under its
+   one-line explanation inside the detail content (not the footer). */
+.concurrent-launch { margin-top: 12px; }
 @supports (text-wrap: balance) { .detail-switch-hint { text-wrap: balance; } }
 .icon-btn {
   flex: none;
