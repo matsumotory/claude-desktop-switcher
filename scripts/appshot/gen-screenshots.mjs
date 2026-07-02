@@ -28,6 +28,9 @@ const UI = path.join(REPO, 'crates', 'desktop', 'ui');
 const OUT = path.join(REPO, 'website', 'assets');
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const PORT = 8191, DP = 9341;
+// The shipped app reads its version from tauri.conf.json; the dev mock cannot,
+// so inject it via ?appver= to keep the footer in screenshots current.
+const APPVER = JSON.parse(fs.readFileSync(path.join(REPO, 'crates', 'desktop', 'tauri.conf.json'), 'utf8')).version;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
@@ -56,7 +59,7 @@ async function main() {
   await cmd('Page.enable'); await cmd('Runtime.enable');
   await cmd('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
 
-  const load = async (lang) => { await cmd('Emulation.setDeviceMetricsOverride', { width: 760, height: 900, deviceScaleFactor: 2, mobile: false }); await cmd('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?lang=${lang}` }); await sleep(1300); };
+  const load = async (lang) => { await cmd('Emulation.setDeviceMetricsOverride', { width: 760, height: 900, deviceScaleFactor: 2, mobile: false }); await cmd('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?lang=${lang}&appver=${APPVER}` }); await sleep(1300); };
   async function fit(scrollId, file) {
     const over = (await evalv(`(()=>{const s=document.getElementById('${scrollId}');return s?Math.ceil(s.scrollHeight-s.clientHeight):0;})()`)).result?.value || 0;
     await cmd('Emulation.setDeviceMetricsOverride', { width: 760, height: 900 + Math.max(0, over) + 24, deviceScaleFactor: 2, mobile: false });
