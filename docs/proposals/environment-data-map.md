@@ -1,7 +1,8 @@
 ---
 title: 環境インスペクタ: 環境のデータの中身とサイズの表示
 created: 2026-07-03
-status: approved
+status: in-progress
+pr: 152
 related_prs: []
 related_issues: []
 ---
