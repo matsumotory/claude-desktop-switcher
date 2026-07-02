@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.19.0...v0.19.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* 丸括弧の乱用を全サーフェスで整理し日本語を平易にする ([bfd2be5](https://github.com/matsumotory/claude-desktop-switcher/commit/bfd2be503b8dca318c6e2e4fb9f9a9de4fca95ce))
+
 ## [0.19.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.18.0...v0.19.0) (2026-07-02)
 
 
