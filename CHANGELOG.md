@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.17.1...v0.18.0) (2026-07-02)
+
+
+### Features
+
+* 環境ごとの利用量表示を取り下げる ([18b65b3](https://github.com/matsumotory/claude-desktop-switcher/commit/18b65b3af1db07bed0794b38dcace15a15f9429c))
+
 ## [0.17.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.17.0...v0.17.1) (2026-07-02)
 
 
