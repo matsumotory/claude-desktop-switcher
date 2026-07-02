@@ -296,6 +296,41 @@ async fn get_default_roots_status(state: State<'_, AppState>) -> Result<serde_js
     }))
 }
 
+// Native menus bypass the WebView, so its Japanese→English dictionary cannot
+// reach them; the tray labels are resolved here under the same locale rule as
+// ui/main.js (docs/SPECIFICATION.md §5.A 表示言語): a system locale starting
+// with "ja" selects Japanese, anything else (including unknown) English.
+fn is_ja_locale(locale: Option<&str>) -> bool {
+    locale.is_some_and(|l| l.to_ascii_lowercase().starts_with("ja"))
+}
+
+fn tray_profile_label(profile_name: &str, running: bool, ja: bool) -> String {
+    // Only the built-in default profile has a localized display name; a
+    // user-given environment name is user data and is never translated.
+    let display = if profile_name == "default" {
+        if ja {
+            "既存の Claude"
+        } else {
+            "Existing Claude"
+        }
+    } else {
+        profile_name
+    };
+    if running {
+        format!("● {} ({})", display, if ja { "利用中" } else { "In use" })
+    } else {
+        format!("○ {}", display)
+    }
+}
+
+fn tray_settings_label(ja: bool) -> &'static str {
+    if ja { "設定..." } else { "Settings..." }
+}
+
+fn tray_quit_label(ja: bool) -> &'static str {
+    if ja { "終了" } else { "Quit" }
+}
+
 // Function to update the system tray menu dynamically
 fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let state = app.state::<AppState>();
@@ -320,20 +355,14 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let sep1 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(sep1) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
+    let ja = is_ja_locale(sys_locale::get_locale().as_deref());
+
     // 2. Add profile switchers
     for p_name in profiles {
-        // The settings UI shows the default profile as "既存の Claude" and marks the
-        // active one as "利用中"; mirror both here so the menu-bar wording matches.
-        let display: &str = if p_name == "default" {
-            "既存の Claude"
-        } else {
-            p_name.as_str()
-        };
-        let label = if running.iter().any(|n| n == &p_name) {
-            format!("● {} (利用中)", display)
-        } else {
-            format!("○ {}", display)
-        };
+        // The settings UI shows the default profile as "既存の Claude" / "Existing
+        // Claude" and marks the active one as "利用中" / "In use"; mirror both here
+        // so the menu-bar wording matches.
+        let label = tray_profile_label(&p_name, running.iter().any(|n| n == &p_name), ja);
 
         let p_item = MenuItem::with_id(
             app,
@@ -351,12 +380,13 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     let sep2 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(sep2) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
-    let settings_item = MenuItem::with_id(app, "settings", "設定...", true, None::<&str>)
-        .map_err(|e| e.to_string())?;
+    let settings_item =
+        MenuItem::with_id(app, "settings", tray_settings_label(ja), true, None::<&str>)
+            .map_err(|e| e.to_string())?;
     menu_items.push(Box::new(settings_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
-    let quit_item =
-        MenuItem::with_id(app, "quit", "終了", true, None::<&str>).map_err(|e| e.to_string())?;
+    let quit_item = MenuItem::with_id(app, "quit", tray_quit_label(ja), true, None::<&str>)
+        .map_err(|e| e.to_string())?;
     menu_items.push(Box::new(quit_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
     // Reconstruct the menu
@@ -526,4 +556,60 @@ fn main() {
                 let _ = window.set_focus();
             }
         });
+}
+
+// Expectations come from docs/SPECIFICATION.md §5.A 表示言語（i18n）: only a
+// system locale starting with "ja" selects Japanese, anything else (including
+// an unknown locale) is English; user-given environment names are never
+// translated; the English labels reuse the WebView's established vocabulary.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ja_locale_only_when_locale_starts_with_ja() {
+        assert!(is_ja_locale(Some("ja-JP")));
+        assert!(is_ja_locale(Some("ja")));
+        assert!(is_ja_locale(Some("JA-JP")));
+        assert!(!is_ja_locale(Some("en-US")));
+        assert!(!is_ja_locale(Some("en")));
+        assert!(!is_ja_locale(Some("de-DE")));
+        assert!(!is_ja_locale(None));
+    }
+
+    #[test]
+    fn default_profile_label_is_localized() {
+        assert_eq!(
+            tray_profile_label("default", true, true),
+            "● 既存の Claude (利用中)"
+        );
+        assert_eq!(
+            tray_profile_label("default", false, true),
+            "○ 既存の Claude"
+        );
+        assert_eq!(
+            tray_profile_label("default", true, false),
+            "● Existing Claude (In use)"
+        );
+        assert_eq!(
+            tray_profile_label("default", false, false),
+            "○ Existing Claude"
+        );
+    }
+
+    #[test]
+    fn user_environment_names_are_never_translated() {
+        assert_eq!(tray_profile_label("work", false, true), "○ work");
+        assert_eq!(tray_profile_label("work", false, false), "○ work");
+        assert_eq!(tray_profile_label("仕事", true, false), "● 仕事 (In use)");
+        assert_eq!(tray_profile_label("仕事", true, true), "● 仕事 (利用中)");
+    }
+
+    #[test]
+    fn footer_labels_are_localized() {
+        assert_eq!(tray_settings_label(true), "設定...");
+        assert_eq!(tray_settings_label(false), "Settings...");
+        assert_eq!(tray_quit_label(true), "終了");
+        assert_eq!(tray_quit_label(false), "Quit");
+    }
 }
