@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.16.0...v0.16.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* **desktop:** DMG 案内バナーが常時表示になる問題を修正する ([76602e0](https://github.com/matsumotory/claude-desktop-switcher/commit/76602e0fd3d7d540fd4bc904a060f7f5efff4748))
+
 ## [0.16.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.15.1...v0.16.0) (2026-07-02)
 
 
