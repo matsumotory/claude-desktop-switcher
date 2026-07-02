@@ -15,7 +15,7 @@ Claude Desktop Switcher（以下 CSW）が、あなたの Mac の何を読み、
 
 CSW はインターネットに接続しません。接続する仕組み自体を持っていません。
 
-唯一の例外は、画面下部のリンク（ユーザーガイド・問題を報告・更新を確認）と、「このアプリについて」の画面にある「確かめ方を見る」です。これらを押すと、あらかじめ決めてある GitHub の URL を macOS に渡し、既定のブラウザで開きます。通信するのはブラウザであって、CSW 自身ではありません。渡せる URL は次の 5 つに固定してあり、実装のうえでも `https` 以外の URL を拒否します。
+唯一の例外は、画面下部にある「ユーザーガイド」「問題を報告」「更新を確認」の 3 つのリンクと、「このアプリについて」の画面にある「確かめ方を見る」です。これらを押すと、あらかじめ決めてある GitHub の URL を macOS に渡し、既定のブラウザで開きます。通信するのはブラウザであって、CSW 自身ではありません。渡せる URL は次の 5 つに固定してあり、実装のうえでも `https` 以外の URL を拒否します。
 
 - `https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md`
 - `https://github.com/matsumotory/claude-desktop-switcher/issues`
@@ -32,11 +32,11 @@ CSW がファイルを書き込むのは、自分専用のフォルダ `~/.conte
 | パス | 内容 |
 |---|---|
 | `~/.context-switcher-claude/config.toml` | いま選ばれている環境の名前 |
-| `~/.context-switcher-claude/profiles/<環境名>/profile.toml` | その環境の設定（名前・共有モード） |
+| `~/.context-switcher-claude/profiles/<環境名>/profile.toml` | その環境の名前と共有モード |
 | `~/.context-switcher-claude/profiles/<環境名>/desktop-data/` | その環境の Claude Desktop App 用データ |
 | `~/.context-switcher-claude/profiles/<環境名>/cli-data/` | その環境の Claude Code 用データ |
 
-このほかに、設定ウィンドウの表示設定（選んだアクセントカラーと、初回案内を表示したかどうかの記録）を、macOS がアプリごとに用意する画面データの保存場所に保存します。ここに入るのは CSW の見た目の設定だけで、あなたのデータや Claude のデータは含まれません。
+このほかに、設定ウィンドウの表示設定として、選んだアクセントカラーと、初回案内を表示したかどうかの記録を、macOS がアプリごとに用意する画面データの保存場所に保存します。ここに入るのは CSW の見た目の設定だけで、あなたのデータや Claude のデータは含まれません。
 
 ## CSW が読む場所
 

@@ -1,6 +1,6 @@
 //! Read-only data map of an environment: per-item and per-folder approximate
 //! sizes and last-modified times, for the detail screen's
-//! 「場所（この環境のデータ）」 breakdown.
+//! 「この環境のデータの場所」 breakdown.
 //!
 //! Aggregation rules (docs/PRIVACY.md):
 //! - Only file names and stat metadata (size, mtime) are read; file contents

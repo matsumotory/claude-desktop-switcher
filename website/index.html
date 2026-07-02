@@ -80,7 +80,7 @@
                             <img src="assets/logo.png" class="menu-bar-logo" alt="CSW Icon">
                         </div>
                     </div>
-                    <img src="assets/hero.png?v=0.19.0" width="1520" height="996" alt="Settings Interface" class="hero-image">
+                    <img src="assets/hero.png?v=0.19.1" width="1520" height="996" alt="Settings Interface" class="hero-image">
                 </div>
             </div>
         </section>
@@ -119,15 +119,15 @@
             </div>
             <div class="screens-bento">
                 <figure class="screen-card fade-in delay-1">
-                    <img src="assets/screen_overview.png?v=0.19.0" width="1520" height="3022" alt="CSW settings window showing an environment's paths and a per-component carry-over matrix" loading="lazy">
+                    <img src="assets/screen_overview.png?v=0.19.1" width="1520" height="3022" alt="CSW settings window showing an environment's paths and a per-component carry-over matrix" loading="lazy">
                     <figcaption>Every environment gets its own data directories. You choose per component what carries over and what stays separate; the account sign-in is always kept apart.</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
-                    <img src="assets/screen_create.png?v=0.19.0" width="1520" height="2152" alt="New-environment screen offering the three separation modes" loading="lazy">
+                    <img src="assets/screen_create.png?v=0.19.1" width="1520" height="2152" alt="New-environment screen offering the three separation modes" loading="lazy">
                     <figcaption>Create an environment in seconds. Choose how much carries over: the account only, conversations and memory too, or everything.</figcaption>
                 </figure>
                 <figure class="screen-card fade-in delay-2">
-                    <img src="assets/screen_onboarding.png?v=0.19.0" width="1520" height="1848" alt="First-run onboarding explaining that the existing setup is preserved" loading="lazy">
+                    <img src="assets/screen_onboarding.png?v=0.19.1" width="1520" height="1848" alt="First-run onboarding explaining that the existing setup is preserved" loading="lazy">
                     <figcaption>A short first-run tour shown only the first time. Your current setup is preserved as “Existing Claude” and never modified.</figcaption>
                 </figure>
             </div>
@@ -151,7 +151,7 @@
                 <div class="feature-cell dark-accent fade-in delay-2">
                     <div class="cell-content">
                         <span class="usecase-num">02</span>
-                        <h3 class="usecase-title">Work and personal on one Mac (no terminal)</h3>
+                        <h3 class="usecase-title">Work and personal on one Mac, no terminal needed</h3>
                         <p class="usecase-text">You want to keep your business and personal accounts apart without touching the terminal.</p>
                         <p class="usecase-solution">Just pick an environment and that account's Claude Desktop App launches without signing in again. No terminal needed; it is complete in the GUI.</p>
                     </div>
@@ -176,7 +176,7 @@
                     <div class="cell-content">
                         <span class="usecase-num">05</span>
                         <h3 class="usecase-title">Link the CLI to your GUI separation</h3>
-                        <p class="usecase-text">You want to use the environment you chose in the GUI from the CLI as well (for developers).</p>
+                        <p class="usecase-text">You want to use the environment you chose in the GUI from the CLI as well.</p>
                         <p class="usecase-solution">Sync the environment you chose in the GUI to Claude Code (CLI) in a separate terminal with a single command. This adds GUI-level consistency on top of what existing CLI-only switchers already solve. See Terminal Integration below for the exact command.</p>
                     </div>
                 </div>
@@ -215,8 +215,8 @@
         </section>
         <section id="guide" class="guide container fade-in">
             <div class="guide-header">
-                <h2>Terminal (Claude Code) Integration</h2>
-                <p>The built-in terminal inside the app inherits its environment automatically. For a separate external terminal (like iTerm), one command switches it.</p>
+                <h2>Terminal Integration with Claude Code</h2>
+                <p>The built-in terminal inside the app inherits its environment automatically. For an external terminal you open yourself, such as iTerm2, one command switches it.</p>
             </div>
             
             <div class="guide-grid">
@@ -228,12 +228,12 @@
                 <div class="guide-card">
                     <div class="guide-icon">02</div>
                     <h3>Flexible Separation</h3>
-                    <p>Choose how much carries over: separate everything (recommended, default), separate conversations and memory too, or separate the account only.</p>
+                    <p>Choose how much carries over: separate everything, separate conversations and memory too, or separate the account only. Separate everything is the default and the recommended choice.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-icon">03</div>
                     <h3>Terminal Integration</h3>
-                    <p>The built-in terminal inherits its environment automatically. For an external terminal (iTerm2, etc.), one command switches it. Replace the last argument with the name of the environment you want.</p>
+                    <p>The built-in terminal inherits its environment automatically. For an external terminal you open yourself, such as iTerm2, one command switches it. Replace the last argument with the name of the environment you want.</p>
                     <div class="code-snippet">
                         <code>eval $(csw env &lt;env-name&gt;)</code>
                     </div>
@@ -250,7 +250,7 @@
             <div class="faq-grid">
                 <div class="faq-item">
                     <p class="faq-q">Carry over or keep separate: relative to what?</p>
-                    <p class="faq-a">Always relative to "Existing Claude" (your existing setup). For each item, you choose whether to carry over the same thing as your existing Claude, or keep a new one just for this environment. The account is always separate.</p>
+                    <p class="faq-a">Always relative to Existing Claude, the setup you already use. For each item, you choose whether to carry over the same thing as your existing Claude, or keep a new one just for this environment. The account is always separate.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">What is "Existing Claude"?</p>
@@ -270,7 +270,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Do I have to sign in again on every switch?</p>
-                    <p class="faq-a">No. Each environment keeps its account sign-in inside its own directory. Sign in once and it persists across switches (items set to stay separate start empty in the new environment).</p>
+                    <p class="faq-a">No. Each environment keeps its account sign-in inside its own directory. Sign in once and it persists across switches. Items set to stay separate are not carried over and start empty in the new environment.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
@@ -278,11 +278,11 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Can I open more than one environment at the same time?</p>
-                    <p class="faq-a">Environments set to "separate everything" can be opened side by side in a new window, without quitting a running Claude: they share nothing, so concurrent instances cannot clash over the same file. The detail view shows a dedicated "Launch alongside" button for them. Environments that share settings ("separate conversations & memory too", "separate the account only") open one at a time, because a running instance can write back to a shared file and clash with the switch; quit the running Claude before switching to one of those.</p>
+                    <p class="faq-a">Environments set to "separate everything" can be opened side by side in a new window, without quitting a running Claude: they share nothing, so concurrent instances cannot clash over the same file. The detail view shows a dedicated "Launch alongside" button for them. Environments created with "separate conversations & memory too" or "separate the account only" share settings, so they open one at a time, because a running instance can write back to a shared file and clash with the switch; quit the running Claude before switching to one of those.</p>
                 </div>
                 <div class="faq-item">
-                    <p class="faq-q">Can CSW list each environment's usage?</p>
-                    <p class="faq-a">Not at the moment. This app makes no internet connection and never touches your passwords or sign-in. There is currently no way to obtain an accurate usage figure that includes desktop-app activity while keeping to that approach, so it is not offered as a feature. If an official, safe way becomes available, we will consider adding it. You can check each environment's usage in Claude itself by opening Claude for that environment.</p>
+                    <p class="faq-q">Can CSW list each environment's Claude usage?</p>
+                    <p class="faq-a">Not at the moment. This app makes no internet connection and never touches your passwords or sign-in. There is currently no way to obtain an accurate figure for Claude usage against its limits, including desktop-app activity, while keeping to that approach, so it is not offered as a feature. If an official, safe way becomes available, we will consider adding it. You can check each environment's Claude usage in Claude itself by opening Claude for that environment.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does using multiple accounts go against Anthropic's terms?</p>
