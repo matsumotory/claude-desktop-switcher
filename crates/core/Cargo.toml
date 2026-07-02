@@ -15,7 +15,6 @@ toml = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 dirs = { workspace = true }
-notify = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 trash = "5.2.6"
