@@ -40,7 +40,7 @@ In addition, the settings window stores its own display preferences (the accent 
 
 ## Where CSW reads
 
-- CSW reads and writes its own folder listed above.
+- CSW reads and writes its own folder listed above. When the detail screen shows the data breakdown, it reads only file names and their sizes and dates inside this folder, never file contents. The targets of shared links are never included in the totals.
 - CSW touches the existing Claude folders, `~/Library/Application Support/Claude` and `~/.claude`, in exactly three cases:
   1. **Existence checks**: it checks whether a folder or file exists, without reading its contents.
   2. **Creating and re-pointing shared links**: for items you set to Shared when creating an environment, it creates symbolic links inside the new environment that point to the existing Claude's originals. The isolation check's repair command, `csw doctor --fix`, likewise only re-points share links that no longer point at their declared source. Only the link is swapped; real files are never touched. The links live in the environment's folder; nothing is written on the existing Claude's side.
@@ -57,7 +57,7 @@ CSW runs only the following four standard macOS commands. All of them are local 
 
 | Command | Purpose |
 |---|---|
-| `open` | Launches Claude with the selected environment's data folder, and opens the fixed links in your default browser |
+| `open` | Launches Claude with the selected environment's data folder, opens the fixed links in your default browser, and opens an environment's data folder in Finder |
 | `pgrep` | Checks whether the Claude Desktop App is running |
 | `ps` | Reads the launch arguments of running Claude processes to learn which environment's data folder they use |
 | `hdiutil` | Detects a CSW installer disk image that is still mounted and ejects it |

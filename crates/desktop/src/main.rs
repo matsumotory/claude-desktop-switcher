@@ -207,6 +207,44 @@ async fn inspect_profile(
     serde_json::to_value(report).map_err(|e| e.to_string())
 }
 
+/// Read-only data map (sizes, link targets) for the detail screen's
+/// 「場所（この環境のデータ）」 breakdown. Loaded lazily when the disclosure opens.
+#[tauri::command]
+async fn get_profile_data_map(
+    name: String,
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let map = state
+        .profile_manager
+        .profile_data_map(&name)
+        .map_err(|e| e.to_string())?;
+    serde_json::to_value(map).map_err(|e| e.to_string())
+}
+
+/// Open one of an environment's data folders in Finder. The path is resolved
+/// here from the profile name, so the WebView can never pass an arbitrary path.
+#[tauri::command]
+async fn reveal_profile_dir(
+    name: String,
+    which: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let profile = state
+        .profile_manager
+        .get_profile(&name)
+        .map_err(|e| e.to_string())?;
+    let path = match which.as_str() {
+        "desktop" => profile.isolation.desktop_user_data_dir,
+        "cli" => profile.isolation.cli_config_dir,
+        _ => return Err(format!("unknown dir kind: {which}")),
+    };
+    std::process::Command::new("open")
+        .arg(&path)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn switch_profile(
     name: String,
@@ -569,6 +607,8 @@ fn main() {
             delete_profile,
             clone_profile,
             inspect_profile,
+            get_profile_data_map,
+            reveal_profile_dir,
             switch_profile,
             launch_additional_window,
             get_desktop_running_status,

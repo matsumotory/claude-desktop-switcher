@@ -171,6 +171,14 @@ const EN = {
   '常に分離する項目がリンクになっています。': 'An always-isolated item has become a link.',
   'コピーの項目がリンクになっています。': 'An item set to copy has become a link.',
   '分離の項目がリンクになっています。': 'An isolated item has become a link.',
+  // Data map (場所のデータの内訳)
+  '読み込んでいます…': 'Loading…',
+  '内訳を読み込めませんでした。': 'The breakdown could not be loaded.',
+  'Finder で表示': 'Show in Finder',
+  'Finder で表示できませんでした。': 'Could not show it in Finder.',
+  '常に分離（この環境の中）': 'Always isolated (inside this environment)',
+  '既存の Claude と共有': 'Shared with your existing Claude',
+  'まだありません': 'Not present yet',
   '状態を判定できませんでした。': 'The state could not be determined.',
   'セッション状態': 'Session state',
   'アカウントのサインイン情報': 'Account sign-in',
@@ -688,20 +696,115 @@ function section(label, children) {
 }
 
 function pathsSection(d, isDefault) {
+  if (isDefault) {
+    // The default is the user's real Claude data: paths only, never aggregated.
+    const rows = [
+      pathRow('Claudeデスクトップアプリ', d.desktop_path, 'default', 'desktop'),
+      pathRow('Claude Code', d.cli_path, 'default', 'cli'),
+      h('p', { class: 'path-caption', text: 'これは CSW が作った場所ではなく、あなた自身の Claude フォルダです。' }),
+    ];
+    return section('', [disclosure('場所（あなたの Claude フォルダ）', null, rows)]);
+  }
+  const name = d.name;
   const rows = [
-    pathRow('Claudeデスクトップアプリ', d.desktop_path),
-    pathRow('Claude Code', d.cli_path),
-    isDefault ? h('p', { class: 'path-caption', text: 'これは CSW が作った場所ではなく、あなた自身の Claude フォルダです。' }) : null,
+    pathRow('Claudeデスクトップアプリ', d.desktop_path, name, 'desktop'),
+    pathRow('Claude Code', d.cli_path, name, 'cli'),
   ];
-  // Paths are needed rarely (not for switch/clone/delete) → collapsed by default.
-  return section('', [disclosure(isDefault ? '場所（あなたの Claude フォルダ）' : '場所（この環境のデータ）', null, rows)]);
+  // The breakdown (sizes, link targets) is aggregated lazily on first open:
+  // it stats files but never reads contents and never follows symlinks.
+  const details = h('div', { class: 'datamap' });
+  // Loaded on open; retried on the next open after a failure.
+  let loading = false;
+  let loaded = false;
+  const loadMap = async () => {
+    if (loading || loaded) return;
+    loading = true;
+    details.replaceChildren(h('p', { class: 'datamap-loading', text: '読み込んでいます…' }));
+    try {
+      const map = await invoke('get_profile_data_map', { name });
+      details.replaceChildren(renderDataMap(map));
+      loaded = true;
+    } catch (err) {
+      details.replaceChildren(h('p', { class: 'datamap-loading', text: '内訳を読み込めませんでした。' }));
+    } finally {
+      loading = false;
+    }
+  };
+  return section('', [disclosure('場所（この環境のデータ）', null, [...rows, details], loadMap)]);
 }
 
-function pathRow(label, value) {
+// Item labels for the data map: same vocabulary as the isolation check.
+function fmtBytes(n) {
+  if (n < 1024) return `${n} B`;
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let v = n / 1024;
+  let u = 0;
+  while (v >= 1024 && u < units.length - 1) { v /= 1024; u += 1; }
+  return `${v >= 100 ? Math.round(v) : v.toFixed(1)} ${units[u]}`;
+}
+
+function fmtEpoch(epoch) {
+  const d = new Date(epoch * 1000);
+  return d.toLocaleDateString(LANG === 'ja' ? 'ja-JP' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function renderDataMap(map) {
+  const wrap = h('div', { class: 'datamap-report' });
+  wrap.appendChild(h('p', {
+    class: 'datamap-total',
+    text: T(
+      `この環境が専有している容量は ${fmtBytes(map.total_size_bytes)} です。内訳は Claudeデスクトップアプリが ${fmtBytes(map.desktop_size_bytes)}、Claude Code が ${fmtBytes(map.cli_size_bytes)} で、共有リンクの先の実体は含みません。`,
+      `This environment occupies ${fmtBytes(map.total_size_bytes)} by itself: ${fmtBytes(map.desktop_size_bytes)} for the Claude Desktop App and ${fmtBytes(map.cli_size_bytes)} for Claude Code. Shared originals are not included.`
+    ),
+  }));
+  const list = h('div', { class: 'datamap-list' });
+  for (const item of map.items) {
+    const label = DOCTOR_LABELS[item.key] || item.key;
+    let state;
+    let detail = null;
+    if (item.key === 'desktop_app_config') {
+      state = '常に分離（この環境の中）';
+    } else if (item.mode === 'share' && item.link_target) {
+      state = '既存の Claude と共有';
+      detail = item.link_target;
+    } else if (item.link_target) {
+      // A non-share item drifted into a link: state the fact with the same
+      // wording the isolation check uses, and show where it points.
+      state = ALWAYS_ISOLATED_KEYS.includes(item.key)
+        ? '常に分離する項目がリンクになっています。'
+        : (item.mode === 'copy' ? 'コピーの項目がリンクになっています。' : '分離の項目がリンクになっています。');
+      detail = item.link_target;
+    } else if (!item.exists) {
+      state = 'まだありません';
+    } else {
+      const size = fmtBytes(item.size_bytes || 0);
+      state = item.modified_epoch
+        ? `${size}${T(' ・ 最終更新 ', ' · updated ')}${fmtEpoch(item.modified_epoch)}`
+        : size;
+    }
+    list.appendChild(h('div', { class: 'datamap-item' },
+      h('span', { class: 'datamap-item-label', text: label }),
+      h('span', { class: 'datamap-item-state', text: state })));
+    if (detail) {
+      list.appendChild(h('p', { class: 'datamap-item-detail' },
+        h('code', { class: 'path-code', text: detail })));
+    }
+  }
+  wrap.appendChild(list);
+  return wrap;
+}
+
+function pathRow(label, value, revealName, revealWhich) {
+  const reveal = revealName ? h('button', {
+    type: 'button', class: 'icon-btn', title: 'Finder で表示',
+    onclick: () => invoke('reveal_profile_dir', { name: revealName, which: revealWhich })
+      .catch(() => showToast('Finder で表示できませんでした。', true)),
+  }, icon('i-folder')) : null;
   return h('div', { class: 'path-row' },
     h('div', { class: 'path-meta' },
       h('span', { class: 'path-label', text: label }),
       h('code', { class: 'path-code', text: value })),
+    reveal,
     copyButton(value, 'パスをコピー'));
 }
 
@@ -731,7 +834,7 @@ function terminalSection(name) {
 // on click. Keeps secondary detail (paths, the terminal command, the full
 // sharing breakdown) off the always-on surface so the detail view shows state +
 // actions first and discloses the rest only when asked.
-function disclosure(label, sub, innerNodes) {
+function disclosure(label, sub, innerNodes, onOpen) {
   const wrap = h('div', { class: 'disclosure' });
   const innerWrap = h('div', { class: 'disclosure-inner' }, ...innerNodes);
   innerWrap.inert = true; // keep collapsed content out of the tab order
@@ -741,6 +844,7 @@ function disclosure(label, sub, innerNodes) {
       const open = wrap.classList.toggle('open');
       toggle.setAttribute('aria-expanded', String(open));
       innerWrap.inert = !open;
+      if (open && onOpen) onOpen(); // callbacks self-guard (e.g. load once, retry on failure)
       requestAnimationFrame(refreshFades);
     },
   },
@@ -1401,6 +1505,36 @@ function devInvoke(cmd, args) {
       // The existing Claude is depicted as running (mirrors get_desktop_running_status).
       return Promise.resolve(['default']);
     case 'launch_additional_window':
+      return Promise.resolve(null);
+    case 'get_profile_data_map': {
+      // Plausible healthy map shaped like the Rust serde output (lowercase
+      // modes, LINK_ITEMS order, share_settings-style environment).
+      const base = `~/.context-switcher-claude/profiles/${args.name}`;
+      const t = 1782900000;
+      const items = [
+        { key: 'desktop_config', mode: 'isolate', link_target: null, size_bytes: 2048, modified_epoch: t, exists: true },
+        { key: 'cli_settings', mode: 'copy', link_target: null, size_bytes: 6144, modified_epoch: t, exists: true },
+        { key: 'cli_claude_md', mode: 'share', link_target: '~/.claude/CLAUDE.md', size_bytes: null, modified_epoch: null, exists: true },
+        { key: 'cli_project_memory', mode: 'isolate', link_target: null, size_bytes: 48 * 1024 * 1024, modified_epoch: t, exists: true },
+        { key: 'cli_plugins', mode: 'share', link_target: '~/.claude/plugins', size_bytes: null, modified_epoch: null, exists: true },
+        { key: 'cli_skills', mode: 'share', link_target: '~/.claude/skills', size_bytes: null, modified_epoch: null, exists: true },
+        { key: 'cli_sessions', mode: 'isolate', link_target: null, size_bytes: 12288, modified_epoch: t, exists: true },
+        { key: 'cli_history', mode: 'isolate', link_target: null, size_bytes: null, modified_epoch: null, exists: false },
+        { key: 'desktop_worktrees', mode: 'copy', link_target: null, size_bytes: 1024, modified_epoch: t, exists: true },
+        { key: 'desktop_device_id', mode: 'isolate', link_target: null, size_bytes: 64, modified_epoch: t, exists: true },
+        { key: 'desktop_app_config', mode: 'isolate', link_target: null, size_bytes: null, modified_epoch: null, exists: true },
+      ];
+      return Promise.resolve({
+        profile: args.name,
+        desktop_dir: `${base}/desktop-data`,
+        cli_dir: `${base}/cli-data`,
+        desktop_size_bytes: 96 * 1024 * 1024,
+        cli_size_bytes: 49 * 1024 * 1024,
+        total_size_bytes: 145 * 1024 * 1024,
+        items,
+      });
+    }
+    case 'reveal_profile_dir':
       return Promise.resolve(null);
     case 'inspect_profile': {
       // Healthy sample report for browser QA / screenshots, shaped exactly like

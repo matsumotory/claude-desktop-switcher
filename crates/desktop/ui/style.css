@@ -626,6 +626,30 @@ code, .code-line { font-family: var(--font-mono); }
   color: var(--ink-muted);
   line-height: 1.7;
 }
+
+/* Data map (場所のデータの内訳): same flat list language as the doctor report. */
+.datamap-loading { margin: 6px 0 0; font-size: 0.8125rem; color: var(--ink-muted); }
+.datamap-report { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.datamap-total { margin: 0; font-size: 0.8125rem; color: var(--ink-muted); line-height: 1.7; }
+.datamap-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  overflow: hidden;
+}
+.datamap-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+}
+.datamap-item + .datamap-item,
+.datamap-item-detail + .datamap-item { border-top: 1px solid var(--border); }
+.datamap-item-label { font-size: 0.8125rem; color: var(--ink); }
+.datamap-item-state { font-size: 0.78rem; color: var(--ink-muted); text-align: right; }
+.datamap-item-detail { margin: 0; padding: 0 14px 10px; overflow-wrap: anywhere; }
+.datamap-item-detail .path-code { font-size: 0.72rem; color: var(--ink-muted); }
 @supports (text-wrap: balance) { .detail-switch-hint { text-wrap: balance; } }
 .icon-btn {
   flex: none;
