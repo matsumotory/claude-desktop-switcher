@@ -20,6 +20,8 @@
   --neutral-soft:  #ECEAE4;   /* "isolated" — neutral, not alarming */
   --danger:        #9F2F2D;
   --danger-soft:   #FDEBEC;
+  --warn:          #956400;   /* isolation-check issues only (one color, one meaning) */
+  --warn-soft:     #FBF3DB;
   --shadow-soft:   0 1px 2px rgba(40, 36, 32, 0.04), 0 8px 24px rgba(40, 36, 32, 0.06);
   --radius-card:   12px;
   --radius-ctl:    6px;
@@ -48,6 +50,8 @@
     --neutral-soft:  rgba(255, 255, 255, 0.07);
     --danger:        #E0807E;
     --danger-soft:   rgba(224, 128, 126, 0.14);
+    --warn:          #D9A85C;
+    --warn-soft:     rgba(217, 168, 92, 0.14);
     --shadow-soft:   0 1px 2px rgba(0, 0, 0, 0.20), 0 8px 24px rgba(0, 0, 0, 0.28);
   }
 }
@@ -580,6 +584,48 @@ code, .code-line { font-family: var(--font-mono); }
 }
 .manage-row .manage-text { flex: 1; min-width: 0; margin: 0; }
 .manage-row .manage-action { flex: none; }
+
+/* Isolation check (csw doctor) report. Same flat bordered card language as the
+   rest of the detail view. Issues use --warn only, so the shared (--ok) and
+   delete (--danger) semantic colors keep one meaning each. */
+.doctor-report { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.doctor-note {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-ctl);
+  background: var(--warn-soft);
+  color: var(--ink);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.doctor-summary { margin: 0; font-size: 0.8125rem; color: var(--ink-muted); line-height: 1.7; }
+.doctor-summary-issue { color: var(--warn); font-weight: 600; }
+.doctor-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  overflow: hidden;
+}
+.doctor-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+}
+.doctor-item + .doctor-item,
+.doctor-item-detail + .doctor-item { border-top: 1px solid var(--border); }
+.doctor-item-label { font-size: 0.8125rem; color: var(--ink); }
+.doctor-item-state { font-size: 0.78rem; color: var(--ink-muted); text-align: right; }
+.doctor-item-issue { color: var(--warn); font-weight: 600; }
+.doctor-item-detail {
+  margin: 0;
+  padding: 0 14px 10px;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
 @supports (text-wrap: balance) { .detail-switch-hint { text-wrap: balance; } }
 .icon-btn {
   flex: none;

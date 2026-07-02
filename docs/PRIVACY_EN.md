@@ -43,7 +43,7 @@ In addition, the settings window stores its own display preferences (the accent 
 - CSW reads and writes its own folder listed above.
 - CSW touches the existing Claude folders, `~/Library/Application Support/Claude` and `~/.claude`, in exactly three cases:
   1. **Existence checks**: it checks whether a folder or file exists, without reading its contents.
-  2. **Creating shared links**: for items you set to Shared when creating an environment, it creates symbolic links inside the new environment that point to the existing Claude's originals. The links live in the new environment's folder; nothing is written on the existing Claude's side.
+  2. **Creating and re-pointing shared links**: for items you set to Shared when creating an environment, it creates symbolic links inside the new environment that point to the existing Claude's originals. The isolation check's repair command, `csw doctor --fix`, likewise only re-points share links that no longer point at their declared source. Only the link is swapped; real files are never touched. The links live in the environment's folder; nothing is written on the existing Claude's side.
   3. **Copying**: for items you set to Copy when creating an environment, it reads those files and copies them into the new environment. Only the items you chose are read, and the existing Claude's side is never modified.
 - To tell which environment a running Claude is using, CSW reads the list of running processes and their launch arguments. It reads nothing else about those processes and no communication contents.
 

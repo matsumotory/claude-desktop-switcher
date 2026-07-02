@@ -438,3 +438,266 @@ fn default_profile_is_not_fully_isolated() {
     let default_profile = manager.get_profile("default").unwrap();
     assert!(!default_profile.sharing.is_fully_isolated());
 }
+
+// --- csw doctor (isolation inspector) ---------------------------------------
+
+use crate::profile::inspector::ItemHealth;
+use std::path::Path;
+
+/// Put shareable sources into the default dirs so Share links have targets.
+fn populate_default_sources(cli_default: &Path, desktop_default: &Path) {
+    std::fs::write(cli_default.join("CLAUDE.md"), "rules").unwrap();
+    std::fs::write(cli_default.join("settings.json"), "{}").unwrap();
+    std::fs::create_dir_all(cli_default.join("plugins")).unwrap();
+    std::fs::create_dir_all(cli_default.join("skills")).unwrap();
+    std::fs::create_dir_all(cli_default.join("projects")).unwrap();
+    std::fs::write(cli_default.join("history.jsonl"), "").unwrap();
+    std::fs::write(desktop_default.join("git-worktrees.json"), "{}").unwrap();
+}
+
+#[test]
+fn doctor_reports_healthy_share_profile() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+
+    assert_eq!(
+        report.items.len(),
+        11,
+        "every linker-managed link point is checked"
+    );
+    assert_eq!(
+        report.issue_count, 0,
+        "healthy profile must have no issues: {:?}",
+        report.items
+    );
+    let claude_md = report
+        .items
+        .iter()
+        .find(|i| i.key == "cli_claude_md")
+        .unwrap();
+    assert!(matches!(claude_md.health, ItemHealth::SharedOk { .. }));
+    let app_config = report
+        .items
+        .iter()
+        .find(|i| i.key == "desktop_app_config")
+        .unwrap();
+    assert!(matches!(app_config.health, ItemHealth::IsolatedOk));
+    assert!(!report.running);
+}
+
+#[test]
+fn doctor_accepts_share_profile_without_sources() {
+    // Creating a share profile with an empty default is legal (nothing to
+    // share yet); the inspector must not call that drift.
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    assert_eq!(
+        report.issue_count, 0,
+        "missing sources are not issues: {:?}",
+        report.items
+    );
+}
+
+#[test]
+fn doctor_detects_missing_share_source() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    // The shared source disappears after the link was created.
+    std::fs::remove_file(provider.claude_cli_default_dir().join("CLAUDE.md")).unwrap();
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    let claude_md = report
+        .items
+        .iter()
+        .find(|i| i.key == "cli_claude_md")
+        .unwrap();
+    assert!(matches!(claude_md.health, ItemHealth::SourceMissing { .. }));
+    assert!(claude_md.is_issue);
+    assert!(report.issue_count >= 1);
+}
+
+#[test]
+fn doctor_detects_and_fixes_wrong_target() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    // Re-point the CLAUDE.md link at a bogus location.
+    let profile = manager.get_profile("env").unwrap();
+    let link = profile.isolation.cli_config_dir.join("CLAUDE.md");
+    std::fs::remove_file(&link).unwrap();
+    std::os::unix::fs::symlink(
+        provider.claude_cli_default_dir().join("no-such-file.md"),
+        &link,
+    )
+    .unwrap();
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    let claude_md = report
+        .items
+        .iter()
+        .find(|i| i.key == "cli_claude_md")
+        .unwrap();
+    assert!(matches!(
+        claude_md.health,
+        ItemHealth::WrongTarget { fixable: true, .. }
+    ));
+
+    // --fix re-points it; afterwards the profile is healthy again.
+    let fixed = manager.doctor_fix_links("env").unwrap();
+    assert!(fixed.contains(&"cli_claude_md"));
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    assert_eq!(report.issue_count, 0, "{:?}", report.items);
+}
+
+#[test]
+fn doctor_detects_materialized_drift_and_never_fixes_it() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    // The share link got replaced by a real file (temp+rename style drift).
+    let profile = manager.get_profile("env").unwrap();
+    let link = profile.isolation.cli_config_dir.join("CLAUDE.md");
+    std::fs::remove_file(&link).unwrap();
+    std::fs::write(&link, "materialized local copy").unwrap();
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    let claude_md = report
+        .items
+        .iter()
+        .find(|i| i.key == "cli_claude_md")
+        .unwrap();
+    assert!(matches!(claude_md.health, ItemHealth::Materialized));
+    assert!(claude_md.is_issue);
+
+    // --fix must not touch real files: data-loss risk.
+    let fixed = manager.doctor_fix_links("env").unwrap();
+    assert!(!fixed.contains(&"cli_claude_md"));
+    assert_eq!(
+        std::fs::read_to_string(&link).unwrap(),
+        "materialized local copy",
+        "the real file must survive --fix untouched"
+    );
+}
+
+#[test]
+fn doctor_detects_unexpected_link_on_always_isolated_item() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("env", SharingConfig::default(), None)
+        .unwrap();
+
+    // Someone (or a bug) turned the always-isolated config.json into a link.
+    std::fs::write(
+        provider.claude_desktop_default_dir().join("config.json"),
+        "{}",
+    )
+    .unwrap();
+    let profile = manager.get_profile("env").unwrap();
+    let path = profile.isolation.desktop_user_data_dir.join("config.json");
+    if path.exists() {
+        std::fs::remove_file(&path).unwrap();
+    }
+    std::os::unix::fs::symlink(
+        provider.claude_desktop_default_dir().join("config.json"),
+        &path,
+    )
+    .unwrap();
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    let app_config = report
+        .items
+        .iter()
+        .find(|i| i.key == "desktop_app_config")
+        .unwrap();
+    assert!(matches!(
+        app_config.health,
+        ItemHealth::UnexpectedLink { .. }
+    ));
+    assert!(app_config.is_issue);
+
+    // --fix only re-points share links; it must not silently remove this.
+    let fixed = manager.doctor_fix_links("env").unwrap();
+    assert!(fixed.is_empty());
+    assert!(
+        provider.is_symlink(&path),
+        "detected, reported, not auto-removed"
+    );
+}
+
+#[test]
+fn doctor_rejects_default_profile() {
+    let (_, manager, _tmp) = setup_test_manager();
+    assert!(manager.inspect_profile_isolation("default").is_err());
+    assert!(manager.doctor_fix_links("default").is_err());
+}
+
+#[test]
+fn doctor_flags_running_environment() {
+    let tmp_dir = tempdir().unwrap();
+    let app_data = tmp_dir.path().join("app_data");
+    let desktop_default = tmp_dir.path().join("desktop_default");
+    let cli_default = tmp_dir.path().join("cli_default");
+    std::fs::create_dir_all(&app_data).unwrap();
+    std::fs::create_dir_all(&desktop_default).unwrap();
+    std::fs::create_dir_all(&cli_default).unwrap();
+
+    // First pass: create the environment.
+    let provider = Arc::new(MockPlatformProvider::new(
+        desktop_default.clone(),
+        cli_default.clone(),
+        app_data.clone(),
+    ));
+    let manager = ProfileManager::new(provider.clone()).unwrap();
+    manager
+        .create_profile("env", SharingConfig::default(), None)
+        .unwrap();
+    let desktop_dir = manager
+        .get_profile("env")
+        .unwrap()
+        .isolation
+        .desktop_user_data_dir;
+
+    // Second pass: same app data, but a Claude main process now runs on it.
+    let provider = Arc::new(
+        MockPlatformProvider::new(desktop_default, cli_default, app_data).with_running_args(vec![
+            format!(
+                "/Applications/Claude.app/Contents/MacOS/Claude --user-data-dir={}",
+                desktop_dir.display()
+            ),
+        ]),
+    );
+    let manager = ProfileManager::new(provider).unwrap();
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    assert!(report.running, "a running environment must be flagged");
+}

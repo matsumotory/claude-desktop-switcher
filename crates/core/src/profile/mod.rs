@@ -1,4 +1,5 @@
 pub mod config;
+pub mod inspector;
 pub mod linker;
 
 use std::fs;
@@ -377,6 +378,34 @@ impl ProfileManager {
         linker.link_profile(&profile, &source_profile)?;
 
         Ok(profile)
+    }
+
+    /// Read-only isolation check of one profile's link points (csw doctor).
+    /// The default profile has no links, so inspecting it is rejected.
+    pub fn inspect_profile_isolation(&self, name: &str) -> Result<inspector::ProfileReport> {
+        if name == "default" {
+            return Err(CswError::Other(
+                "The default environment (existing Claude) has no links to inspect".to_string(),
+            ));
+        }
+        let profile = self.get_profile(name)?;
+        let source_profile = self.get_profile(&profile.sharing.source.profile)?;
+        let inspector = inspector::Inspector::new(self.provider.as_ref());
+        Ok(inspector.inspect_profile(&profile, &source_profile))
+    }
+
+    /// Re-point share links that no longer resolve to their existing expected
+    /// source (csw doctor --fix). Only symlinks are swapped; never real data.
+    pub fn doctor_fix_links(&self, name: &str) -> Result<Vec<&'static str>> {
+        if name == "default" {
+            return Err(CswError::Other(
+                "The default environment (existing Claude) has no links to fix".to_string(),
+            ));
+        }
+        let profile = self.get_profile(name)?;
+        let source_profile = self.get_profile(&profile.sharing.source.profile)?;
+        let inspector = inspector::Inspector::new(self.provider.as_ref());
+        inspector.fix_relinkable(&profile, &source_profile)
     }
 
     pub fn clone_profile(&self, source_name: &str, target_name: &str) -> Result<Profile> {

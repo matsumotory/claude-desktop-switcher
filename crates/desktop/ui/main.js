@@ -147,6 +147,34 @@ const EN = {
     'Environment data is written only inside CSW\'s own folder, ~/.context-switcher-claude/. The full lists of what it reads and writes, and the steps to verify on your own Mac that it makes no network requests, are published in the Privacy and Transparency document.',
   '確かめ方を見る': 'See how to verify',
   '非公式プロジェクト': 'Unofficial project',
+  // Isolation check (csw doctor)
+  '分離の検査': 'Isolation check',
+  '共有と分離が設定どおりに保たれているかを、この場で点検します。ファイルの中身は読まず、何も書き換えません。':
+    'Checks on the spot that sharing and isolation still match this environment\'s settings. It reads no file contents and changes nothing.',
+  '検査する': 'Check now',
+  '検査できませんでした。': 'The check could not be run.',
+  'この環境の Claudeデスクトップアプリが起動中です。書き換えの途中を検査した可能性があるため、問題が出た場合は Claude を終了してからもう一度検査してください。':
+    'The Claude Desktop App is running in this environment. The check may have caught a rewrite in progress; if issues appear, quit Claude and check again.',
+  '共有（正常）': 'Shared (OK)',
+  '分離（正常）': 'Isolated (OK)',
+  'コピー（正常）': 'Copied (OK)',
+  '共有（共有元がまだありません）': 'Shared (nothing to share yet)',
+  '要確認': 'Needs attention',
+  '共有元が見つかりません。': 'The shared source is missing.',
+  'リンク先が想定と異なります。ターミナルで csw doctor --fix を実行すると張り直せます。':
+    'The link points somewhere unexpected. Run csw doctor --fix in a terminal to re-point it.',
+  'リンク先が想定と異なり、共有元も見つかりません。':
+    'The link points somewhere unexpected, and the shared source is missing.',
+  '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。':
+    'The share link has been replaced by a regular file. To avoid losing your local contents, it is not repaired automatically.',
+  '共有のリンクがありません。': 'The share link is missing.',
+  '常に分離する項目がリンクになっています。': 'An always-isolated item has become a link.',
+  'コピーの項目がリンクになっています。': 'An item set to copy has become a link.',
+  '分離の項目がリンクになっています。': 'An isolated item has become a link.',
+  '状態を判定できませんでした。': 'The state could not be determined.',
+  'セッション状態': 'Session state',
+  'アカウントのサインイン情報': 'Account sign-in',
+  'コネクタ・アプリ設定': 'Connectors & app settings',
   '本プロジェクトは非公式のコミュニティ製で、Anthropic 社とは関係ありません。「Claude」は Anthropic の商標です。': 'This is an unofficial community project, not affiliated with Anthropic. "Claude" is a trademark of Anthropic.',
   // Avatar picker labels
   '仕事': 'Work', '個人': 'Personal', '検証': 'Testing', '開発': 'Dev', '会社': 'Company',
@@ -257,6 +285,17 @@ const SHARE_GROUPS = [
 ];
 const DEVICE_ID = { key: 'desktop_device_id', name: '端末 ID', desc: '端末を識別するための ID' };
 const ALL_KEYS = [...SHARE_GROUPS.flatMap((g) => g.items.map((i) => i.key)), DEVICE_ID.key];
+
+// Labels for the isolation check (csw doctor). Reuses the share-UI vocabulary;
+// the always-isolated items the share UI deliberately hides get their
+// SPECIFICATION.md §3 names here.
+const DOCTOR_LABELS = {
+  ...Object.fromEntries(SHARE_GROUPS.flatMap((g) => g.items).map((i) => [i.key, i.name])),
+  [DEVICE_ID.key]: DEVICE_ID.name,
+  cli_sessions: 'セッション状態',
+  desktop_app_config: 'アカウントのサインイン情報',
+  desktop_config: 'コネクタ・アプリ設定',
+};
 
 // Mode presets — must mirror SharingConfig::{share_settings,share_workspace}_preset
 // and build_sharing_config in main.rs. config.json / claude_desktop_config.json are
@@ -509,6 +548,7 @@ async function showDetail(name) {
     // in onboarding, not repeated as an always-on block here.
     nodes.push(sharingDisclosure(d.sharing));
     nodes.push(pathsSection(d, false));
+    nodes.push(doctorSection(name));
     nodes.push(terminalSection(name));
     // Cloning is a rare management action, so it sits here as a quiet button rather
     // than taking a prominent footer slot next to the launch actions.
@@ -534,6 +574,94 @@ function cloneSection(name) {
       h('button', { type: 'button', class: 'btn btn-ghost manage-action', onclick: () => showCloneRow(name) },
         icon('i-duplicate'), h('span', { text: '複製' }))),
   ]);
+}
+
+// The isolation check (csw doctor) is a quiet, on-demand, read-only action.
+// Same presentation as cloneSection: a labeled row with a one-line explanation
+// and a ghost button; the report renders below when run. The GUI never repairs
+// anything (auto-fixes are the classic source of profile-switcher accidents);
+// re-pointing broken links stays in the CLI as `csw doctor --fix`.
+function doctorSection(name) {
+  const results = h('div', { class: 'doctor-results' });
+  const btn = h('button', {
+    type: 'button', class: 'btn btn-ghost manage-action',
+    onclick: () => runDoctor(name, results, btn),
+  }, icon('i-check'), h('span', { text: '検査する' }));
+  return section('分離の検査', [
+    h('div', { class: 'manage-row' },
+      h('p', { class: 'firstrun-body manage-text', text: '共有と分離が設定どおりに保たれているかを、この場で点検します。ファイルの中身は読まず、何も書き換えません。' }),
+      btn),
+    results,
+  ]);
+}
+
+async function runDoctor(name, results, btn) {
+  btn.disabled = true;
+  try {
+    const report = await invoke('inspect_profile', { name });
+    results.replaceChildren(renderDoctorReport(report));
+  } catch (err) {
+    showToast('検査できませんでした。', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// The four link points that are structurally isolated in every mode
+// (SPECIFICATION.md §3「常に分離する項目」). Mirrors LINK_ITEMS' fixed_mode.
+const ALWAYS_ISOLATED_KEYS = ['desktop_config', 'cli_sessions', 'desktop_device_id', 'desktop_app_config'];
+
+// Status text per item. Healthy states are short labels; issues add one full
+// explanatory sentence below the row. Copy stays a distinct word from 分離
+// (csw_product_canon: 共有 / 分離 / コピー only). item.mode carries the serde
+// form of SharingMode ('share' / 'copy' / 'isolate', lowercase).
+function doctorStatus(item) {
+  const st = item.health.state;
+  if (st === 'shared_ok') return { status: '共有（正常）', issue: false };
+  if (st === 'isolated_ok') {
+    return { status: item.mode === 'copy' ? 'コピー（正常）' : '分離（正常）', issue: false };
+  }
+  if (st === 'source_absent') return { status: '共有（共有元がまだありません）', issue: false };
+  const unexpectedLink = ALWAYS_ISOLATED_KEYS.includes(item.key)
+    ? '常に分離する項目がリンクになっています。'
+    : (item.mode === 'copy' ? 'コピーの項目がリンクになっています。' : '分離の項目がリンクになっています。');
+  const detail = {
+    source_missing: '共有元が見つかりません。',
+    wrong_target: item.health.fixable
+      ? 'リンク先が想定と異なります。ターミナルで csw doctor --fix を実行すると張り直せます。'
+      : 'リンク先が想定と異なり、共有元も見つかりません。',
+    materialized: '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。',
+    missing_link: '共有のリンクがありません。',
+    unexpected_link: unexpectedLink,
+  }[st] || '状態を判定できませんでした。';
+  return { status: '要確認', detail, issue: true };
+}
+
+function renderDoctorReport(report) {
+  const wrap = h('div', { class: 'doctor-report' });
+  if (report.running) {
+    wrap.appendChild(h('p', { class: 'doctor-note', text: 'この環境の Claudeデスクトップアプリが起動中です。書き換えの途中を検査した可能性があるため、問題が出た場合は Claude を終了してからもう一度検査してください。' }));
+  }
+  const n = report.items.length;
+  const c = report.issue_count;
+  const summary = c === 0
+    ? T(`問題は見つかりませんでした。${n} 項目すべてが設定どおりです。`, `No issues found. All ${n} items match the settings.`)
+    : T(`${c} 件の問題が見つかりました。`, c === 1 ? '1 issue found.' : `${c} issues found.`);
+  wrap.appendChild(h('p', {
+    class: report.issue_count === 0 ? 'doctor-summary' : 'doctor-summary doctor-summary-issue',
+    text: summary,
+  }));
+  const list = h('div', { class: 'doctor-list' });
+  for (const item of report.items) {
+    const label = DOCTOR_LABELS[item.key] || item.key;
+    const s = doctorStatus(item);
+    list.appendChild(h('div', { class: 'doctor-item' },
+      h('span', { class: 'doctor-item-label', text: label }),
+      h('span', { class: s.issue ? 'doctor-item-state doctor-item-issue' : 'doctor-item-state', text: s.status })));
+    if (s.detail) list.appendChild(h('p', { class: 'doctor-item-detail', text: s.detail }));
+  }
+  wrap.appendChild(list);
+  return wrap;
 }
 
 // Describe the footer's launch buttons just above them. Uses the same bordered
@@ -1274,6 +1402,18 @@ function devInvoke(cmd, args) {
       return Promise.resolve(['default']);
     case 'launch_additional_window':
       return Promise.resolve(null);
+    case 'inspect_profile': {
+      // Healthy sample report for browser QA / screenshots, shaped exactly like
+      // the Rust inspector's serde output: lowercase SharingMode values and the
+      // LINK_ITEMS order (share_settings-style environment).
+      const modes = { ...PRESETS.share_settings, cli_sessions: 'isolate', desktop_app_config: 'isolate', desktop_config: 'isolate' };
+      const order = ['desktop_config', 'cli_settings', 'cli_claude_md', 'cli_project_memory', 'cli_plugins',
+        'cli_skills', 'cli_sessions', 'cli_history', 'desktop_worktrees', 'desktop_device_id', 'desktop_app_config'];
+      const items = order.map((key) => (modes[key] === 'share'
+        ? { key, mode: 'share', health: { state: 'shared_ok', target: '~/.claude/' + key }, is_issue: false }
+        : { key, mode: modes[key], health: { state: 'isolated_ok' }, is_issue: false }));
+      return Promise.resolve({ profile: args.name, items, issue_count: 0, running: false });
+    }
     case 'get_default_roots_status':
       return Promise.resolve({ desktop_present: true, cli_present: true });
     case 'get_dmg_mount_status':

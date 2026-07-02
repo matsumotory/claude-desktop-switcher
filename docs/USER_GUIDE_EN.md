@@ -128,6 +128,8 @@ The Claude Code (CLI) sign-in is managed separately from the desktop app's sign-
   From the very bottom of the sidebar you can open the user guide, report an issue (GitHub), and "About" (the disclaimer). The current version and "Check for updates" (the latest release) live there too. External links open in your default browser; the app itself makes no network requests.
 * **Everything the app reads and writes is documented**
   [Privacy and Transparency](PRIVACY_EN.md) lists every path this app reads, every path it writes, and everything it never touches, together with the steps to verify on your own Mac that it makes no network requests. We publish the verification steps, not just the claims.
+* **Check anytime that the isolation still holds**
+  In an environment's detail screen, press "Check now" under "Isolation check" to confirm, item by item, that sharing and isolation still match the settings. The check reads no file contents and changes nothing. In a terminal, `csw doctor` runs the same check, and `csw doctor --fix` only re-points share links that no longer point at their declared source. Claude Code's own `claude doctor` is a different command that diagnoses the installation, unrelated to this check.
 
 ---
 

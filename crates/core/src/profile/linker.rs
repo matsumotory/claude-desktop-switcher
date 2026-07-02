@@ -5,6 +5,143 @@ use crate::error::{CswError, Result};
 use crate::platform::PlatformProvider;
 use crate::profile::{Profile, SharingMode};
 
+/// Which of a profile's two data directories an item lives in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ItemDir {
+    Desktop,
+    Cli,
+}
+
+/// One linker-managed link point inside a profile. This table is the single
+/// source of truth for what the linker touches: `link_profile`,
+/// `unlink_profile` and the isolation inspector all iterate it, so they can
+/// never drift apart. Keys follow docs/SPECIFICATION.md §3.
+pub struct LinkItem {
+    pub key: &'static str,
+    pub dir: ItemDir,
+    pub rel_path: &'static str,
+    pub is_directory: bool,
+    /// `Some(mode)` for structurally fixed items (always isolated: they hold
+    /// account-keyed state, runtime state or the device id, and no SharingConfig
+    /// field can express sharing them). `None` reads the profile's SharingConfig.
+    pub fixed_mode: Option<SharingMode>,
+}
+
+/// All link points, in the order `link_profile` applies them.
+pub const LINK_ITEMS: &[LinkItem] = &[
+    // claude_desktop_config.json — ALWAYS isolated. It holds account-keyed
+    // permission gates and is rewritten via temp+rename on launch (breaking any
+    // symlink). The isolation is structural, not a runtime guard.
+    LinkItem {
+        key: "desktop_config",
+        dir: ItemDir::Desktop,
+        rel_path: "claude_desktop_config.json",
+        is_directory: false,
+        fixed_mode: Some(SharingMode::Isolate),
+    },
+    LinkItem {
+        key: "cli_settings",
+        dir: ItemDir::Cli,
+        rel_path: "settings.json",
+        is_directory: false,
+        fixed_mode: None,
+    },
+    LinkItem {
+        key: "cli_claude_md",
+        dir: ItemDir::Cli,
+        rel_path: "CLAUDE.md",
+        is_directory: false,
+        fixed_mode: None,
+    },
+    LinkItem {
+        key: "cli_project_memory",
+        dir: ItemDir::Cli,
+        rel_path: "projects",
+        is_directory: true,
+        fixed_mode: None,
+    },
+    LinkItem {
+        key: "cli_plugins",
+        dir: ItemDir::Cli,
+        rel_path: "plugins",
+        is_directory: true,
+        fixed_mode: None,
+    },
+    LinkItem {
+        key: "cli_skills",
+        dir: ItemDir::Cli,
+        rel_path: "skills",
+        is_directory: true,
+        fixed_mode: None,
+    },
+    // sessions/ — ALWAYS isolated. Per-environment runtime state (pid, cwd,
+    // start time), not conversation content.
+    LinkItem {
+        key: "cli_sessions",
+        dir: ItemDir::Cli,
+        rel_path: "sessions",
+        is_directory: true,
+        fixed_mode: Some(SharingMode::Isolate),
+    },
+    LinkItem {
+        key: "cli_history",
+        dir: ItemDir::Cli,
+        rel_path: "history.jsonl",
+        is_directory: false,
+        fixed_mode: None,
+    },
+    LinkItem {
+        key: "desktop_worktrees",
+        dir: ItemDir::Desktop,
+        rel_path: "git-worktrees.json",
+        is_directory: false,
+        fixed_mode: None,
+    },
+    // ant-did — ALWAYS isolated. Sharing the device id would correlate two
+    // accounts as one device.
+    LinkItem {
+        key: "desktop_device_id",
+        dir: ItemDir::Desktop,
+        rel_path: "ant-did",
+        is_directory: false,
+        fixed_mode: Some(SharingMode::Isolate),
+    },
+    // config.json — ALWAYS isolated. Holds OAuth token caches and per-account
+    // state; sharing it would mix two logins into one file.
+    LinkItem {
+        key: "desktop_app_config",
+        dir: ItemDir::Desktop,
+        rel_path: "config.json",
+        is_directory: false,
+        fixed_mode: Some(SharingMode::Isolate),
+    },
+];
+
+/// The sharing mode a profile declares (or the structure fixes) for an item.
+pub fn item_mode(profile: &Profile, item: &LinkItem) -> SharingMode {
+    if let Some(fixed) = &item.fixed_mode {
+        return fixed.clone();
+    }
+    match item.key {
+        "cli_settings" => profile.sharing.cli_settings.clone(),
+        "cli_claude_md" => profile.sharing.cli_claude_md.clone(),
+        "cli_project_memory" => profile.sharing.cli_project_memory.clone(),
+        "cli_plugins" => profile.sharing.cli_plugins.clone(),
+        "cli_skills" => profile.sharing.cli_skills.clone(),
+        "cli_history" => profile.sharing.cli_history.clone(),
+        "desktop_worktrees" => profile.sharing.desktop_worktrees.clone(),
+        _ => SharingMode::Isolate,
+    }
+}
+
+/// The absolute path of an item inside the given profile's data directories.
+pub fn item_path(profile: &Profile, item: &LinkItem) -> PathBuf {
+    match item.dir {
+        ItemDir::Desktop => profile.isolation.desktop_user_data_dir.join(item.rel_path),
+        ItemDir::Cli => profile.isolation.cli_config_dir.join(item.rel_path),
+    }
+}
+
 /// Manages symlinks and files setup for a profile based on its sharing configuration.
 pub struct Linker<'a> {
     provider: &'a dyn PlatformProvider,
@@ -16,132 +153,31 @@ impl<'a> Linker<'a> {
     }
 
     /// Links or copies all components of a target profile from a source profile.
+    /// Iterates `LINK_ITEMS`, so the applied set always matches what
+    /// `unlink_profile` cleans up and what the isolation inspector checks.
     pub fn link_profile(&self, target_profile: &Profile, source_profile: &Profile) -> Result<()> {
-        let target_desktop_dir = &target_profile.isolation.desktop_user_data_dir;
-        let target_cli_dir = &target_profile.isolation.cli_config_dir;
-
         // Ensure base target directories exist
-        fs::create_dir_all(target_desktop_dir)?;
-        fs::create_dir_all(target_cli_dir)?;
+        fs::create_dir_all(&target_profile.isolation.desktop_user_data_dir)?;
+        fs::create_dir_all(&target_profile.isolation.cli_config_dir)?;
 
-        let source_desktop_dir = &source_profile.isolation.desktop_user_data_dir;
-        let source_cli_dir = &source_profile.isolation.cli_config_dir;
-
-        // 1. claude_desktop_config.json — ALWAYS isolated. It holds account-keyed
-        // permission gates and is rewritten via temp+rename on launch (breaking any
-        // symlink). It is not a SharingConfig field, so no mode or caller can express
-        // sharing it; the isolation is structural, not a runtime guard.
-        self.apply_link(
-            &source_desktop_dir.join("claude_desktop_config.json"),
-            &target_desktop_dir.join("claude_desktop_config.json"),
-            SharingMode::Isolate,
-            false, // is_directory
-        )?;
-
-        // 2. CLI Settings (settings.json)
-        self.apply_link(
-            &source_cli_dir.join("settings.json"),
-            &target_cli_dir.join("settings.json"),
-            target_profile.sharing.cli_settings.clone(),
-            false,
-        )?;
-
-        // 3. CLI Claude.md (CLAUDE.md)
-        self.apply_link(
-            &source_cli_dir.join("CLAUDE.md"),
-            &target_cli_dir.join("CLAUDE.md"),
-            target_profile.sharing.cli_claude_md.clone(),
-            false,
-        )?;
-
-        // 4. CLI Project Memory (projects/ directory)
-        self.apply_link(
-            &source_cli_dir.join("projects"),
-            &target_cli_dir.join("projects"),
-            target_profile.sharing.cli_project_memory.clone(),
-            true, // is_directory
-        )?;
-
-        // 5. CLI Plugins (plugins/ directory)
-        self.apply_link(
-            &source_cli_dir.join("plugins"),
-            &target_cli_dir.join("plugins"),
-            target_profile.sharing.cli_plugins.clone(),
-            true,
-        )?;
-
-        // 5b. CLI Skills (skills/ directory)
-        self.apply_link(
-            &source_cli_dir.join("skills"),
-            &target_cli_dir.join("skills"),
-            target_profile.sharing.cli_skills.clone(),
-            true,
-        )?;
-
-        // 5c. sessions/ — ALWAYS isolated. Per-environment runtime state (pid, cwd,
-        // start time), not conversation content; not a SharingConfig field.
-        self.apply_link(
-            &source_cli_dir.join("sessions"),
-            &target_cli_dir.join("sessions"),
-            SharingMode::Isolate,
-            true,
-        )?;
-
-        // 5d. CLI Command History (history.jsonl file)
-        self.apply_link(
-            &source_cli_dir.join("history.jsonl"),
-            &target_cli_dir.join("history.jsonl"),
-            target_profile.sharing.cli_history.clone(),
-            false,
-        )?;
-
-        // 6. Desktop Worktrees (git-worktrees.json)
-        self.apply_link(
-            &source_desktop_dir.join("git-worktrees.json"),
-            &target_desktop_dir.join("git-worktrees.json"),
-            target_profile.sharing.desktop_worktrees.clone(),
-            false,
-        )?;
-
-        // 7. ant-did — ALWAYS isolated. Sharing the device id would correlate two
-        // accounts as one device; not a SharingConfig field.
-        self.apply_link(
-            &source_desktop_dir.join("ant-did"),
-            &target_desktop_dir.join("ant-did"),
-            SharingMode::Isolate,
-            false,
-        )?;
-
-        // 8. config.json — ALWAYS isolated. Holds OAuth token caches and per-account
-        // state; sharing it would mix two logins into one file. Not a SharingConfig field.
-        self.apply_link(
-            &source_desktop_dir.join("config.json"),
-            &target_desktop_dir.join("config.json"),
-            SharingMode::Isolate,
-            false,
-        )?;
+        for item in LINK_ITEMS {
+            self.apply_link(
+                &item_path(source_profile, item),
+                &item_path(target_profile, item),
+                item_mode(target_profile, item),
+                item.is_directory,
+            )?;
+        }
 
         Ok(())
     }
 
     /// Cleans up any symlinks created in the target profile.
     pub fn unlink_profile(&self, target_profile: &Profile) -> Result<()> {
-        let target_desktop_dir = &target_profile.isolation.desktop_user_data_dir;
-        let target_cli_dir = &target_profile.isolation.cli_config_dir;
-
-        let paths_to_unlink = vec![
-            target_desktop_dir.join("claude_desktop_config.json"),
-            target_desktop_dir.join("git-worktrees.json"),
-            target_desktop_dir.join("ant-did"),
-            target_desktop_dir.join("config.json"),
-            target_cli_dir.join("settings.json"),
-            target_cli_dir.join("CLAUDE.md"),
-            target_cli_dir.join("projects"),
-            target_cli_dir.join("plugins"),
-            target_cli_dir.join("skills"),
-            target_cli_dir.join("sessions"),
-            target_cli_dir.join("history.jsonl"),
-        ];
+        let paths_to_unlink: Vec<PathBuf> = LINK_ITEMS
+            .iter()
+            .map(|item| item_path(target_profile, item))
+            .collect();
 
         for path in paths_to_unlink {
             if path.exists() || self.provider.is_symlink(&path) {
