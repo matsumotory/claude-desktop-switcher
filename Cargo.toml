@@ -20,5 +20,4 @@ anyhow = "1"
 thiserror = "2"
 dirs = "6"
 clap = { version = "4", features = ["derive"] }
-notify = "8"
 colored = "3"
