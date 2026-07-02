@@ -1,4 +1,5 @@
 pub mod config;
+pub mod data_map;
 pub mod inspector;
 pub mod linker;
 
@@ -328,6 +329,11 @@ impl ProfileManager {
             });
         }
 
+        // Names come from user input or directory listings; validating here keeps
+        // path traversal structurally impossible for every caller (SPECIFICATION
+        // §5.A: paths are resolved from the environment name, never accepted raw).
+        validate_profile_name(name)?;
+
         let profiles_dir = self.app_config.lock().unwrap().profiles_dir.clone();
         let profile_toml = profiles_dir.join(name).join("profile.toml");
         if !profile_toml.exists() {
@@ -406,6 +412,19 @@ impl ProfileManager {
         let source_profile = self.get_profile(&profile.sharing.source.profile)?;
         let inspector = inspector::Inspector::new(self.provider.as_ref());
         inspector.fix_relinkable(&profile, &source_profile)
+    }
+
+    /// Read-only data map of one profile (sizes and link targets for the
+    /// detail screen). The default profile is the user's real Claude data, so
+    /// it is never aggregated.
+    pub fn profile_data_map(&self, name: &str) -> Result<data_map::DataMap> {
+        if name == "default" {
+            return Err(CswError::Other(
+                "The default environment (existing Claude) is not aggregated".to_string(),
+            ));
+        }
+        let profile = self.get_profile(name)?;
+        Ok(data_map::build_data_map(&profile))
     }
 
     pub fn clone_profile(&self, source_name: &str, target_name: &str) -> Result<Profile> {

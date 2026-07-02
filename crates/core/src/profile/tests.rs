@@ -701,3 +701,183 @@ fn doctor_flags_running_environment() {
     let report = manager.inspect_profile_isolation("env").unwrap();
     assert!(report.running, "a running environment must be flagged");
 }
+
+// --- environment data map ----------------------------------------------------
+
+use crate::profile::data_map::DataMap;
+
+fn data_map_setup() -> (
+    Arc<MockPlatformProvider>,
+    ProfileManager,
+    tempfile::TempDir,
+    DataMap,
+) {
+    let (provider, manager, tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    // A big shared source: if the walk ever followed links, totals would jump.
+    std::fs::write(
+        provider.claude_cli_default_dir().join("CLAUDE.md"),
+        vec![b'x'; 4096],
+    )
+    .unwrap();
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    let profile = manager.get_profile("env").unwrap();
+    // Real isolated data owned by the environment: 100 bytes.
+    std::fs::write(
+        profile
+            .isolation
+            .cli_config_dir
+            .join("projects")
+            .join("a.jsonl"),
+        vec![b'y'; 100],
+    )
+    .unwrap();
+    // A stray symlink inside the environment pointing at a big external file.
+    let big = tmp.path().join("big.bin");
+    std::fs::write(&big, vec![0u8; 8192]).unwrap();
+    std::os::unix::fs::symlink(
+        &big,
+        profile
+            .isolation
+            .cli_config_dir
+            .join("projects")
+            .join("link.bin"),
+    )
+    .unwrap();
+
+    let map = manager.profile_data_map("env").unwrap();
+    (provider, manager, tmp, map)
+}
+
+#[test]
+fn data_map_does_not_follow_symlinks() {
+    let (_, _, _tmp, map) = data_map_setup();
+
+    // The 100-byte real file must be counted; the 4096-byte shared source and
+    // the 8192-byte stray link target must not be (links are never followed).
+    assert!(map.cli_size_bytes >= 100, "{:?}", map);
+    assert!(
+        map.cli_size_bytes < 4096,
+        "symlink targets must never be followed: {} bytes",
+        map.cli_size_bytes
+    );
+    assert_eq!(
+        map.total_size_bytes,
+        map.cli_size_bytes + map.desktop_size_bytes
+    );
+}
+
+#[test]
+fn data_map_reports_share_targets_without_size() {
+    let (provider, _, _tmp, map) = data_map_setup();
+
+    let claude_md = map.items.iter().find(|i| i.key == "cli_claude_md").unwrap();
+    assert_eq!(
+        claude_md.link_target,
+        Some(
+            provider
+                .claude_cli_default_dir()
+                .join("CLAUDE.md")
+                .display()
+                .to_string()
+        )
+    );
+    assert!(
+        claude_md.size_bytes.is_none(),
+        "share items show the target, not a size"
+    );
+    assert!(claude_md.exists);
+}
+
+#[test]
+fn data_map_sign_in_item_is_metadata_only() {
+    let (_, _, _tmp, map) = data_map_setup();
+
+    // Minimal exposure for the sign-in item: presence only, no size, no mtime.
+    let sign_in = map
+        .items
+        .iter()
+        .find(|i| i.key == "desktop_app_config")
+        .unwrap();
+    assert!(sign_in.size_bytes.is_none());
+    assert!(sign_in.modified_epoch.is_none());
+    assert!(sign_in.link_target.is_none());
+}
+
+#[test]
+fn data_map_counts_isolated_items() {
+    let (_, _, _tmp, map) = data_map_setup();
+
+    let projects = map
+        .items
+        .iter()
+        .find(|i| i.key == "cli_project_memory")
+        .unwrap();
+    assert!(projects.size_bytes.unwrap_or(0) >= 100, "{:?}", projects);
+    assert!(projects.modified_epoch.is_some());
+}
+
+#[test]
+fn data_map_rejects_default() {
+    let (_, manager, _tmp) = setup_test_manager();
+    assert!(manager.profile_data_map("default").is_err());
+}
+
+#[test]
+fn data_map_scales_to_thousands_of_files() {
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("env", SharingConfig::default(), None)
+        .unwrap();
+    let profile = manager.get_profile("env").unwrap();
+    let dir = profile.isolation.cli_config_dir.join("projects");
+    for i in 0..5000 {
+        std::fs::write(dir.join(format!("f{i}.jsonl")), b"0123456789").unwrap();
+    }
+
+    let started = std::time::Instant::now();
+    let map = manager.profile_data_map("env").unwrap();
+    let elapsed = started.elapsed();
+    println!("data_map over 5000 files took {elapsed:?}");
+
+    assert!(map.cli_size_bytes >= 50_000);
+    // Generous bound: catches pathological recursion, not normal variance.
+    assert!(elapsed.as_secs() < 5, "took {elapsed:?}");
+}
+
+#[test]
+fn get_profile_rejects_traversal_names() {
+    let (_, manager, _tmp) = setup_test_manager();
+    assert!(manager.get_profile("../escape").is_err());
+    assert!(manager.profile_data_map("../escape").is_err());
+}
+
+#[test]
+fn data_map_sizes_materialized_share_item() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    // The share link drifted into a real local file: it occupies real bytes,
+    // so the item row must report them (consistent with the folder totals).
+    let profile = manager.get_profile("env").unwrap();
+    let link = profile.isolation.cli_config_dir.join("CLAUDE.md");
+    std::fs::remove_file(&link).unwrap();
+    std::fs::write(&link, vec![b'm'; 777]).unwrap();
+
+    let map = manager.profile_data_map("env").unwrap();
+    let claude_md = map.items.iter().find(|i| i.key == "cli_claude_md").unwrap();
+    assert!(claude_md.link_target.is_none());
+    assert_eq!(claude_md.size_bytes, Some(777));
+}
