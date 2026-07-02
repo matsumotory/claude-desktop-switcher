@@ -32,7 +32,7 @@ Your existing Claude environment (e.g., your default personal environment) is pr
 ### Step 1: Install the Application
 1. Download the latest `.dmg` file from the [Releases](https://github.com/matsumotory/claude-desktop-switcher/releases/latest) page.
 2. Drag and drop the downloaded `Claude-Desktop-Switcher.app` into your macOS `Applications` folder.
-3. Launch the app. The settings window opens, and a menu bar icon also appears (it can be hidden when the menu bar is crowded, but you can always reopen the settings window from the Dock icon).
+3. Launch the app. The settings window opens, and a menu bar icon also appears (it can be hidden when the menu bar is crowded, but you can always reopen the settings window from the Dock icon). If the installer disk image is still mounted, a prompt appears at the top of the settings window: press "Eject" to eject it right there.
 4. On first launch only, the welcome screen shows a few helper cards (your Existing Claude is protected, you can switch between environments, and the terminal (Claude Code) shares the same environment). They appear once and then go away.
 
 ![First-run onboarding](../website/assets/screen_onboarding.png)

@@ -335,6 +335,8 @@ code, .code-line { font-family: var(--font-mono); }
 /* --------------------------------------------------------------------- Pane */
 .pane {
   display: flex;
+  /* Column so the dmg-banner (when shown) stacks above the single visible view. */
+  flex-direction: column;
   min-width: 0;
   /* Grid items default to min-height:auto, so without this the pane grows to its
      content height and the inner .view-scroll never gets a bounded height to
@@ -349,6 +351,36 @@ code, .code-line { font-family: var(--font-mono); }
   min-width: 0;
   min-height: 0;
 }
+
+/* Leftover installer disk image prompt: flat card in the note-card idiom, with
+   the primary action on the right (macOS button order). */
+.dmg-banner {
+  display: flex;
+  /* At the real window minimum (600px) the actions wrap below the text and
+     stay right-aligned via margin-left:auto. */
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 14px 28px 0;
+  max-width: 640px;
+  padding: 12px 12px 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.dmg-banner-text {
+  flex: 1 1 300px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  line-break: strict;
+  color: var(--ink);
+}
+/* Keep the short closing question unbroken so the Japanese line break lands on
+   the sentence boundary, never inside a word (only present in the JA markup;
+   the data-en replacement removes the span for English). */
+.dmg-banner-q { white-space: nowrap; }
+.dmg-banner-actions { display: flex; gap: 8px; flex-shrink: 0; margin-left: auto; }
 .view[hidden] { display: none; }
 .view-main { position: relative; flex: 1; min-height: 0; display: flex; }
 .view-scroll { flex: 1; min-height: 0; overflow-y: auto; }

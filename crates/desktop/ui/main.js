@@ -120,6 +120,9 @@ const EN = {
   'モードを変えたので高度設定をリセットしました': 'Changed the mode, so advanced settings were reset',
   'リンクを開けませんでした。': 'Could not open the link.',
   '既存の Claude に切り替えました': 'Switched to Existing Claude',
+  '取り出す': 'Eject', 'あとで': 'Later',
+  'ディスクイメージを取り出しました': 'Disk image ejected',
+  '取り出せませんでした。ディスクイメージを使用中のウィンドウを閉じてから、もう一度お試しください。': 'Could not eject. Close any window using the disk image, then try again.',
   'パスをコピー': 'Copy path', 'コマンドをコピー': 'Copy command',
   '複製先の名前（例: 仕事用-控え）': 'Name for the copy (e.g. Work-backup)',
   '名前を入力してください。': 'Enter a name.',
@@ -368,6 +371,9 @@ function withTransition(update) {
 // --- DOM refs ---------------------------------------------------------------
 const el = {
   profileList: $('profileList'),
+  dmgBanner: $('dmgBanner'),
+  btnDmgEject: $('btnDmgEject'),
+  btnDmgLater: $('btnDmgLater'),
   btnCreate: $('btnCreate'),
   btnCreateEmpty: $('btnCreateEmpty'),
   viewEmpty: $('viewEmpty'),
@@ -1167,10 +1173,45 @@ function wireFooter() {
     .catch(() => { el.appVersion.hidden = true; });
 }
 
+// --- Leftover installer disk image (SPECIFICATION.md §5.A) ------------------
+// Prompt to eject a still-mounted CSW .dmg. "あとで" hides the banner for this
+// session only; the next launch prompts again while the image stays mounted.
+let dmgMounts = [];
+let dmgDismissed = false;
+
+async function checkDmgLeftover() {
+  try { dmgMounts = (await invoke('get_dmg_mount_status')) || []; }
+  catch (e) { dmgMounts = []; }
+  el.dmgBanner.hidden = dmgDismissed || dmgMounts.length === 0;
+}
+
+async function doEjectDmg() {
+  el.btnDmgEject.disabled = true;
+  try {
+    for (const m of dmgMounts) await invoke('eject_dmg', { mountPoint: m });
+    el.dmgBanner.hidden = true;
+    showToast('ディスクイメージを取り出しました');
+  } catch (err) {
+    showToast('取り出せませんでした。ディスクイメージを使用中のウィンドウを閉じてから、もう一度お試しください。', true);
+  } finally {
+    el.btnDmgEject.disabled = false;
+  }
+}
+
+function wireDmgBanner() {
+  el.btnDmgEject.addEventListener('click', doEjectDmg);
+  el.btnDmgLater.addEventListener('click', () => {
+    dmgDismissed = true;
+    el.dmgBanner.hidden = true;
+  });
+}
+
 async function init() {
   initAccent();
   wireEvents();
   wireFooter();
+  wireDmgBanner();
+  checkDmgLeftover();
   await refreshProfiles();
   checkFirstRun();
   showEmpty();
@@ -1221,6 +1262,11 @@ function devInvoke(cmd, args) {
       return Promise.resolve(null);
     case 'get_default_roots_status':
       return Promise.resolve({ desktop_present: true, cli_present: true });
+    case 'get_dmg_mount_status':
+      // Browser/screenshot mode never shows the banner; QA forces it via eval.
+      return Promise.resolve([]);
+    case 'eject_dmg':
+      return Promise.resolve(null);
     case 'app_version':
       return Promise.resolve('0.14.0');
     case 'open_url':

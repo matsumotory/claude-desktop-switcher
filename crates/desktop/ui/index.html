@@ -95,6 +95,17 @@
 
     <!-- Right pane: one of empty / detail / create is visible -->
     <main class="pane">
+      <!-- Leftover installer disk image prompt (SPECIFICATION.md §5.A). Shown on
+           launch only when a CSW .dmg is still mounted and the app is not running
+           from it. "あとで" hides it for this session only. -->
+      <div class="dmg-banner" id="dmgBanner" hidden>
+        <p class="dmg-banner-text" data-en="The installer disk image is still mounted. Eject it now?">インストール用のディスクイメージがマウントされたままです。<span class="dmg-banner-q">取り出しますか？</span></p>
+        <div class="dmg-banner-actions">
+          <button type="button" class="btn btn-ghost" id="btnDmgLater">あとで</button>
+          <button type="button" class="btn btn-primary" id="btnDmgEject">取り出す</button>
+        </div>
+      </div>
+
       <!-- (a) Empty / welcome -->
       <section class="view" id="viewEmpty">
         <div class="view-main">
