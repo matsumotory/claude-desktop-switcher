@@ -5,6 +5,9 @@ pub enum CswError {
     #[error("Profile '{0}' not found")]
     ProfileNotFound(String),
 
+    #[error("could not move to the Trash: {0}")]
+    TrashMoveFailed(String),
+
     #[error("Profile '{0}' already exists")]
     ProfileAlreadyExists(String),
 

@@ -42,6 +42,11 @@ pub trait PlatformProvider: Send + Sync {
     /// Check if a path is a symbolic link.
     fn is_symlink(&self, path: &std::path::Path) -> bool;
 
+    /// Move a file or directory to the OS trash (macOS: the Trash). Never a
+    /// silent fallback to permanent deletion: on failure the caller reports
+    /// the error and offers an explicit purge instead.
+    fn move_to_trash(&self, path: &std::path::Path) -> Result<()>;
+
     // --- Process control ---
 
     /// Launch Claude Desktop with a specific user-data-dir.

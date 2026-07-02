@@ -881,3 +881,168 @@ fn data_map_sizes_materialized_share_item() {
     assert!(claude_md.link_target.is_none());
     assert_eq!(claude_md.size_bytes, Some(777));
 }
+
+// --- trash on delete ----------------------------------------------------------
+
+#[test]
+fn delete_profile_moves_to_trash_and_keeps_data() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("bin-me", SharingConfig::default(), None)
+        .unwrap();
+    let profile = manager.get_profile("bin-me").unwrap();
+    std::fs::write(
+        profile
+            .isolation
+            .cli_config_dir
+            .join("projects")
+            .join("keep.jsonl"),
+        "precious",
+    )
+    .unwrap();
+
+    manager.delete_profile("bin-me").unwrap();
+
+    assert!(
+        !manager
+            .list_profiles()
+            .unwrap()
+            .contains(&"bin-me".to_string())
+    );
+    let trashed = provider.mock_trash_dir().join("bin-me");
+    assert!(trashed.exists(), "the folder must land in the trash");
+    assert_eq!(
+        std::fs::read_to_string(trashed.join("cli-data").join("projects").join("keep.jsonl"))
+            .unwrap(),
+        "precious",
+        "trashed data must stay intact and restorable"
+    );
+}
+
+#[test]
+fn restored_profile_is_recognized_again() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("bin-me", SharingConfig::default(), None)
+        .unwrap();
+    manager.delete_profile("bin-me").unwrap();
+
+    // The documented restore procedure: move the folder back under profiles/.
+    let profiles_dir = provider.app_data_dir().join("profiles");
+    std::fs::rename(
+        provider.mock_trash_dir().join("bin-me"),
+        profiles_dir.join("bin-me"),
+    )
+    .unwrap();
+
+    assert!(
+        manager
+            .list_profiles()
+            .unwrap()
+            .contains(&"bin-me".to_string())
+    );
+    assert_eq!(
+        manager.get_profile("bin-me").unwrap().profile.name,
+        "bin-me"
+    );
+}
+
+#[test]
+fn purge_profile_deletes_permanently() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("gone", SharingConfig::default(), None)
+        .unwrap();
+
+    manager.purge_profile("gone").unwrap();
+
+    assert!(
+        !manager
+            .list_profiles()
+            .unwrap()
+            .contains(&"gone".to_string())
+    );
+    assert!(
+        !provider.mock_trash_dir().join("gone").exists(),
+        "purge must not go through the trash"
+    );
+}
+
+#[test]
+fn delete_profile_errors_without_fallback_when_trash_fails() {
+    let tmp_dir = tempdir().unwrap();
+    let app_data = tmp_dir.path().join("app_data");
+    let desktop_default = tmp_dir.path().join("desktop_default");
+    let cli_default = tmp_dir.path().join("cli_default");
+    std::fs::create_dir_all(&app_data).unwrap();
+    std::fs::create_dir_all(&desktop_default).unwrap();
+    std::fs::create_dir_all(&cli_default).unwrap();
+    let provider = Arc::new(
+        MockPlatformProvider::new(desktop_default, cli_default, app_data.clone())
+            .with_trash_failure(true),
+    );
+    let manager = ProfileManager::new(provider).unwrap();
+    manager
+        .create_profile("stuck", SharingConfig::default(), None)
+        .unwrap();
+
+    let res = manager.delete_profile("stuck");
+
+    assert!(
+        res.is_err(),
+        "trash failure must surface, never silently purge"
+    );
+    assert!(
+        app_data.join("profiles").join("stuck").exists(),
+        "the environment must survive a failed trash move"
+    );
+}
+
+#[test]
+fn delete_profile_trashes_share_links_without_touching_originals() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    manager
+        .create_profile("linked", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+
+    manager.delete_profile("linked").unwrap();
+
+    // The link moved to the trash as a link; the shared original is untouched,
+    // so restoring the folder brings the environment back completely.
+    let trashed_link = provider
+        .mock_trash_dir()
+        .join("linked")
+        .join("cli-data")
+        .join("CLAUDE.md");
+    assert!(provider.is_symlink(&trashed_link));
+    assert!(
+        provider.claude_cli_default_dir().join("CLAUDE.md").exists(),
+        "the existing Claude's original must never be affected"
+    );
+}
+
+#[test]
+fn purge_profile_rejects_default_and_active() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("busy", SharingConfig::default(), None)
+        .unwrap();
+    manager.switch_to("busy").unwrap();
+
+    // The worst possible regression is purging the existing Claude or the
+    // active environment; pin both rejections on the purge path itself.
+    assert!(manager.purge_profile("default").is_err());
+    assert!(manager.purge_profile("busy").is_err());
+    assert!(
+        provider
+            .app_data_dir()
+            .join("profiles")
+            .join("busy")
+            .exists(),
+        "a rejected purge must leave the environment untouched"
+    );
+}

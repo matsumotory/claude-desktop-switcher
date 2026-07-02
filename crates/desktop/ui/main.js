@@ -93,9 +93,14 @@ const EN = {
     'Opens this environment in a new window at the same time, without quitting a running Claude.',
   '既存の Claude に切り替える': 'Switch to Existing Claude',
   '既存の Claude は変更・削除できません': 'Existing Claude cannot be changed or deleted',
-  'この環境を削除します。共有リンクと分離データが消えます。既存の Claude には影響しません。':
-    'This deletes the environment. Its shared links and isolated data are removed. Existing Claude is not affected.',
-  'やめる': 'Cancel', '削除する': 'Delete', '複製を作る': 'Duplicate', '戻る': 'Back',
+  '完全に削除': 'Delete permanently',
+  'ゴミ箱へ移動': 'Move to Trash',
+  '完全に削除する': 'Delete permanently',
+  '完全に削除すると、ゴミ箱を経由せずにすぐ消え、戻せません。':
+    'Permanent deletion skips the Trash, takes effect immediately, and cannot be undone.',
+  'ゴミ箱へ移動できませんでした。すぐに消す場合は「完全に削除」を選んでください。':
+    'Could not move it to the Trash. To remove it now, choose "Delete permanently".',
+  'やめる': 'Cancel', '複製を作る': 'Duplicate', '戻る': 'Back',
   'この環境は、起動中の Claude を終了せずに開けます。': 'You can open this environment without quitting a running Claude.',
   '起動中の Claude を終了してから、もう一度押してください。設定の衝突を防ぐため、共有を含む環境の Claude は同時に開けません。':
     'Quit the running Claude, then press this again. To avoid configuration conflicts, environments that share settings cannot be open at once.',
@@ -926,15 +931,48 @@ function renderDetailFooter(name, isDefault, isInUse, supportsConcurrent) {
 }
 
 // --- Inline confirm / clone rows (no window.confirm) ------------------------
+// Deleting moves the whole folder to the Trash (restorable, links move as
+// links). The copy states that honestly, including that the sign-in state
+// stays restorable until the Trash is emptied; users who want the data gone
+// now get an explicit, separately confirmed "完全に削除".
 function showDeleteRow(name) {
+  el.detailFooter.className = 'view-footer confirm-stack';
+  const cancel = h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, 'やめる');
+  const text = h('span', {
+    class: 'confirm-text',
+    text: T(
+      'この環境をゴミ箱へ移動します。ゴミ箱を空にするまでは、サインイン状態を含むすべてのデータを戻せます。既存の Claude には影響しません。',
+      'This environment will be moved to the Trash. Until you empty the Trash, everything including the sign-in state can be restored. Your existing Claude is not affected.'
+    ),
+  });
+  el.detailFooter.replaceChildren(
+    text,
+    h('div', { class: 'footer-group' },
+      cancel,
+      h('button', { type: 'button', class: 'btn btn-danger', onclick: () => showPurgeRow(name) }, '完全に削除'),
+      h('button', { type: 'button', class: 'btn btn-danger-solid', onclick: () => doDelete(name) }, 'ゴミ箱へ移動')));
+  cancel.focus(); // default focus on the safe action
+  // The occupied size arrives whenever the read-only aggregation resolves; the
+  // confirmation never waits for it. Built with T(), so the observer-based
+  // dictionary is not involved and the sentence stays language-correct.
+  invoke('get_profile_data_map', { name }).then((map) => {
+    text.textContent += T(
+      `この環境の専有容量は ${fmtBytes(map.total_size_bytes)} です。`,
+      ` This environment occupies ${fmtBytes(map.total_size_bytes)} by itself.`
+    );
+  }).catch(() => { /* size stays out of the copy */ });
+}
+
+// Second, separate confirmation for the non-restorable path.
+function showPurgeRow(name) {
   el.detailFooter.className = 'view-footer split';
   const cancel = h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => showDetail(name) }, 'やめる');
   el.detailFooter.replaceChildren(
-    h('span', { class: 'confirm-text', text: 'この環境を削除します。共有リンクと分離データが消えます。既存の Claude には影響しません。' }),
+    h('span', { class: 'confirm-text', text: '完全に削除すると、ゴミ箱を経由せずにすぐ消え、戻せません。' }),
     h('div', { class: 'footer-group' },
       cancel,
-      h('button', { type: 'button', class: 'btn btn-danger-solid', onclick: () => doDelete(name) }, '削除する')));
-  cancel.focus(); // default focus on the safe action
+      h('button', { type: 'button', class: 'btn btn-danger-solid', onclick: () => doPurge(name) }, '完全に削除する')));
+  cancel.focus();
 }
 
 function showCloneRow(name) {
@@ -1009,7 +1047,27 @@ async function doDelete(name) {
     await refreshProfiles();
     const remaining = profiles.filter((p) => p.name !== 'default');
     withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
-    showToast(T(`${name}を削除しました`, `Deleted ${name}`));
+    showToast(T(`「${name}」をゴミ箱へ移動しました`, `Moved "${name}" to the Trash`));
+  } catch (err) {
+    // The backend never falls back to permanent deletion. When the Trash move
+    // itself failed (CswError::TrashMoveFailed), say so and point at the
+    // explicit permanent path; otherwise the usual cause is an in-use profile.
+    if (String(err).includes('could not move to the Trash')) {
+      showToast('ゴミ箱へ移動できませんでした。すぐに消す場合は「完全に削除」を選んでください。', true);
+    } else {
+      showToast('削除できませんでした。利用中の環境は切り替えてから削除してください。', true);
+    }
+  }
+}
+
+async function doPurge(name) {
+  try {
+    await invoke('purge_profile', { name });
+    selectedName = null;
+    await refreshProfiles();
+    const remaining = profiles.filter((p) => p.name !== 'default');
+    withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
+    showToast(T(`「${name}」を完全に削除しました`, `Permanently deleted "${name}"`));
   } catch (err) {
     showToast('削除できませんでした。利用中の環境は切り替えてから削除してください。', true);
   }
@@ -1023,7 +1081,7 @@ async function doClone(source, target) {
     selectedName = target;
     await refreshProfiles();
     withTransition(() => showDetail(target));
-    showToast(T(`${target}を複製しました。元の環境はそのままです。`, `Duplicated ${target}. The original is unchanged.`));
+    showToast(T(`「${target}」を複製しました。元の環境はそのままです。`, `Duplicated "${target}". The original is unchanged.`));
   } catch (e) {
     showToast('複製できませんでした。同じ名前がすでにあるか確認してください。', true);
   }
@@ -1226,7 +1284,7 @@ async function submitCreate() {
     selectedName = name;
     await refreshProfiles();
     withTransition(() => showDetail(name));
-    showToast(T(`${name}を作成しました`, `Created ${name}`));
+    showToast(T(`「${name}」を作成しました`, `Created "${name}"`));
   } catch (e) {
     showToast('作成できませんでした。同じ名前がすでにあるか確認してください。', true);
     renderCreateFooter(); // restore the form footer so the user can fix and retry
@@ -1279,14 +1337,24 @@ async function refreshRunning() {
 }
 
 // When the window regains focus or becomes visible again, the user may have just
-// quit (or started) a Claude Desktop elsewhere. Re-check the running state and
-// re-render so "利用中" and the launch actions reflect reality without a restart.
+// quit (or started) a Claude Desktop elsewhere, or moved an environment folder
+// back from the Trash. Re-list the environments and the running state so the
+// sidebar and the launch actions reflect reality without a restart
+// (list_profiles is a single directory scan, so this stays cheap).
 async function revalidateRunning() {
-  const before = JSON.stringify([desktopRunning, runningProfiles]);
-  await refreshRunning();
-  if (JSON.stringify([desktopRunning, runningProfiles]) === before) return;
-  renderSidebar();
-  if (!el.viewDetail.hidden && selectedName) showDetail(selectedName);
+  const before = JSON.stringify([desktopRunning, runningProfiles, profiles.map((p) => p.name)]);
+  await refreshProfiles();
+  if (JSON.stringify([desktopRunning, runningProfiles, profiles.map((p) => p.name)]) === before) return;
+  if (!el.viewDetail.hidden && selectedName) {
+    if (profiles.some((p) => p.name === selectedName)) {
+      showDetail(selectedName);
+    } else {
+      // The shown environment disappeared outside CSW: fall back gracefully.
+      selectedName = null;
+      const remaining = profiles.filter((p) => p.name !== 'default');
+      withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
+    }
+  }
 }
 
 // --- Init -------------------------------------------------------------------

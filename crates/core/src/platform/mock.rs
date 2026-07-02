@@ -11,6 +11,8 @@ pub struct MockPlatformProvider {
     desktop_running: AtomicBool,
     /// Test knob: make `create_symlink` fail (to exercise rollback paths).
     fail_symlink: AtomicBool,
+    /// Test knob: make `move_to_trash` fail (to exercise the no-fallback path).
+    fail_trash: AtomicBool,
     /// Test knob: arg lines returned by `running_desktop_args` (running main procs).
     running_args: std::sync::Mutex<Vec<String>>,
 }
@@ -23,6 +25,7 @@ impl MockPlatformProvider {
             app_data,
             desktop_running: AtomicBool::new(false),
             fail_symlink: AtomicBool::new(false),
+            fail_trash: AtomicBool::new(false),
             running_args: std::sync::Mutex::new(Vec::new()),
         }
     }
@@ -44,6 +47,17 @@ impl MockPlatformProvider {
     pub fn with_symlink_failure(self, fail: bool) -> Self {
         self.fail_symlink.store(fail, Ordering::SeqCst);
         self
+    }
+
+    /// Builder: make `move_to_trash` fail, to test the no-fallback error path.
+    pub fn with_trash_failure(self, fail: bool) -> Self {
+        self.fail_trash.store(fail, Ordering::SeqCst);
+        self
+    }
+
+    /// Where this mock "trashes" paths to (a directory next to app data).
+    pub fn mock_trash_dir(&self) -> PathBuf {
+        self.app_data.join("mock-trash")
     }
 }
 
@@ -108,5 +122,18 @@ impl PlatformProvider for MockPlatformProvider {
 
     fn running_desktop_args(&self) -> Result<Vec<String>> {
         Ok(self.running_args.lock().unwrap().clone())
+    }
+
+    fn move_to_trash(&self, path: &std::path::Path) -> Result<()> {
+        if self.fail_trash.load(Ordering::SeqCst) {
+            return Err(CswError::TrashMoveFailed("mock failure".to_string()));
+        }
+        let trash = self.mock_trash_dir();
+        std::fs::create_dir_all(&trash)?;
+        let name = path
+            .file_name()
+            .ok_or_else(|| CswError::Other("mock: path has no file name".to_string()))?;
+        std::fs::rename(path, trash.join(name))?;
+        Ok(())
     }
 }
