@@ -8,6 +8,8 @@ use tauri::{
     tray::TrayIconBuilder,
 };
 
+mod dmg;
+
 use csw_core::platform::create_provider;
 use csw_core::profile::{ProfileManager, SharingConfig, SharingMode};
 use csw_core::switcher::{ContextSwitcher, desktop_dir_running};
@@ -296,6 +298,21 @@ async fn get_default_roots_status(state: State<'_, AppState>) -> Result<serde_js
     }))
 }
 
+/// Mounted CSW installer disk images the user can eject (SPECIFICATION.md §5.A
+/// インストール用ディスクイメージの取り出し案内). Empty when there is nothing
+/// to prompt about.
+#[tauri::command]
+async fn get_dmg_mount_status() -> Result<Vec<String>, String> {
+    Ok(dmg::current_mount_status())
+}
+
+/// Detach a mount point previously reported by get_dmg_mount_status. Any other
+/// path is refused inside dmg::eject.
+#[tauri::command]
+async fn eject_dmg(mount_point: String) -> Result<(), String> {
+    dmg::eject(&mount_point)
+}
+
 // Native menus bypass the WebView, so its Japanese→English dictionary cannot
 // reach them; the tray labels are resolved here under the same locale rule as
 // ui/main.js (docs/SPECIFICATION.md §5.A 表示言語): a system locale starting
@@ -543,7 +560,9 @@ fn main() {
             get_running_profiles,
             get_default_roots_status,
             app_version,
-            open_url
+            open_url,
+            get_dmg_mount_status,
+            eject_dmg
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
