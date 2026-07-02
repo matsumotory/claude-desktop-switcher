@@ -1,7 +1,8 @@
 ---
 title: csw doctor: 分離と共有リンクの健全性検査
 created: 2026-07-03
-status: approved
+status: in-progress
+pr: 151
 related_prs: []
 related_issues: []
 ---
