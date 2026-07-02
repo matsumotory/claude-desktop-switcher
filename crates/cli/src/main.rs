@@ -82,10 +82,14 @@ enum ProfileAction {
         /// Profile name
         name: String,
     },
-    /// Delete a profile
+    /// Delete a profile (moves its folder to the Trash; restorable until the Trash is emptied)
     Delete {
         /// Profile name
         name: String,
+
+        /// Delete permanently instead of moving to the Trash (not restorable)
+        #[arg(long)]
+        purge: bool,
     },
 }
 
@@ -214,17 +218,54 @@ fn main() -> anyhow::Result<()> {
                         std::process::exit(1);
                     }
                 },
-                ProfileAction::Delete { name } => {
-                    println!("Deleting profile '{}'...", name.cyan());
-                    match manager.delete_profile(&name) {
-                        Ok(_) => println!(
-                            "{} Profile '{}' deleted successfully.",
-                            "OK".green(),
-                            name.cyan()
-                        ),
-                        Err(e) => {
-                            eprintln!("{} Failed to delete profile: {}", "Error:".red(), e);
-                            std::process::exit(1);
+                ProfileAction::Delete { name, purge } => {
+                    if purge {
+                        println!("Permanently deleting profile '{}'...", name.cyan());
+                        match manager.purge_profile(&name) {
+                            Ok(_) => println!(
+                                "{} Profile '{}' permanently deleted (not restorable).",
+                                "OK".green(),
+                                name.cyan()
+                            ),
+                            Err(e) => {
+                                eprintln!("{} Failed to delete profile: {}", "Error:".red(), e);
+                                std::process::exit(1);
+                            }
+                        }
+                    } else {
+                        println!("Moving profile '{}' to the Trash...", name.cyan());
+                        match manager.delete_profile(&name) {
+                            Ok(_) => {
+                                println!(
+                                    "{} Profile '{}' moved to the Trash.",
+                                    "OK".green(),
+                                    name.cyan()
+                                );
+                                println!(
+                                    "  Until you empty the Trash, everything (including the \
+sign-in state) can be restored by moving the folder back under profiles/."
+                                );
+                            }
+                            // Advise --purge only when the Trash move itself
+                            // failed; validation errors (default/active) would
+                            // fail --purge identically, so the hint would be
+                            // wrong and, for the default, dangerous.
+                            Err(csw_core::error::CswError::TrashMoveFailed(e)) => {
+                                eprintln!(
+                                    "{} Could not move the profile to the Trash: {}",
+                                    "Error:".red(),
+                                    e
+                                );
+                                eprintln!(
+                                    "  To delete it permanently instead, run '{}'.",
+                                    format!("csw profile delete {name} --purge").yellow()
+                                );
+                                std::process::exit(1);
+                            }
+                            Err(e) => {
+                                eprintln!("{} Failed to delete profile: {}", "Error:".red(), e);
+                                std::process::exit(1);
+                            }
                         }
                     }
                 }

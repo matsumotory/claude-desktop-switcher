@@ -135,6 +135,21 @@ impl PlatformProvider for MacOsProvider {
         Ok(pids)
     }
 
+    fn move_to_trash(&self, path: &std::path::Path) -> Result<()> {
+        // Explicitly use the NSFileManager backend: the trash crate's default
+        // on macOS drives Finder via AppleScript, which needs an Automation
+        // permission prompt and can time out (observed on a real machine), and
+        // would contradict docs/PRIVACY.md (CSW runs no osascript). The direct
+        // API moves the folder into the user's Trash, restorable until the
+        // Trash is emptied. Never falls back to permanent deletion on failure.
+        use trash::TrashContext;
+        use trash::macos::{DeleteMethod, TrashContextExtMacos};
+        let mut ctx = TrashContext::default();
+        ctx.set_delete_method(DeleteMethod::NsFileManager);
+        ctx.delete(path)
+            .map_err(|e| CswError::TrashMoveFailed(e.to_string()))
+    }
+
     fn running_desktop_args(&self) -> Result<Vec<String>> {
         let pids = self.claude_desktop_pids()?;
         if pids.is_empty() {

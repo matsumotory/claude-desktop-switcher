@@ -568,7 +568,41 @@ impl ProfileManager {
         Ok(())
     }
 
+    /// Delete an environment by moving its folder, as is, to the OS trash.
+    /// Share links move as links (their targets on the existing Claude side
+    /// are untouched), so until the trash is emptied the environment can be
+    /// restored completely (including its sign-in state and share links) by
+    /// moving the folder back under `profiles/`; CSW re-recognizes it from
+    /// the directory listing. Never falls back to permanent deletion: on
+    /// trash failure the error surfaces and callers offer `purge` instead.
     pub fn delete_profile(&self, name: &str) -> Result<()> {
+        let profile_dir = self.validate_deletable(name)?;
+        if profile_dir.exists() {
+            self.provider.move_to_trash(&profile_dir)?;
+        }
+        Ok(())
+    }
+
+    /// Permanently delete an environment (no trash, not restorable). The
+    /// explicit path for users who want the data gone immediately. Symlinks
+    /// are unlinked first (with the linker's default-data guards) before the
+    /// directory is removed.
+    pub fn purge_profile(&self, name: &str) -> Result<()> {
+        let profile_dir = self.validate_deletable(name)?;
+
+        let profile = self.get_profile(name)?;
+        let linker = linker::Linker::new(self.provider.as_ref());
+        linker.unlink_profile(&profile)?;
+
+        if profile_dir.exists() {
+            std::fs::remove_dir_all(profile_dir)?;
+        }
+        Ok(())
+    }
+
+    /// Shared validation for both delete flavors: never the default, never
+    /// the active environment. Returns the profile directory.
+    fn validate_deletable(&self, name: &str) -> Result<PathBuf> {
         if name == "default" {
             return Err(CswError::DefaultProfileCannotBeDeleted);
         }
@@ -577,20 +611,11 @@ impl ProfileManager {
             return Err(CswError::ActiveProfileCannotBeDeleted(name.to_string()));
         }
 
-        let profile = self.get_profile(name)?;
-        let linker = linker::Linker::new(self.provider.as_ref());
+        // Ensure the profile exists (and the name is valid) before touching disk.
+        self.get_profile(name)?;
 
-        // Clean up symlinks first
-        linker.unlink_profile(&profile)?;
-
-        // Remove profile directory
         let profiles_dir = self.app_config.lock().unwrap().profiles_dir.clone();
-        let profile_dir = profiles_dir.join(name);
-        if profile_dir.exists() {
-            std::fs::remove_dir_all(profile_dir)?;
-        }
-
-        Ok(())
+        Ok(profiles_dir.join(name))
     }
 
     pub fn list_profiles(&self) -> Result<Vec<String>> {

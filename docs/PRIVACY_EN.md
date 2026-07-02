@@ -27,7 +27,7 @@ Update checks work the same way: CSW never queries for new versions; it simply o
 
 ## Where CSW writes
 
-CSW writes files only inside its own folder, `~/.context-switcher-claude/`.
+CSW writes files only inside its own folder, `~/.context-switcher-claude/`. The one exception is deleting an environment, which moves that environment's folder, as is, to the macOS Trash. Nothing new is written out; only the environment folders listed below are ever moved.
 
 | Path | Contents |
 |---|---|

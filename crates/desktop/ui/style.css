@@ -415,6 +415,11 @@ code, .code-line { font-family: var(--font-mono); }
 /* Keep the destructive action to the right even when the launch buttons wrap it
    onto its own line (narrow windows), so it never sits under a launch button. */
 .view-footer.split > .btn-danger { margin-left: auto; }
+/* Confirm rows with a full-sentence explanation (delete): stack the text above
+   the actions so the sentence keeps the full width instead of being squeezed
+   into a narrow column next to three buttons. */
+.view-footer.confirm-stack { flex-direction: column; align-items: stretch; gap: 10px; }
+.view-footer.confirm-stack .footer-group { justify-content: flex-end; }
 
 .view-title {
   font-family: var(--font-disp);

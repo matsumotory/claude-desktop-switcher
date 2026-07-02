@@ -178,6 +178,22 @@ async fn delete_profile(
     Ok(())
 }
 
+/// Permanent, non-restorable deletion (the Trash is skipped). Confirmed
+/// separately in the UI; `delete_profile` (the default) moves to the Trash.
+#[tauri::command]
+async fn purge_profile(
+    name: String,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<(), String> {
+    state
+        .profile_manager
+        .purge_profile(&name)
+        .map_err(|e| e.to_string())?;
+    update_tray_menu(&app)?;
+    Ok(())
+}
+
 #[tauri::command]
 async fn clone_profile(
     source: String,
@@ -605,6 +621,7 @@ fn main() {
             get_profile_details,
             create_profile,
             delete_profile,
+            purge_profile,
             clone_profile,
             inspect_profile,
             get_profile_data_map,
