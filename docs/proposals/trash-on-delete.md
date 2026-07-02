@@ -1,7 +1,7 @@
 ---
 title: 環境削除のゴミ箱化と削除前サマリー
 created: 2026-07-03
-status: in-progress
+status: completed
 pr: 153
 related_prs: []
 related_issues: []
