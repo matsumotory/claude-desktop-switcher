@@ -1,7 +1,8 @@
 ---
 title: 検証可能な透明性パッケージ (PRIVACY 文書 + アプリ内開示 + cargo-deny/SBOM)
 created: 2026-07-03
-status: approved
+status: in-progress
+pr: 149
 related_prs: []
 related_issues: []
 ---
