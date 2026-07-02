@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.17.0...v0.17.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* **desktop:** 利用量ゲージのラベルを対称にしレイアウトを整える ([c0c7566](https://github.com/matsumotory/claude-desktop-switcher/commit/c0c75669b771cfc6ab24b3598f6b5f14d002751f))
+
 ## [0.17.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.16.1...v0.17.0) (2026-07-02)
 
 
