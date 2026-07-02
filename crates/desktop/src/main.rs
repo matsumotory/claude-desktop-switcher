@@ -193,6 +193,20 @@ async fn clone_profile(
     Ok(())
 }
 
+/// Read-only isolation check of one environment's link points (SPECIFICATION.md
+/// §5.A「分離の検査」). The GUI never repairs anything; fixing stays in the CLI.
+#[tauri::command]
+async fn inspect_profile(
+    name: String,
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let report = state
+        .profile_manager
+        .inspect_profile_isolation(&name)
+        .map_err(|e| e.to_string())?;
+    serde_json::to_value(report).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn switch_profile(
     name: String,
@@ -554,6 +568,7 @@ fn main() {
             create_profile,
             delete_profile,
             clone_profile,
+            inspect_profile,
             switch_profile,
             launch_additional_window,
             get_desktop_running_status,

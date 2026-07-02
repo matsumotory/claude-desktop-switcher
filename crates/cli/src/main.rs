@@ -43,6 +43,20 @@ enum Commands {
 
     /// Show current status (active profile, running processes)
     Status,
+
+    /// Check that each environment's isolation and share links are intact.
+    /// Unrelated to Claude Code's own `claude doctor` (install diagnostics):
+    /// this inspects the environments CSW created. Read-only unless --fix.
+    Doctor {
+        /// Environment name (checks all environments if omitted)
+        name: Option<String>,
+
+        /// Re-point share links that no longer resolve to their existing
+        /// expected source. Only symlinks are swapped; real files are never
+        /// touched (drifted real copies are reported, not repaired).
+        #[arg(long)]
+        fix: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -305,7 +319,196 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+        Commands::Doctor { name, fix } => {
+            let manager = ProfileManager::new(provider.clone())?;
+            let names: Vec<String> = match name {
+                Some(n) => vec![n],
+                None => manager
+                    .list_profiles()?
+                    .into_iter()
+                    .filter(|n| n != "default")
+                    .collect(),
+            };
+            if names.is_empty() {
+                println!("No environments to check. The existing Claude has no links by design.");
+                return Ok(());
+            }
+
+            let mut total_issues = 0usize;
+            for env_name in &names {
+                if env_name == "default" {
+                    println!(
+                        "{} the existing Claude has no links to inspect.",
+                        "SKIP".yellow()
+                    );
+                    continue;
+                }
+
+                let mut report = manager.inspect_profile_isolation(env_name)?;
+                if fix && report.items.iter().any(is_fixable) {
+                    let fixed = manager.doctor_fix_links(env_name)?;
+                    for key in &fixed {
+                        println!(
+                            "{} re-pointed the share link for {}",
+                            "FIXED".green(),
+                            doctor_label(key).cyan()
+                        );
+                    }
+                    report = manager.inspect_profile_isolation(env_name)?;
+                }
+
+                print_doctor_report(&report);
+                total_issues += report.issue_count;
+            }
+
+            if total_issues > 0 {
+                std::process::exit(1);
+            }
+        }
     }
 
     Ok(())
+}
+
+fn is_fixable(item: &csw_core::profile::inspector::ItemReport) -> bool {
+    matches!(
+        item.health,
+        csw_core::profile::inspector::ItemHealth::WrongTarget { fixable: true, .. }
+    )
+}
+
+/// Human label for a link-point key. English terms match the GUI's EN
+/// dictionary (crates/desktop/ui/main.js) so both surfaces report identically.
+fn doctor_label(key: &str) -> &'static str {
+    match key {
+        "cli_claude_md" => "Global rules (CLAUDE.md)",
+        "cli_settings" => "Tool permissions & hooks (settings.json)",
+        "cli_project_memory" => "Project conversations & memory (projects/)",
+        "cli_plugins" => "Plugins (plugins/)",
+        "cli_skills" => "Skills (skills/)",
+        "cli_sessions" => "Session state (sessions/)",
+        "cli_history" => "Input history (history.jsonl)",
+        "desktop_worktrees" => "Worktrees (git-worktrees.json)",
+        "desktop_device_id" => "Device ID (ant-did)",
+        "desktop_app_config" => "Account sign-in (config.json)",
+        "desktop_config" => "Connectors & app settings (claude_desktop_config.json)",
+        _ => "Unknown item",
+    }
+}
+
+/// Whether a link point is structurally isolated in every mode
+/// (SPECIFICATION.md §3「常に分離する項目」).
+fn is_always_isolated(key: &str) -> bool {
+    csw_core::profile::linker::LINK_ITEMS
+        .iter()
+        .any(|i| i.key == key && i.fixed_mode.is_some())
+}
+
+fn print_doctor_report(report: &csw_core::profile::inspector::ProfileReport) {
+    use csw_core::profile::inspector::ItemHealth;
+
+    println!("{}: {}", "Environment".bold(), report.profile.cyan().bold());
+    if report.running {
+        println!(
+            "  {} The Claude Desktop App is running in this environment. A rewrite may \
+have been caught mid-flight; if issues appear, quit Claude and re-check.",
+            "NOTE".yellow()
+        );
+    }
+
+    for item in &report.items {
+        let label = doctor_label(item.key);
+        match &item.health {
+            ItemHealth::SharedOk { target } => {
+                println!("  {} {} shared -> {}", "OK".green(), label, target);
+            }
+            ItemHealth::IsolatedOk => {
+                // Copy and Isolate are distinct modes; reflect the declared one.
+                let word = match item.mode {
+                    csw_core::profile::SharingMode::Copy => "independent copy",
+                    _ => "isolated",
+                };
+                println!("  {} {} {}", "OK".green(), label, word);
+            }
+            ItemHealth::SourceAbsent => {
+                println!(
+                    "  {} {} share declared; nothing to share yet",
+                    "OK".green(),
+                    label
+                );
+            }
+            ItemHealth::SourceMissing { expected_source } => {
+                println!(
+                    "  {} {} the shared source is missing: {}",
+                    "!!".red().bold(),
+                    label,
+                    expected_source
+                );
+            }
+            ItemHealth::WrongTarget {
+                expected_source,
+                actual_target,
+                fixable,
+            } => {
+                println!(
+                    "  {} {} link points to {}, expected {}{}",
+                    "!!".red().bold(),
+                    label,
+                    actual_target,
+                    expected_source,
+                    if *fixable {
+                        " (run `csw doctor --fix` to re-point it)"
+                    } else {
+                        ""
+                    }
+                );
+            }
+            ItemHealth::Materialized => {
+                println!(
+                    "  {} {} expected a shared link but found a real copy (drifted). \
+Not auto-fixed to avoid losing the local copy.",
+                    "!!".red().bold(),
+                    label
+                );
+            }
+            ItemHealth::MissingLink { expected_source } => {
+                println!(
+                    "  {} {} share link missing (expected -> {})",
+                    "!!".red().bold(),
+                    label,
+                    expected_source
+                );
+            }
+            ItemHealth::UnexpectedLink { actual_target } => {
+                // Name the declared mode accurately: 常に分離する項目 is a fixed
+                // set (SPECIFICATION.md §3), not every isolated/copied item.
+                let declared = if is_always_isolated(item.key) {
+                    "must always stay isolated"
+                } else if matches!(item.mode, csw_core::profile::SharingMode::Copy) {
+                    "is declared as copy"
+                } else {
+                    "is declared isolated"
+                };
+                println!(
+                    "  {} {} {} but is a link to {}",
+                    "!!".red().bold(),
+                    label,
+                    declared,
+                    actual_target
+                );
+            }
+        }
+    }
+
+    if report.issue_count == 0 {
+        println!("  {} no issues found", "OK".green().bold());
+    } else if report.issue_count == 1 {
+        println!("  {} 1 issue found", "!!".red().bold());
+    } else {
+        println!(
+            "  {} {} issues found",
+            "!!".red().bold(),
+            report.issue_count
+        );
+    }
 }
