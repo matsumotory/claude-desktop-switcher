@@ -350,9 +350,14 @@ esac
             body.push_str(
                 r#"
 # Default line: concise usage percentages (empty when rate_limits is absent,
-# e.g. API-key sessions). plutil ships with macOS; no jq dependency.
+# e.g. API-key sessions). plutil ships with macOS; no jq dependency. On a
+# missing key some plutil versions print the error to stdout instead of
+# stderr, so anything non-numeric is discarded rather than fed to printf
+# (which would render a fake 0%).
 five=$(printf '%s' "$json" | plutil -extract rate_limits.five_hour.used_percentage raw -o - - 2>/dev/null)
+case "$five" in ''|*[!0-9.]*) five='' ;; esac
 week=$(printf '%s' "$json" | plutil -extract rate_limits.seven_day.used_percentage raw -o - - 2>/dev/null)
+case "$week" in ''|*[!0-9.]*) week='' ;; esac
 line=''
 [ -n "$five" ] && line="5h $(LC_ALL=C printf '%.0f' "$five")%"
 if [ -n "$week" ]; then
