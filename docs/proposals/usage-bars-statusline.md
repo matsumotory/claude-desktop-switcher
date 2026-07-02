@@ -1,7 +1,8 @@
 ---
 title: 環境ごとの利用量バー（statusline 連携）
 created: 2026-07-02
-status: approved
+status: in-progress
+pr: 141
 related_prs: []
 related_issues: []
 ---
