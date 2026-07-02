@@ -384,6 +384,14 @@ impl ProfileManager {
         if target_name == "default" {
             return Err(CswError::ProfileAlreadyExists("default".to_string()));
         }
+        // The default profile's isolation dirs point at the user's real Claude
+        // data directories; cloning it would bulk-read them, which docs/PRIVACY.md
+        // promises never happens. Reject here so no UI path can reach it.
+        if source_name == "default" {
+            return Err(CswError::Other(
+                "The default environment (existing Claude) cannot be duplicated".to_string(),
+            ));
+        }
         if source_name == target_name {
             return Err(CswError::Other(
                 "Source and target profile names must be different".to_string(),

@@ -101,3 +101,39 @@ jobs:
       - name: Clean up App Store Connect API Key
         if: always()
         run: rm -f "${{ runner.temp }}"/AuthKey_*.p8
+
+  # Attach CycloneDX SBOMs for the shipped binaries (both macOS targets of the
+  # universal build). Runs on ubuntu because SBOM generation only reads the
+  # dependency graph; kept independent so a failure never blocks the DMG.
+  sbom:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
+      - name: Install cargo-cyclonedx
+        run: cargo install cargo-cyclonedx --locked
+
+      - name: Generate SBOMs for the macOS targets
+        run: |
+          cargo cyclonedx --format json --target aarch64-apple-darwin --target-in-filename -qq
+          cargo cyclonedx --format json --target x86_64-apple-darwin --target-in-filename -qq
+
+      - name: Upload SBOMs to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          gh release upload "$TAG_NAME" \
+            crates/desktop/csw-desktop_aarch64-apple-darwin.cdx.json \
+            crates/desktop/csw-desktop_x86_64-apple-darwin.cdx.json \
+            crates/cli/csw-cli_aarch64-apple-darwin.cdx.json \
+            crates/cli/csw-cli_x86_64-apple-darwin.cdx.json \
+            --clobber

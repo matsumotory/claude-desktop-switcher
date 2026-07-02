@@ -126,6 +126,8 @@ The Claude Code (CLI) sign-in is managed separately from the desktop app's sign-
   Use the swatches at the bottom of the sidebar to choose the accent: blue (default), teal, indigo, or terracotta. Your choice is saved and applied next time (the semantic colors for shared, isolated, and delete stay the same).
 * **Help and version**
   From the very bottom of the sidebar you can open the user guide, report an issue (GitHub), and "About" (the disclaimer). The current version and "Check for updates" (the latest release) live there too. External links open in your default browser; the app itself makes no network requests.
+* **Everything the app reads and writes is documented**
+  [Privacy and Transparency](PRIVACY_EN.md) lists every path this app reads, every path it writes, and everything it never touches, together with the steps to verify on your own Mac that it makes no network requests. We publish the verification steps, not just the claims.
 
 ---
 

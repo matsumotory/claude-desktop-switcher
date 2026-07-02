@@ -1,0 +1,23 @@
+name: Deny
+
+# Cheap ubuntu job: cargo-deny inspects the dependency graph statically, so no
+# macOS runner is needed. Enforces the no-network-crates policy (deny.toml):
+# the macOS dependency graph must never contain an HTTP/WebSocket client crate.
+on:
+  pull_request:
+
+concurrency:
+  group: deny-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cargo-deny:
+    name: Ban network crates (cargo-deny)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Check banned crates in the macOS dependency graph
+        uses: EmbarkStudios/cargo-deny-action@bb137d7af7e4fb67e5f82a49c4fce4fad40782fe # v2.0.20
+        with:
+          command: check bans

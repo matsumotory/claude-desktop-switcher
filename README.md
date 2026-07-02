@@ -10,6 +10,8 @@
   <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest">Download (.dmg)</a>
   &nbsp;·&nbsp;
   <a href="docs/USER_GUIDE_EN.md">User Guide</a>
+  &nbsp;·&nbsp;
+  <a href="docs/PRIVACY_EN.md">Privacy and Transparency</a>
 </p>
 
 *Read this in other languages: [日本語 (Japanese)](#日本語-japanese)*
@@ -118,6 +120,8 @@ MIT
   <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest">ダウンロード (.dmg)</a>
   &nbsp;·&nbsp;
   <a href="docs/USER_GUIDE.md">ユーザーガイド</a>
+  &nbsp;·&nbsp;
+  <a href="docs/PRIVACY.md">プライバシーと透明性</a>
 </p>
 
 Claudeデスクトップアプリのスイート全体（チャット・Projects・Claude Cowork・Artifacts・Claude Design・Claude Code 連携）を、アカウント／用途ごとに安全に分けて 1 つの Mac で使い分けるためのメニューバーアプリです。（CLI のプロファイル切り替えだけなら direnv や claude-swap など既存ツールが既によく解決しています。CSW の主眼は、デスクトップの作業全体を分け、必要なら CLI も同じ環境に連動させることです。）デスクトップアプリはネイティブの複数アカウント切替を備えていないため、再ログインなしで環境を切り替えられます。用途に合わせて分離度を細かくカスタマイズでき、GUI 側の環境分離に Claude Code（CLI）も連動させられます。ターミナルを使わない方から、CLI 連携まで一貫させたい開発者まで対応します。
