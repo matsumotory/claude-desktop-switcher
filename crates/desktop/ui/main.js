@@ -146,8 +146,8 @@ const EN = {
   '本プロジェクトは非公式のコミュニティ製で、Anthropic 社とは関係ありません。「Claude」は Anthropic の商標です。': 'This is an unofficial community project, not affiliated with Anthropic. "Claude" is a trademark of Anthropic.',
   // Usage display (statusline integration)
   '利用量': 'Usage',
-  'セッション上限（5時間）と週間上限の使用率を、サイドバーのこの環境の行に表示します。':
-    "Shows how much of the session limit (5-hour) and the weekly limit this environment has used, on this environment's row in the sidebar.",
+  '5時間ごとの上限と1週間ごとの上限の使用率を、サイドバーのこの環境の行に表示します。':
+    "Shows how much of the 5-hour limit and the weekly limit this environment has used, on this environment's row in the sidebar.",
   '有効にすると、利用量を記録するステータスライン設定を、この環境の Claude Code に追加します。通信は行わず、Claude Code が手元に書き出した値を読むだけです。無効にすると設定を元に戻します。':
     'Turning this on adds a status-line setting that records usage to Claude Code in this environment. Nothing is sent anywhere; CSW only reads the values Claude Code writes locally. Turning it off restores the previous setting.',
   'この環境はツール権限・フック（settings.json）を既存の Claude と共有しているため、ここでは切り替えられません。既存の Claude 側で有効にすると、この環境で使った分も記録されます。':
@@ -504,13 +504,18 @@ function fmtAgeCore(sec) {
   return T(`${Math.round(sec / 86400)}日前`, `${Math.round(sec / 86400)} days ago`);
 }
 
+// Gauge labels, identical in the sidebar and the detail view. Both name the
+// window's period, so the pair stays symmetric in meaning as well as length:
+// ja 5時間/1週間 (3 glyphs each), en 5h/week (the status line's own vocabulary).
+const labelFiveHour = () => T('5時間', '5h');
+const labelWeek = () => T('1週間', 'week');
+
 function usageBars(snap) {
   if (!snap) return null;
   const parts = [];
-  if (snap.five_hour) parts.push(T(`セッション（5時間） ${Math.round(snap.five_hour.used_percentage)}%`, `Session (5h) ${Math.round(snap.five_hour.used_percentage)}%`));
-  if (snap.seven_day) parts.push(T(`週間 ${Math.round(snap.seven_day.used_percentage)}%`, `Week ${Math.round(snap.seven_day.used_percentage)}%`));
+  if (snap.five_hour) parts.push(`${labelFiveHour()} ${Math.round(snap.five_hour.used_percentage)}%`);
+  if (snap.seven_day) parts.push(`${labelWeek()} ${Math.round(snap.seven_day.used_percentage)}%`);
   parts.push(snap.age_seconds < 90 ? T('たった今の値', 'captured just now') : T(`${fmtAgeCore(snap.age_seconds)}の値`, `captured ${fmtAgeCore(snap.age_seconds)}`));
-  // Labels reuse the vocabulary of the status line's own display (5h / week).
   const line = (label, win) => win == null ? null : h('span', { class: 'usage-line' },
     h('span', { class: 'usage-line-label', text: label }),
     h('span', { class: 'usage-bar' + gaugeClass(win) },
@@ -519,7 +524,7 @@ function usageBars(snap) {
   return h('span', {
     class: 'usage-bars' + (snap.age_seconds > USAGE_STALE_SECS ? ' stale' : ''),
     title: parts.join(T('、', ', ')),
-  }, line(T('5h', '5h'), snap.five_hour), line(T('週', 'week'), snap.seven_day));
+  }, line(labelFiveHour(), snap.five_hour), line(labelWeek(), snap.seven_day));
 }
 
 // --- Detail view ------------------------------------------------------------
@@ -597,7 +602,7 @@ function usageSection(name, status) {
     onchange: (e) => doSetUsage(name, e.target.checked),
   });
   const card = [h('div', { class: 'usage-head' },
-    h('p', { class: 'firstrun-body manage-text', text: 'セッション上限（5時間）と週間上限の使用率を、サイドバーのこの環境の行に表示します。' }),
+    h('p', { class: 'firstrun-body manage-text', text: '5時間ごとの上限と1週間ごとの上限の使用率を、サイドバーのこの環境の行に表示します。' }),
     h('label', { class: 'switch' + (status.can_enable ? '' : ' disabled') },
       input,
       h('span', { class: 'switch-track' }, h('span', { class: 'switch-knob' }))))];
@@ -612,8 +617,10 @@ function usageSection(name, status) {
   return section('利用量', [h('div', { class: 'usage-card' }, ...card)]);
 }
 
-// The current values as two labeled gauges with the reset time, plus how old
-// the capture is (an old value must not look fresh: dimmed past the threshold).
+// The current values as two labeled gauges, plus how old the capture is (an
+// old value must not look fresh: dimmed past the threshold). Each row stacks
+// the label over its reset time (the share-line name+desc pattern), so a long
+// date never squeezes the bar itself.
 function usageReadout(snap) {
   if (!snap) {
     return h('p', { class: 'usage-empty', text: 'まだ値がありません。この環境のターミナルで Claude Code を使うと表示されます。' });
@@ -625,17 +632,18 @@ function usageReadout(snap) {
     return new Intl.DateTimeFormat(LANG === 'ja' ? 'ja-JP' : 'en-US', opts).format(new Date(epochSec * 1000));
   };
   const row = (label, win, withDate) => win == null ? null : h('div', { class: 'usage-row' },
-    h('span', { class: 'usage-row-label', text: label }),
+    h('span', { class: 'usage-row-meta' },
+      h('span', { class: 'usage-row-label', text: label }),
+      h('span', { class: 'usage-row-reset', text: T(`リセット ${fmtReset(win.resets_at, withDate)}`, `Resets ${fmtReset(win.resets_at, withDate)}`) })),
     h('span', { class: 'usage-bar' + gaugeClass(win) },
       h('span', { class: 'usage-bar-fill', style: `width:${pctWidth(win)}` })),
-    h('span', { class: 'usage-row-value', text: `${Math.round(win.used_percentage)}%` }),
-    h('span', { class: 'usage-row-reset', text: T(`リセット ${fmtReset(win.resets_at, withDate)}`, `Resets ${fmtReset(win.resets_at, withDate)}`) }));
+    h('span', { class: 'usage-row-value', text: `${Math.round(win.used_percentage)}%` }));
   const captured = snap.age_seconds < 90
     ? T('たった今取得した値です。', 'Captured just now.')
     : T(`${fmtAgeCore(snap.age_seconds)}に取得した値です。`, `Captured ${fmtAgeCore(snap.age_seconds)}.`);
   return h('div', { class: 'usage-readout' + (snap.age_seconds > USAGE_STALE_SECS ? ' stale' : '') },
-    row(T('セッション（5時間）', 'Session (5h)'), snap.five_hour, false),
-    row(T('週間', 'Week'), snap.seven_day, true),
+    row(labelFiveHour(), snap.five_hour, false),
+    row(labelWeek(), snap.seven_day, true),
     h('p', { class: 'path-caption', text: captured }));
 }
 

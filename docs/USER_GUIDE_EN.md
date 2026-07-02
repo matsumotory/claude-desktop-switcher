@@ -116,7 +116,7 @@ The Claude Code (CLI) sign-in is managed separately from the desktop app's sign-
 
 ### Showing per-environment usage (Pro / Max plans)
 
-Each environment's row in the sidebar can show how much of Claude's session limit (5-hour) and weekly limit that environment has used, so you can see at a glance which account still has headroom before switching.
+Each environment's row in the sidebar can show how much of Claude's 5-hour limit and weekly limit that environment has used, so you can see at a glance which account still has headroom before switching.
 
 * **Turning it on**: Flip the "Usage" switch on the environment's detail screen. It is opt-in per environment: turning it on adds a status-line setting that records usage to that environment's Claude Code settings (settings.json). If you already have your own status line configured, its display is kept and only the recording is added; turning the switch off restores the previous setting.
 * **Reading the bars**: Each bar carries its label (5h / week) and the percentage used, and the fill color reflects the headroom: green while there is room, amber from 70%, red from 90%.
@@ -163,7 +163,7 @@ A terminal inside the app you launched from CSW is already in the same environme
 No. The desktop app's sign-in and the Claude Code (CLI) sign-in are managed separately. The first time you run `claude` in a terminal for a given environment, you need to sign in to the CLI once for that environment (choose the subscription account as the sign-in method). Once signed in, it persists for that environment, so you don't need to sign in again when you switch. The built-in terminal and an external terminal switched into the same environment share the same sign-in. See Scenario B under "Daily Workflow" for details.
 
 **Q. Can I see each environment's usage (rate-limit consumption)?**
-Yes. Turn on "Usage" on the environment's detail screen and its sidebar row shows usage bars for the session limit (5-hour) and the weekly limit. Values update when Claude Code responds in a terminal for that environment, with no network requests. A Pro or Max subscription sign-in is required. See "Showing per-environment usage" under "Daily Workflow" for details.
+Yes. Turn on "Usage" on the environment's detail screen and its sidebar row shows usage bars for the 5-hour limit and the weekly limit. Values update when Claude Code responds in a terminal for that environment, with no network requests. A Pro or Max subscription sign-in is required. See "Showing per-environment usage" under "Daily Workflow" for details.
 
 **Q. What exactly carries over with "Separate conversations & memory too"?**
 Your common rules (CLAUDE.md), tool permissions and hooks (settings.json), plugins, and skills carry over from "Existing Claude". Conversation history and auto-memory (projects/), prompt history (history.jsonl), and the account sign-in info (config.json) stay separate. The connector and app settings (claude_desktop_config.json, which is where MCP connectors live) and the session state (sessions/) are always separate as well. To fine-tune, use "Configure in detail (per item)" on the create screen.
