@@ -34,7 +34,7 @@ const EN = {
   // Sidebar / chrome
   'Claude Desktop Switcher': 'Claude Desktop Switcher',
   '既存の Claude': 'Existing Claude',
-  '既存の Claude（標準環境）': 'Existing Claude (standard environment)',
+  'あなたの標準環境である既存の Claude': 'Existing Claude, your standard environment',
   '利用中': 'In use',
   '環境を作る': 'New environment',
   'テーマ': 'Theme',
@@ -54,7 +54,7 @@ const EN = {
   '環境を切り替えて使えます': 'Switch between environments',
   '「利用中」は、いま Claude が起動している環境です。Claude を終了すれば「利用中」は外れ、その環境はまた「切り替えて起動」から開き直せます。設定を共有する環境は衝突を防ぐため一度に1つずつ開くので、別の環境に切り替えるときは先に起動中の Claude を終了します。「すべて分ける」で作った環境は何も共有しないので、起動中の Claude を終了せず、新しいウィンドウで並べて開けます。':
     '"In use" marks the environment Claude is currently running for. Quit Claude and it clears, so you can reopen that environment from "Switch and launch". Environments that share settings open one at a time to avoid conflicts, so quit the running Claude before switching to another. An environment set to "separate everything" shares nothing, so you can open it in a new window alongside a running Claude, without quitting.',
-  'ターミナル（Claude Code）も同じ環境で使えます': 'Use the terminal (Claude Code) in the same environment',
+  'ターミナルの Claude Code も同じ環境で使えます': 'Claude Code in the terminal uses the same environment',
   // Detail: taglines, sections, sharing
   'あなた自身の環境': 'Your own setup',
   '利用中の環境': 'Environment in use',
@@ -73,10 +73,10 @@ const EN = {
   '入力履歴': 'Input history', '入力したプロンプトの履歴': 'History of entered prompts',
   '端末 ID': 'Device ID', '端末を識別するための ID': 'ID that identifies your device',
   '共有': 'Shared', 'コピー': 'Copied', '分離': 'Isolated',
-  '場所（この環境のデータ）': "Location (this environment's data)",
-  '場所（あなたの Claude フォルダ）': 'Location (your Claude folder)',
+  'この環境のデータの場所': "Location of this environment's data",
+  'あなたの Claude フォルダの場所': 'Location of your Claude folder',
   'これは CSW が作った場所ではなく、あなた自身の Claude フォルダです。': 'This is not a folder CSW created; it is your own Claude folder.',
-  'ターミナル（Claude Code）で使う': 'Use in the terminal (Claude Code)',
+  'ターミナルで Claude Code を使う': 'Use Claude Code in the terminal',
   'CSW から開いたアプリの中で使うターミナルは、最初からこの環境です。コマンドは要りません。自分で別に開いた iTerm2 などのターミナルで対象の環境に揃えるには、環境名を渡して次を実行します。この設定はそのタブだけに効き、普段の環境には影響しません。':
     "A terminal opened inside the app you launched from CSW is already in this environment, so no command is needed. To switch a terminal you opened yourself, such as iTerm2, to a target environment, pass the environment name and run the command below. It applies to that tab only and never affects your usual environment.",
   'あなた自身の Claudeデスクトップアプリと Claude Code の環境です。CSW はここを表示しているだけで、設定・履歴・ログインを変更したり削除したりしません。':
@@ -129,17 +129,16 @@ const EN = {
   'ディスクイメージを取り出しました': 'Disk image ejected',
   '取り出せませんでした。ディスクイメージを使用中のウィンドウを閉じてから、もう一度お試しください。': 'Could not eject. Close any window using the disk image, then try again.',
   'パスをコピー': 'Copy path', 'コマンドをコピー': 'Copy command',
-  '複製先の名前（例: 仕事用-控え）': 'Name for the copy (e.g. Work-backup)',
+  '複製先の名前。例: 仕事用-控え': 'Name for the copy. e.g. Work-backup',
   '名前を入力してください。': 'Enter a name.',
   '"default" は使えません。いまの環境を指す予約名です。': '"default" is reserved for the current environment and cannot be used.',
   '名前は64文字までにしてください。': 'Use at most 64 characters.',
-  '文字・数字・ハイフン・アンダースコアだけ使えます（空白や記号は使えません）。': 'Use letters, digits, hyphens and underscores only (no spaces or symbols).',
+  '使えるのは文字・数字・ハイフン・アンダースコアだけです。空白や記号は使えません。': 'Use letters, digits, hyphens and underscores only. No spaces or symbols.',
   '既存の Claude が標準の場所に見つかりません。引き継げるものが無いため、「すべて分ける」だけで作成できます。':
     'Your existing Claude was not found at the standard locations. There is nothing to carry over, so you can create only with "Separate everything".',
   'Claude Code（CLI）の設定が標準の場所に見つかりません。引き継ぐモードを選んでも、ルールやスキル、会話などの CLI 側は引き継がれません。':
     'No Claude Code (CLI) settings were found at the standard location. Even if you choose a mode that carries things over, the CLI side (rules, skills, and conversations) is not carried over.',
   // About dialog
-  'このアプリについて（免責）': 'About',
   '非公式のオープンソースのコミュニティプロジェクトです。': 'An unofficial, open-source community project.',
   '無保証': 'No warranty',
   '本ソフトウェアは MIT ライセンスのもとで、そのままの状態で提供されます。動作や品質について、いかなる保証もありません。': 'This software is provided as is under the MIT License, with no warranty of any kind as to operation or quality.',
@@ -160,10 +159,10 @@ const EN = {
   '検査できませんでした。': 'The check could not be run.',
   'この環境の Claudeデスクトップアプリが起動中です。書き換えの途中を検査した可能性があるため、問題が出た場合は Claude を終了してからもう一度検査してください。':
     'The Claude Desktop App is running in this environment. The check may have caught a rewrite in progress; if issues appear, quit Claude and check again.',
-  '共有（正常）': 'Shared (OK)',
-  '分離（正常）': 'Isolated (OK)',
-  'コピー（正常）': 'Copied (OK)',
-  '共有（共有元がまだありません）': 'Shared (nothing to share yet)',
+  '正常に共有': 'Shared (OK)',
+  '正常に分離': 'Isolated (OK)',
+  '正常にコピー': 'Copied (OK)',
+  '共有元がまだありません': 'Nothing to share yet',
   '要確認': 'Needs attention',
   '共有元が見つかりません。': 'The shared source is missing.',
   'リンク先が想定と異なります。ターミナルで csw doctor --fix を実行すると張り直せます。':
@@ -181,7 +180,7 @@ const EN = {
   '内訳を読み込めませんでした。': 'The breakdown could not be loaded.',
   'Finder で表示': 'Show in Finder',
   'Finder で表示できませんでした。': 'Could not show it in Finder.',
-  '常に分離（この環境の中）': 'Always isolated (inside this environment)',
+  '常に分離': 'Always isolated',
   '既存の Claude と共有': 'Shared with your existing Claude',
   'まだありません': 'Not present yet',
   '状態を判定できませんでした。': 'The state could not be determined.',
@@ -212,7 +211,7 @@ const EN = {
   'ルールも設定も会話履歴もメモリも、何も引き継がずにまっさらな環境を作ります。既存の Claude には一切触れないので、案件やクライアント、仕事と個人を完全に分けられます。':
     'Creates a blank environment that carries nothing over: no rules, settings, conversation history, or memory. It never touches your existing Claude, so you can fully separate projects, clients, or work and personal use.',
   '設定・会話': 'Settings & conversations',
-  '詳しく設定する（項目ごとに）': 'Configure in detail, item by item',
+  '項目ごとに詳しく設定する': 'Configure in detail, item by item',
   'モードの既定に戻す': 'Reset to mode defaults',
 };
 
@@ -509,7 +508,7 @@ function renderSidebar() {
     return h('li', {
       class: 'profile-item' + (p.name === selectedName ? ' selected' : ''),
       role: 'button', tabindex: '0', onclick: open,
-      'aria-label': isDefault ? '既存の Claude（標準環境）' : null,
+      'aria-label': isDefault ? 'あなたの標準環境である既存の Claude' : null,
       'aria-current': isInUse ? 'true' : null, // current = the running environment
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
@@ -630,11 +629,11 @@ const ALWAYS_ISOLATED_KEYS = ['desktop_config', 'cli_sessions', 'desktop_device_
 // form of SharingMode ('share' / 'copy' / 'isolate', lowercase).
 function doctorStatus(item) {
   const st = item.health.state;
-  if (st === 'shared_ok') return { status: '共有（正常）', issue: false };
+  if (st === 'shared_ok') return { status: '正常に共有', issue: false };
   if (st === 'isolated_ok') {
-    return { status: item.mode === 'copy' ? 'コピー（正常）' : '分離（正常）', issue: false };
+    return { status: item.mode === 'copy' ? '正常にコピー' : '正常に分離', issue: false };
   }
-  if (st === 'source_absent') return { status: '共有（共有元がまだありません）', issue: false };
+  if (st === 'source_absent') return { status: '共有元がまだありません', issue: false };
   const unexpectedLink = ALWAYS_ISOLATED_KEYS.includes(item.key)
     ? '常に分離する項目がリンクになっています。'
     : (item.mode === 'copy' ? 'コピーの項目がリンクになっています。' : '分離の項目がリンクになっています。');
@@ -708,7 +707,7 @@ function pathsSection(d, isDefault) {
       pathRow('Claude Code', d.cli_path, 'default', 'cli'),
       h('p', { class: 'path-caption', text: 'これは CSW が作った場所ではなく、あなた自身の Claude フォルダです。' }),
     ];
-    return section('', [disclosure('場所（あなたの Claude フォルダ）', null, rows)]);
+    return section('', [disclosure('あなたの Claude フォルダの場所', null, rows)]);
   }
   const name = d.name;
   const rows = [
@@ -735,7 +734,7 @@ function pathsSection(d, isDefault) {
       loading = false;
     }
   };
-  return section('', [disclosure('場所（この環境のデータ）', null, [...rows, details], loadMap)]);
+  return section('', [disclosure('この環境のデータの場所', null, [...rows, details], loadMap)]);
 }
 
 // Item labels for the data map: same vocabulary as the isolation check.
@@ -768,7 +767,7 @@ function renderDataMap(map) {
     let state;
     let detail = null;
     if (item.key === 'desktop_app_config') {
-      state = '常に分離（この環境の中）';
+      state = '常に分離';
     } else if (item.mode === 'share' && item.link_target) {
       state = '既存の Claude と共有';
       detail = item.link_target;
@@ -832,7 +831,7 @@ function terminalSection(name) {
       h('div', { class: 'path-meta' }, h('code', { class: 'path-code', text: cmd })),
       copyButton(cmd, 'コマンドをコピー')),
   ];
-  return section('', [disclosure('ターミナル（Claude Code）で使う', null, inner)]);
+  return section('', [disclosure('ターミナルで Claude Code を使う', null, inner)]);
 }
 
 // Generic collapsible disclosure: a summary row stays visible, the panel opens
@@ -978,7 +977,7 @@ function showPurgeRow(name) {
 function showCloneRow(name) {
   el.detailFooter.className = 'view-footer';
   const input = h('input', {
-    type: 'text', class: 'input', placeholder: '複製先の名前（例: 仕事用-控え）',
+    type: 'text', class: 'input', placeholder: '複製先の名前。例: 仕事用-控え',
     autocomplete: 'off', spellcheck: 'false', style: 'flex:1',
     onkeydown: (e) => { if (e.key === 'Enter') doClone(name, input.value.trim()); },
   });
@@ -1262,7 +1261,7 @@ function validateName(name) {
   // Spaces, slashes, dots and symbols are rejected (the name becomes a folder
   // name and is passed to the shell in `csw env <name>`). Mirrors the core
   // validate_profile_name guard.
-  if (!/^[\p{L}\p{N}_-]+$/u.test(name)) return '文字・数字・ハイフン・アンダースコアだけ使えます（空白や記号は使えません）。';
+  if (!/^[\p{L}\p{N}_-]+$/u.test(name)) return '使えるのは文字・数字・ハイフン・アンダースコアだけです。空白や記号は使えません。';
   return null;
 }
 

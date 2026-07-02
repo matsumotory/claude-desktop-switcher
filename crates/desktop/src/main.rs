@@ -224,7 +224,7 @@ async fn inspect_profile(
 }
 
 /// Read-only data map (sizes, link targets) for the detail screen's
-/// 「場所（この環境のデータ）」 breakdown. Loaded lazily when the disclosure opens.
+/// 「この環境のデータの場所」 breakdown. Loaded lazily when the disclosure opens.
 #[tauri::command]
 async fn get_profile_data_map(
     name: String,
