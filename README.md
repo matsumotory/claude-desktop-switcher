@@ -25,13 +25,13 @@ Claude Desktop Switcher is a macOS menu bar utility for separating the whole Cla
 How should you partition your environments on a single PC? You can flexibly adjust the isolation level to suit your workflow.
 
 - **01. Separate the whole suite per project/client**
-  When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts. Selecting the "Isolated" configuration allocates a separate data directory for each environment (each keeping its own login), structurally preventing information from leaking across the desktop suite.
+  When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts. Selecting "Separate everything" allocates a separate data directory for each environment (each keeping its own login), structurally preventing information from leaking across the desktop suite.
 
 - **02. Separate work and personal on one Mac (no terminal needed)**
   Keep your business and personal accounts apart without touching the terminal. Just pick an environment and the Claude Desktop App switches without signing in again. It is complete in the GUI.
 
 - **03. Separate by use case while sharing common rules**
-  When you want separate accounts but want to reuse common rules and settings. A "Shared" configuration synchronizes specific files (such as `CLAUDE.md`) across environments while keeping history and logins separate.
+  When you want separate accounts but want to reuse common rules and settings. Pick "Separate conversations & memory too" to keep specific files (such as `CLAUDE.md`) shared across environments while keeping history and logins separate.
 
 - **04. Link the CLI to your GUI separation (for developers)**
   Link the environment you chose in the GUI to the CLI's `CLAUDE_CONFIG_DIR`. Run `eval $(csw env <env-name>)` (replace `<env-name>` with your environment's name) in a separate terminal to use the CLI in the same isolated environment. This adds GUI consistency on top of what existing CLI-only switchers already solve.
@@ -131,13 +131,13 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 1つのPCの中で環境をどう分けるか。あなたのワークスタイルに合わせて柔軟に分離度を調整できます。
 
 - **01. 案件・クライアントごとにスイート丸ごと分ける**
-  複数のクライアント案件やプロジェクトを並行する際、チャット履歴・Projects のメモリ・Cowork の作業フォルダ・Artifacts が混ざる懸念を避けたい場合に。「完全隔離」構成を選ぶと、環境ごとに独立したデータディレクトリ（各々が自分のログインを保持）が割り当てられ、別案件の文脈へ漏れる事故を構造的に防ぎます。
+  複数のクライアント案件やプロジェクトを並行する際、チャット履歴・Projects のメモリ・Cowork の作業フォルダ・Artifacts が混ざる懸念を避けたい場合に。「すべて分ける」を選ぶと、環境ごとに独立したデータディレクトリ（各々が自分のログインを保持）が割り当てられ、別案件の文脈へ漏れる事故を構造的に防ぎます。
 
 - **02. 仕事用と個人用を 1 台で分ける（非エンジニア向け）**
   業務アカウントと個人アカウントを混ぜたくないが、ターミナル操作はしたくない場合に。環境を選ぶだけで、再ログインなしに別アカウントのデスクトップアプリへ切り替わります。GUI だけで完結します。
 
 - **03. 用途ごとに分けつつ共通ルールは共有する**
-  アカウントは用途別に分けたいが、共通の運用ルールや設定は使い回したい場合に。特定の設定ファイル（CLAUDE.md 等）だけを全環境で共有する構成に対応し、履歴やログインは分離したまま設定の二重管理を防ぎます。
+  アカウントは用途別に分けたいが、共通の運用ルールや設定は使い回したい場合に。「会話とメモリも分ける」を選ぶと、特定の設定ファイル（CLAUDE.md 等）は全環境で共有したまま、履歴やログインは分離され、設定の二重管理を防げます。
 
 - **04. GUI の分離に CLI を連動させる（開発者向け）**
   GUI で分けた環境を Claude Code（CLI）側でも同じ環境で使いたい場合に。GUI で選んだ環境に `CLAUDE_CONFIG_DIR` を連動させ、別に開いたターミナルで `eval $(csw env <環境名>)`（`<環境名>` は対象の環境名に置き換え）を実行すれば、CLI もその隔離環境で動きます。CLI 単体スイッチャーが既に解決している領域に、GUI 分離との一貫性を足します。
