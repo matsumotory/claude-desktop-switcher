@@ -126,6 +126,10 @@ const EN = {
   '"default" は使えません。いまの環境を指す予約名です。': '"default" is reserved for the current environment and cannot be used.',
   '名前は64文字までにしてください。': 'Use at most 64 characters.',
   '文字・数字・ハイフン・アンダースコアだけ使えます（空白や記号は使えません）。': 'Use letters, digits, hyphens and underscores only (no spaces or symbols).',
+  '既存の Claude が標準の場所に見つかりません。引き継げるものが無いため、「すべて分ける」だけで作成できます。':
+    'Your existing Claude was not found at the standard locations. There is nothing to carry over, so you can create only with "Separate everything".',
+  'Claude Code（CLI）の設定が標準の場所に見つかりません。引き継ぐモードを選んでも、ルールやスキル、会話などの CLI 側は引き継がれません。':
+    'No Claude Code (CLI) settings were found at the standard location. Even if you choose a mode that carries things over, the CLI side (rules, skills, and conversations) is not carried over.',
   // About dialog
   'このアプリについて（免責）': 'About',
   '非公式のオープンソースのコミュニティプロジェクトです。': 'An unofficial, open-source community project.',
@@ -921,7 +925,12 @@ function segRow(item, value, fixed) {
     h('div', { class: 'share-line-meta' },
       h('div', { class: 'share-line-name', text: item.name }),
       h('div', { class: 'share-line-desc', text: item.desc })),
-    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': item.name + '：既存の Claude と共有・分離・コピーのどれにするか' },
+    // Composed at construction with T(): a runtime-concatenated label can never
+    // match the exact-text EN dictionary, so both languages are built here.
+    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': T(
+      item.name + '：既存の Claude と共有・分離・コピーのどれにするか',
+      (setEN(item.name) || item.name) + ': whether to share with, isolate from, or copy from your existing Claude'
+    ) },
       opt('share', 'i-link', '共有'), opt('isolate', 'i-lock', '分離'), opt('copy', 'i-copy', 'コピー')));
 }
 
