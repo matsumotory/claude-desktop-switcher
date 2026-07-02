@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.16.1...v0.17.0) (2026-07-02)
+
+
+### Features
+
+* **desktop:** 環境ごとの利用量表示 (statusline 連携) を追加する ([02507f2](https://github.com/matsumotory/claude-desktop-switcher/commit/02507f2e84e7f6fa4360723fe693e7cc51d1b034))
+
 ## [0.16.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.16.0...v0.16.1) (2026-07-02)
 
 
