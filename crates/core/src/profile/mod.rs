@@ -534,12 +534,6 @@ impl ProfileManager {
             std::fs::remove_dir_all(profile_dir)?;
         }
 
-        // Usage-display artifacts (statusline script, parked setting, captured
-        // payload) live under CSW's own data dir, outside the profile dir, so
-        // removing the directory above does not cover them.
-        let usage_paths = crate::usage::UsagePaths::for_provider(self.provider.as_ref());
-        crate::usage::remove_artifacts(&usage_paths, name)?;
-
         Ok(())
     }
 

@@ -20,12 +20,6 @@
   --neutral-soft:  #ECEAE4;   /* "isolated" — neutral, not alarming */
   --danger:        #9F2F2D;
   --danger-soft:   #FDEBEC;
-  /* Usage-gauge headroom colors. Dedicated tokens (not the shared/danger
-     semantic colors) so gauge state never blends meanings with the badges:
-     ok = room left, warn = 70%+ used, crit = 90%+ used. */
-  --gauge-ok:      #4E7D5B;
-  --gauge-warn:    #A97B12;
-  --gauge-crit:    #B04442;
   --shadow-soft:   0 1px 2px rgba(40, 36, 32, 0.04), 0 8px 24px rgba(40, 36, 32, 0.06);
   --radius-card:   12px;
   --radius-ctl:    6px;
@@ -54,9 +48,6 @@
     --neutral-soft:  rgba(255, 255, 255, 0.07);
     --danger:        #E0807E;
     --danger-soft:   rgba(224, 128, 126, 0.14);
-    --gauge-ok:      #7FB089;
-    --gauge-warn:    #CFA14C;
-    --gauge-crit:    #E0807E;
     --shadow-soft:   0 1px 2px rgba(0, 0, 0, 0.20), 0 8px 24px rgba(0, 0, 0, 0.28);
   }
 }
@@ -159,8 +150,8 @@ code, .code-line { font-family: var(--font-mono); }
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px; /* rows with usage gauges grow taller; plain rows keep 44px */
-  padding: 7px 10px;
+  height: 44px;
+  padding: 0 10px;
   border-radius: 8px;
   cursor: pointer;
   scroll-margin: 8px; /* WCAG 2.4.11: keep focused row clear of the scroll edge */
@@ -195,69 +186,15 @@ code, .code-line { font-family: var(--font-mono); }
 /* default row uses the monitor glyph in its avatar (vs an initial) so the
    baseline reads at a glance without a separate card. */
 .profile-avatar svg.icon { width: 16px; height: 16px; color: var(--ink-muted); }
-.profile-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-}
 .profile-name {
+  flex: 1;
   min-width: 0;
   font-size: 14px;
   font-weight: 500;
-  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Usage gauges: two labeled lines (session 5h above, week below) under the
-   name, only on opted-in rows with a live value. Each line reads at a glance:
-   label + bar + percentage, with the fill in a headroom color (green room /
-   amber 70%+ / red 90%+) from the dedicated gauge tokens. accent stays
-   reserved for focus + the active pill, and the semantic badge colors keep
-   their meanings. Stale values (no recent Claude Code response) are dimmed,
-   never fresh-looking. */
-.usage-bars { display: flex; flex-direction: column; gap: 3px; margin-top: 1px; }
-.usage-line { display: flex; align-items: center; gap: 7px; }
-.usage-line-label {
-  flex: none;
-  width: 34px; /* fits the symmetric pair: ja 5時間/1週間, en 5h/week */
-  font-size: 10px;
-  line-height: 1.2;
-  color: var(--ink-muted);
-  letter-spacing: 0.02em;
-}
-.usage-line-value {
-  flex: none;
-  min-width: 28px;
-  text-align: right;
-  font-size: 10px;
-  line-height: 1.2;
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
-}
-.usage-bar {
-  flex: 1;
-  display: block;
-  height: 3px;
-  border-radius: 1.5px;
-  background: var(--neutral-soft);
-  overflow: hidden;
-}
-.usage-bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: 1.5px;
-  background: var(--ink-muted);
-}
-.usage-bar.ok .usage-bar-fill { background: var(--gauge-ok); }
-.usage-bar.warn .usage-bar-fill { background: var(--gauge-warn); }
-.usage-bar.crit .usage-bar-fill { background: var(--gauge-crit); }
-.usage-bars.stale .usage-bar-fill,
-.usage-readout.stale .usage-bar-fill { opacity: 0.4; }
 
 .sidebar-spacer { flex: 1; min-height: 12px; }
 .sidebar-create { width: 100%; margin-top: 10px; }
@@ -643,76 +580,6 @@ code, .code-line { font-family: var(--font-mono); }
 }
 .manage-row .manage-text { flex: 1; min-width: 0; margin: 0; }
 .manage-row .manage-action { flex: none; }
-
-/* Usage display (detail): one flat card, like the other detail blocks. The
-   explanation + switch head first, then (when on) the current values above a
-   hairline, then the constraint caption. */
-.usage-card {
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-.usage-head { display: flex; align-items: center; gap: 14px; }
-.usage-head .manage-text { flex: 1; min-width: 0; margin: 0; }
-.usage-card .path-caption { margin-top: 12px; }
-.usage-readout { margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--border); }
-.usage-empty { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-muted); }
-/* Each gauge row stacks the label over its reset time (the share-line
-   name+desc pattern), so a long localized date widens nothing: the bar keeps
-   the whole middle of the row. */
-.usage-row { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
-.usage-row-meta {
-  flex: none;
-  width: 128px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.usage-row-label { font-size: 12.5px; font-weight: 500; }
-.usage-row-reset { font-size: 11px; color: var(--ink-muted); }
-.usage-row .usage-bar { flex: 1; height: 4px; border-radius: 2px; }
-.usage-row-value {
-  flex: none;
-  width: 40px;
-  text-align: right;
-  font-size: 12.5px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Switch (on/off control for the usage display). Checked uses accent, the
-   conventional form-control pattern here (like the segmented control and mode
-   cards); accent still never marks passive state. */
-.switch { display: inline-flex; flex: none; cursor: pointer; }
-.switch.disabled { cursor: default; opacity: 0.55; }
-.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
-.switch-track {
-  position: relative;
-  display: block;
-  width: 34px;
-  height: 20px;
-  border-radius: 10px;
-  border: 1px solid var(--border-strong);
-  background: var(--neutral-soft);
-  transition: background 0.15s var(--ease), border-color 0.15s var(--ease);
-}
-.switch-knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
-  transition: transform 0.15s var(--ease);
-}
-.switch input:checked + .switch-track { background: var(--accent); border-color: var(--accent); }
-.switch input:checked + .switch-track .switch-knob { transform: translateX(14px); background: #FFFFFF; }
-.switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
 @supports (text-wrap: balance) { .detail-switch-hint { text-wrap: balance; } }
 .icon-btn {
   flex: none;

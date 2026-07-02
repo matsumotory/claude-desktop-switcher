@@ -298,75 +298,6 @@ async fn get_default_roots_status(state: State<'_, AppState>) -> Result<serde_js
     }))
 }
 
-/// Usage-display state for one environment (SPECIFICATION.md §5.A 環境ごとの
-/// 利用量表示): whether it is opted in (derived from its settings.json), and
-/// whether opting in is possible at all (refused while settings.json is shared
-/// with the existing Claude, since writing through the symlink would change
-/// the existing Claude too).
-#[tauri::command]
-async fn get_usage_display_status(
-    name: String,
-    state: State<'_, AppState>,
-) -> Result<serde_json::Value, String> {
-    let profile = state
-        .profile_manager
-        .get_profile(&name)
-        .map_err(|e| e.to_string())?;
-    let paths = csw_core::usage::UsagePaths::for_provider(state.provider.as_ref());
-    Ok(serde_json::json!({
-        "enabled": csw_core::usage::is_enabled(&paths, &profile),
-        "can_enable": csw_core::usage::can_enable(&profile).is_ok(),
-    }))
-}
-
-/// Opt an environment in or out of the usage display. Enabling points the
-/// environment's settings.json statusLine at a CSW-generated script (parking
-/// any existing setting); disabling restores what was parked and removes the
-/// script and captured data.
-#[tauri::command]
-async fn set_usage_display(
-    name: String,
-    enabled: bool,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    let profile = state
-        .profile_manager
-        .get_profile(&name)
-        .map_err(|e| e.to_string())?;
-    let paths = csw_core::usage::UsagePaths::for_provider(state.provider.as_ref());
-    if enabled {
-        csw_core::usage::enable(&paths, &profile).map_err(|e| e.to_string())
-    } else {
-        csw_core::usage::disable(&paths, &profile).map_err(|e| e.to_string())
-    }
-}
-
-/// The last captured usage values per environment, for the sidebar bars.
-/// Environments without a live capture are simply absent. Local file reads
-/// only; CSW performs no network requests.
-#[tauri::command]
-async fn get_usage_snapshots(state: State<'_, AppState>) -> Result<serde_json::Value, String> {
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|e| e.to_string())?
-        .as_secs();
-    let paths = csw_core::usage::UsagePaths::for_provider(state.provider.as_ref());
-    let names = state
-        .profile_manager
-        .list_profiles()
-        .map_err(|e| e.to_string())?;
-    let mut out = serde_json::Map::new();
-    for name in names {
-        if let Some(snapshot) = csw_core::usage::read_snapshot(&paths, &name, now) {
-            out.insert(
-                name,
-                serde_json::to_value(snapshot).map_err(|e| e.to_string())?,
-            );
-        }
-    }
-    Ok(serde_json::Value::Object(out))
-}
-
 /// Mounted CSW installer disk images the user can eject (SPECIFICATION.md §5.A
 /// インストール用ディスクイメージの取り出し案内). Empty when there is nothing
 /// to prompt about.
@@ -631,10 +562,7 @@ fn main() {
             app_version,
             open_url,
             get_dmg_mount_status,
-            eject_dmg,
-            get_usage_display_status,
-            set_usage_display,
-            get_usage_snapshots
+            eject_dmg
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
