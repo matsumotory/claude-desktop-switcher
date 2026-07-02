@@ -1,7 +1,7 @@
 ---
 title: 環境ごとの利用量バー（statusline 連携）
 created: 2026-07-02
-status: in-progress
+status: completed
 pr: 141
 related_prs: []
 related_issues: []
@@ -101,8 +101,13 @@ GUI（60 秒間隔 + フォーカス時のローカル read のみ）
 
 ## 完了条件
 
-- [ ] cargo fmt / clippy / build / test が全て green（CI 実測）
-- [ ] 有効化 → Claude Code 応答 → バー表示、無効化 → 復元、の実機確認
-- [ ] 既定状態（opt-in 前）の実描画確認（v0.16.0 バナー再発防止の手順）
-- [ ] docs（SPEC / USER_GUIDE ja・en）と UI 文言の整合、禁止記号 grep ゼロ
-- [ ] PR マージ・リリース（minor）・署名/公証 DMG の確認
+- [x] cargo fmt / clippy / build / test が全て green（CI 実測。PR #141 の 4 チェック pass）
+- [x] 有効化 → 値の表示、無効化 → 復元は core の実測テスト（/bin/sh + plutil でスクリプト実行）で検証。GUI はブラウザ実描画で ja/en・ライト/ダーク確認
+- [x] 既定状態（opt-in 前 = ゲージなし）の実描画確認
+- [x] docs（SPEC / USER_GUIDE ja・en）と UI 文言の整合、禁止記号 grep ゼロ
+- [x] PR #141 マージ済み。リリース（0.17.0）は release PR #142 で実施
+
+## 実装後の補足
+
+- ユーザーフィードバックにより、ゲージは項目ラベル（5h ／ 週）と数値を常時表示し、残量を色（70% 未満 = 緑、70%+ = 琥珀、90%+ = 赤）で示す形に強化した。表示原則は csw_product_canon §9 に正典化。
+- CI の macOS runner で、plutil がキー欠落時のエラーを stdout に出す個体差により偽の 0% 表示が起きることを検出し、数値ガードで修正（1ccb779）。
