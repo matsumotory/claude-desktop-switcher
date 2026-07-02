@@ -1267,8 +1267,13 @@ function devInvoke(cmd, args) {
       return Promise.resolve([]);
     case 'eject_dmg':
       return Promise.resolve(null);
-    case 'app_version':
-      return Promise.resolve('0.14.0');
+    case 'app_version': {
+      // The real version lives in tauri.conf.json, which the browser mock cannot
+      // read. Screenshot capture injects ?appver= (scripts/appshot); without it
+      // the footer version is hidden rather than showing a stale hardcoded one.
+      const appver = new URLSearchParams(location.search).get('appver');
+      return appver ? Promise.resolve(appver) : Promise.reject(new Error('no appver'));
+    }
     case 'open_url':
       return Promise.resolve(null);
     default:
