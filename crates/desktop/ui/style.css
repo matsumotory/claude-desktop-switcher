@@ -354,6 +354,9 @@ code, .code-line { font-family: var(--font-mono); }
 
 /* Leftover installer disk image prompt: flat card in the note-card idiom, with
    the primary action on the right (macOS button order). */
+/* display:flex would defeat the hidden attribute (author styles beat the UA's
+   [hidden]{display:none}), so re-assert it like .view[hidden] does. */
+.dmg-banner[hidden] { display: none; }
 .dmg-banner {
   display: flex;
   /* At the real window minimum (600px) the actions wrap below the text and

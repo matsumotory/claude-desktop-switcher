@@ -80,6 +80,7 @@ LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launc
    - 公開 Web アセット (LP) と内部ドキュメント・エージェントファイルを決して混同しない。
 3. **Asset Generation**: アプリのスクリーンショットは上記の通り実アプリから各ロケールで撮影する（本項の対象外）。OG 画像等、スクリーンショット以外の画像内テキストを翻訳するときは生成 AI を使わず、元の視覚デザインを変えてしまうことを禁止する。ピクセル等価の翻訳が要るときは正確なプログラム処理 (例: Python + Pillow) を使う。
 4. **CI/CD Feedback Loops**: commit 後は必ず GitHub Actions を監視する。ワークフローが落ちたら緑になるまでデバッグして push する。成功を仮定しない。
+5. **hidden 属性は author CSS の display に負ける**: `display: flex` 等を指定した要素を `hidden` 属性で表示制御するときは、必ず `.クラス[hidden] { display: none; }` を併記して再表明する（`.view[hidden]` パターン）。UA スタイルの `[hidden]` は author の display 指定より弱く、属性だけでは隠れない。あわせて表示制御の検証は `hidden` プロパティの値でなく computed display と実寸（getBoundingClientRect）で行い、**「何も操作しない素の既定状態」を必ず実描画で 1 枚確認**する（v0.16.0 で DMG 案内バナーが常時表示のまま出荷された再発防止。発見経路はスクショ再生成への写り込みだった。派生物の再生成は既定状態の検証機会でもある）。
 
 ## 5. フィードバックの教訓化 (Feedback Memory Protocol / Self-Correction Mandate)
 
