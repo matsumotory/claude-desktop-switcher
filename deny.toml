@@ -1,0 +1,29 @@
+# cargo-deny の設定。CSW の「インターネット通信を行わない」原則 (docs/PRIVACY.md)
+# を依存グラフのレベルで機械的に強制する。CI (.github/workflows/deny.yml) が
+# PR ごとに `cargo deny check bans` を実行し、ネットワーククライアント系 crate が
+# 依存に入った時点でビルドを失敗させる。
+#
+# 対象を macOS (配布物のターゲット) に絞る理由: tauri は Windows / Linux 向けの
+# 依存として reqwest を宣言しており、Cargo.lock にはその項目が載る。ここで対象を
+# macOS に絞ることで「配布する macOS ビルドの依存グラフに存在しない」ことを検査
+# する。詳細は docs/PRIVACY.md の「依存ライブラリに通信機能が無いことを確かめる」
+# を参照。
+[graph]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
+
+[bans]
+multiple-versions = "allow"
+deny = [
+    { crate = "reqwest", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "hyper", reason = "HTTP クライアント/サーバ。CSW は通信しない" },
+    { crate = "ureq", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "curl", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "curl-sys", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "isahc", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "attohttpc", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "surf", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "minreq", reason = "HTTP クライアント。CSW は通信しない" },
+    { crate = "tungstenite", reason = "WebSocket クライアント。CSW は通信しない" },
+    { crate = "async-tungstenite", reason = "WebSocket クライアント。CSW は通信しない" },
+    { crate = "tokio-tungstenite", reason = "WebSocket クライアント。CSW は通信しない" },
+]

@@ -142,6 +142,10 @@ const EN = {
   'ご利用は自己責任でお願いします。データの損失や不具合などについて、作者は責任を負いません。大切なデータは、お試しになる前にバックアップしておくことをおすすめします。': 'Use at your own risk. The author is not responsible for data loss or malfunctions. Back up important data before trying it.',
   'プライバシー': 'Privacy',
   'CSW はインターネット通信も、利用状況の送信も行いません。パスワードを保管する macOS のキーチェーンにも触れず、すべて手元のフォルダと設定の操作だけで動きます。': 'CSW makes no network requests and sends no usage data. It never touches the macOS Keychain that stores your passwords; it works only with local folders and settings.',
+  '何を読み書きするか': 'What it reads and writes',
+  '環境のデータの書き込み先は、CSW 専用のフォルダ ~/.context-switcher-claude/ の中だけです。読む場所・書く場所の詳しい一覧と、通信していないことをご自身の Mac で確かめる手順は、プライバシーと透明性の文書で公開しています。':
+    'Environment data is written only inside CSW\'s own folder, ~/.context-switcher-claude/. The full lists of what it reads and writes, and the steps to verify on your own Mac that it makes no network requests, are published in the Privacy and Transparency document.',
+  '確かめ方を見る': 'See how to verify',
   '非公式プロジェクト': 'Unofficial project',
   '本プロジェクトは非公式のコミュニティ製で、Anthropic 社とは関係ありません。「Claude」は Anthropic の商標です。': 'This is an unofficial community project, not affiliated with Anthropic. "Claude" is a trademark of Anthropic.',
   // Avatar picker labels
@@ -1126,8 +1130,14 @@ const DISCLAIMER = [
   ['無保証', '本ソフトウェアは MIT ライセンスのもとで、そのままの状態で提供されます。動作や品質について、いかなる保証もありません。'],
   ['自己責任でのご利用', 'ご利用は自己責任でお願いします。データの損失や不具合などについて、作者は責任を負いません。大切なデータは、お試しになる前にバックアップしておくことをおすすめします。'],
   ['プライバシー', 'CSW はインターネット通信も、利用状況の送信も行いません。パスワードを保管する macOS のキーチェーンにも触れず、すべて手元のフォルダと設定の操作だけで動きます。'],
+  ['何を読み書きするか', '環境のデータの書き込み先は、CSW 専用のフォルダ ~/.context-switcher-claude/ の中だけです。読む場所・書く場所の詳しい一覧と、通信していないことをご自身の Mac で確かめる手順は、プライバシーと透明性の文書で公開しています。'],
   ['非公式プロジェクト', '本プロジェクトは非公式のコミュニティ製で、Anthropic 社とは関係ありません。「Claude」は Anthropic の商標です。'],
 ];
+
+// Fixed GitHub URLs for the privacy document (ja/en). Listed, like the footer
+// links, in docs/PRIVACY.md as the complete set of URLs open_url may receive.
+const PRIVACY_URL_JA = 'https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY.md';
+const PRIVACY_URL_EN = 'https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY_EN.md';
 
 // Hand a fixed https GitHub URL to the OS (Rust open_url) so it opens in the
 // default browser. CSW makes no network requests itself.
@@ -1148,6 +1158,10 @@ function showAbout() {
   };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   const closeBtn = h('button', { type: 'button', class: 'btn btn-ghost', onclick: close }, '閉じる');
+  const privacyBtn = h('button', {
+    type: 'button', class: 'btn btn-ghost',
+    onclick: () => openExternal(T(PRIVACY_URL_JA, PRIVACY_URL_EN)),
+  }, '確かめ方を見る');
   const card = h('div', { class: 'about-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'このアプリについて' },
     h('div', { class: 'about-title', text: 'Claude Desktop Switcher' }),
     h('div', { class: 'about-version', text: el.appVersion.textContent || '' }),
@@ -1156,7 +1170,7 @@ function showAbout() {
       ...DISCLAIMER.map(([t, b]) => h('div', { class: 'about-item' },
         h('div', { class: 'about-item-title', text: t }),
         h('div', { class: 'about-item-body', text: b })))),
-    h('div', { class: 'about-foot' }, closeBtn));
+    h('div', { class: 'about-foot' }, privacyBtn, closeBtn));
   overlay = h('div', { class: 'about-overlay', onclick: (e) => { if (e.target === overlay) close(); } }, card);
   document.addEventListener('keydown', onKey);
   document.body.appendChild(overlay);

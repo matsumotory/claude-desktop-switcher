@@ -118,6 +118,20 @@ fn test_clone_profile() {
 }
 
 #[test]
+fn test_clone_profile_rejects_default_source() {
+    let (_, manager, _tmp_dir) = setup_test_manager();
+
+    // The default profile stands for the user's real Claude data directories.
+    // Cloning it would bulk-read them, which docs/PRIVACY.md promises never
+    // happens, so the backend must reject it regardless of what the UI exposes.
+    let res = manager.clone_profile("default", "copy-of-default");
+    assert!(res.is_err());
+
+    let list = manager.list_profiles().unwrap();
+    assert!(!list.contains(&"copy-of-default".to_string()));
+}
+
+#[test]
 fn validate_profile_name_accepts_japanese_and_safe_ascii() {
     for ok in [
         "研究用",
