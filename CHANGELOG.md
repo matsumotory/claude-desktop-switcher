@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.16.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.15.1...v0.16.0) (2026-07-02)
+
+
+### Features
+
+* **desktop:** DMG がマウントされたままなら起動時に取り出しを案内する ([e4d5d01](https://github.com/matsumotory/claude-desktop-switcher/commit/e4d5d01bb1da1661931f2de1ab4b2ced07ccb5cf))
+
+
+### Bug Fixes
+
+* **desktop:** 英語ロケールで日本語が残る表示を全て英語化する ([631e245](https://github.com/matsumotory/claude-desktop-switcher/commit/631e24518d4fdb56bc6686ff3f2163a9346bc6ff))
+
 ## [0.15.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.15.0...v0.15.1) (2026-07-01)
 
 
