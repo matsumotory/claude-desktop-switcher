@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.19.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.18.0...v0.19.0) (2026-07-02)
+
+
+### Features
+
+* **desktop:** 検証可能な透明性パッケージを追加する ([6b71b6e](https://github.com/matsumotory/claude-desktop-switcher/commit/6b71b6ee52731f623335fa952b4e792102c1ba36))
+* 環境の分離と共有リンクの健全性検査 (csw doctor) を追加する ([e3e2aa9](https://github.com/matsumotory/claude-desktop-switcher/commit/e3e2aa9d62f05deb19c4146537caa03738656524))
+* 環境の削除をゴミ箱経由にし、削除前に専有容量を表示する ([bfeead9](https://github.com/matsumotory/claude-desktop-switcher/commit/bfeead94cb1ddb299e8a45db194da02493b84a06))
+* 環境詳細にデータの内訳 (専有容量・項目別サイズ・リンク先) を表示する ([51416ef](https://github.com/matsumotory/claude-desktop-switcher/commit/51416efa3720b4b034b5590575075a4161468838))
+
 ## [0.18.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.17.1...v0.18.0) (2026-07-02)
 
 
