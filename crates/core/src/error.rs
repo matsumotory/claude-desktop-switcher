@@ -45,6 +45,14 @@ pub enum CswError {
     #[error("Claude Desktop is not installed at expected path")]
     DesktopNotInstalled,
 
+    #[error(
+        "Environment '{0}' shares its settings.json with the existing Claude, so enabling usage display here would also change the existing Claude. Enable it on the existing Claude instead."
+    )]
+    UsageSettingsShared(String),
+
+    #[error("Could not parse {0}. Fix or remove the file, then try again: {1}")]
+    UsageSettingsUnreadable(String, String),
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 

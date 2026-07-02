@@ -144,6 +144,20 @@ const EN = {
   'CSW はインターネット通信も、利用状況の送信も行いません。パスワードを保管する macOS のキーチェーンにも触れず、すべて手元のフォルダと設定の操作だけで動きます。': 'CSW makes no network requests and sends no usage data. It never touches the macOS Keychain that stores your passwords; it works only with local folders and settings.',
   '非公式プロジェクト': 'Unofficial project',
   '本プロジェクトは非公式のコミュニティ製で、Anthropic 社とは関係ありません。「Claude」は Anthropic の商標です。': 'This is an unofficial community project, not affiliated with Anthropic. "Claude" is a trademark of Anthropic.',
+  // Usage display (statusline integration)
+  '利用量': 'Usage',
+  'セッション上限（5時間）と週間上限の使用率を、サイドバーのこの環境の行に表示します。':
+    "Shows how much of the session limit (5-hour) and the weekly limit this environment has used, on this environment's row in the sidebar.",
+  '有効にすると、利用量を記録するステータスライン設定を、この環境の Claude Code に追加します。通信は行わず、Claude Code が手元に書き出した値を読むだけです。無効にすると設定を元に戻します。':
+    'Turning this on adds a status-line setting that records usage to Claude Code in this environment. Nothing is sent anywhere; CSW only reads the values Claude Code writes locally. Turning it off restores the previous setting.',
+  'この環境はツール権限・フック（settings.json）を既存の Claude と共有しているため、ここでは切り替えられません。既存の Claude 側で有効にすると、この環境で使った分も記録されます。':
+    'This environment shares its tool permissions & hooks (settings.json) with your existing Claude, so it cannot be switched here. Turn it on for Existing Claude and usage in this environment is recorded as well.',
+  '値が更新されるのは、この環境で Claude Code が応答したときだけです。':
+    'Values update only when Claude Code responds in this environment.',
+  'まだ値がありません。この環境のターミナルで Claude Code を使うと表示されます。':
+    'No values yet. Use Claude Code in a terminal for this environment and they will appear.',
+  '切り替えられませんでした。この環境の settings.json が壊れていないか確認してください。':
+    "Could not change it. Check that this environment's settings.json is not broken.",
   // Avatar picker labels
   '仕事': 'Work', '個人': 'Personal', '検証': 'Testing', '開発': 'Dev', '会社': 'Company',
   '学習': 'Study', 'デザイン': 'Design', 'ローンチ': 'Launch', 'プロジェクト': 'Project',
@@ -289,6 +303,7 @@ let profiles = [];
 let activeName = 'default';
 let desktopRunning = false; // whether any Claude Desktop is running right now
 let runningProfiles = []; // names of environments whose Claude is running (can be several)
+let usageSnapshots = {}; // env name -> last captured usage (absent = no live value)
 let selectedName = null;
 let currentMode = 'isolate';
 let overrides = { ...PRESETS.isolate };
@@ -458,10 +473,53 @@ function renderSidebar() {
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
       h('span', { class: 'profile-avatar' }, isDefault ? icon('i-monitor') : avatarContent(p.icon, p.name)),
-      h('span', { class: 'profile-name', text: isDefault ? T('既存の Claude', 'Existing Claude') : p.name }),
+      h('span', { class: 'profile-main' },
+        h('span', { class: 'profile-name', text: isDefault ? T('既存の Claude', 'Existing Claude') : p.name }),
+        usageBars(usageSnapshots[p.name])),
       pill);
   });
   el.profileList.replaceChildren(...rows);
+}
+
+// --- Usage display (statusline integration, SPECIFICATION.md §5.A) -----------
+// Per-row gauges under the environment name: session (5-hour) on top, week
+// below. Each gauge is self-describing at a glance — a short label (5h / 週),
+// the bar, and the percentage — and the fill color encodes headroom: green
+// while there is room, amber from 70%, red from 90%. Bars appear only for
+// environments with a live captured value (opt-in), so the rail stays quiet
+// by default. Values older than the threshold are dimmed so a stale value
+// never looks fresh.
+const USAGE_STALE_SECS = 600;
+
+const pctWidth = (win) => `${Math.min(100, Math.max(0, win.used_percentage))}%`;
+// Headroom color: ok below 70, warn from 70, crit from 90. Dedicated gauge
+// tokens — the semantic colors (shared/isolated/danger) keep their meanings.
+const gaugeClass = (win) =>
+  win.used_percentage >= 90 ? ' crit' : win.used_percentage >= 70 ? ' warn' : ' ok';
+
+// '3分前' / '3 min ago' — for ages under ~90s the callers say "just now".
+function fmtAgeCore(sec) {
+  if (sec < 3600) return T(`${Math.max(2, Math.round(sec / 60))}分前`, `${Math.max(2, Math.round(sec / 60))} min ago`);
+  if (sec < 86400) return T(`${Math.round(sec / 3600)}時間前`, `${Math.round(sec / 3600)} hr ago`);
+  return T(`${Math.round(sec / 86400)}日前`, `${Math.round(sec / 86400)} days ago`);
+}
+
+function usageBars(snap) {
+  if (!snap) return null;
+  const parts = [];
+  if (snap.five_hour) parts.push(T(`セッション（5時間） ${Math.round(snap.five_hour.used_percentage)}%`, `Session (5h) ${Math.round(snap.five_hour.used_percentage)}%`));
+  if (snap.seven_day) parts.push(T(`週間 ${Math.round(snap.seven_day.used_percentage)}%`, `Week ${Math.round(snap.seven_day.used_percentage)}%`));
+  parts.push(snap.age_seconds < 90 ? T('たった今の値', 'captured just now') : T(`${fmtAgeCore(snap.age_seconds)}の値`, `captured ${fmtAgeCore(snap.age_seconds)}`));
+  // Labels reuse the vocabulary of the status line's own display (5h / week).
+  const line = (label, win) => win == null ? null : h('span', { class: 'usage-line' },
+    h('span', { class: 'usage-line-label', text: label }),
+    h('span', { class: 'usage-bar' + gaugeClass(win) },
+      h('span', { class: 'usage-bar-fill', style: `width:${pctWidth(win)}` })),
+    h('span', { class: 'usage-line-value', text: `${Math.round(win.used_percentage)}%` }));
+  return h('span', {
+    class: 'usage-bars' + (snap.age_seconds > USAGE_STALE_SECS ? ' stale' : ''),
+    title: parts.join(T('、', ', ')),
+  }, line(T('5h', '5h'), snap.five_hour), line(T('週', 'week'), snap.seven_day));
 }
 
 // --- Detail view ------------------------------------------------------------
@@ -474,6 +532,10 @@ async function showDetail(name) {
     showToast('環境を読み込めませんでした。', true);
     return;
   }
+  // Usage opt-in state; on failure the section is simply omitted so the rest
+  // of the detail view stays usable.
+  let usageStatus = null;
+  try { usageStatus = await invoke('get_usage_display_status', { name }); } catch (err) { usageStatus = null; }
   renderSidebar();
   const isDefault = !!d.is_default;
   const isInUse = inUse(name);
@@ -498,12 +560,14 @@ async function showDetail(name) {
         h('strong', { text: 'Claude Code' }),
         ' の環境です。CSW はここを表示しているだけで、設定・履歴・ログインを変更したり削除したりしません。'),
     ]));
+    nodes.push(usageSection(name, usageStatus));
     nodes.push(pathsSection(d, true));
   } else {
     // State first (what this environment inherits), then collapsed detail, then
     // a one-line switch hint by the action. The "利用中"/multi-window concept lives
     // in onboarding, not repeated as an always-on block here.
     nodes.push(sharingDisclosure(d.sharing));
+    nodes.push(usageSection(name, usageStatus));
     nodes.push(pathsSection(d, false));
     nodes.push(terminalSection(name));
     // Cloning is a rare management action, so it sits here as a quiet button rather
@@ -517,6 +581,74 @@ async function showDetail(name) {
   el.detailContent.replaceChildren(...nodes);
   renderDetailFooter(name, isDefault, isInUse, !!d.supports_concurrent_windows);
   setView('detail');
+}
+
+// The usage section: an explanation + switch row, then (when on) the current
+// values or a plain "no values yet" line, then the update-timing constraint.
+// Environments whose settings.json is shared with the existing Claude cannot
+// opt in here (writing through the symlink would change the existing Claude),
+// so the switch is disabled with the reason spelled out.
+function usageSection(name, status) {
+  if (!status) return null;
+  const input = h('input', {
+    type: 'checkbox', role: 'switch',
+    checked: !!status.enabled, disabled: !status.can_enable,
+    'aria-label': '利用量',
+    onchange: (e) => doSetUsage(name, e.target.checked),
+  });
+  const card = [h('div', { class: 'usage-head' },
+    h('p', { class: 'firstrun-body manage-text', text: 'セッション上限（5時間）と週間上限の使用率を、サイドバーのこの環境の行に表示します。' }),
+    h('label', { class: 'switch' + (status.can_enable ? '' : ' disabled') },
+      input,
+      h('span', { class: 'switch-track' }, h('span', { class: 'switch-knob' }))))];
+  if (!status.can_enable) {
+    card.push(h('p', { class: 'path-caption', text: 'この環境はツール権限・フック（settings.json）を既存の Claude と共有しているため、ここでは切り替えられません。既存の Claude 側で有効にすると、この環境で使った分も記録されます。' }));
+  } else if (status.enabled) {
+    card.push(usageReadout(usageSnapshots[name]));
+    card.push(h('p', { class: 'path-caption', text: '値が更新されるのは、この環境で Claude Code が応答したときだけです。' }));
+  } else {
+    card.push(h('p', { class: 'path-caption', text: '有効にすると、利用量を記録するステータスライン設定を、この環境の Claude Code に追加します。通信は行わず、Claude Code が手元に書き出した値を読むだけです。無効にすると設定を元に戻します。' }));
+  }
+  return section('利用量', [h('div', { class: 'usage-card' }, ...card)]);
+}
+
+// The current values as two labeled gauges with the reset time, plus how old
+// the capture is (an old value must not look fresh: dimmed past the threshold).
+function usageReadout(snap) {
+  if (!snap) {
+    return h('p', { class: 'usage-empty', text: 'まだ値がありません。この環境のターミナルで Claude Code を使うと表示されます。' });
+  }
+  const fmtReset = (epochSec, withDate) => {
+    const opts = withDate
+      ? { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }
+      : { hour: 'numeric', minute: '2-digit' };
+    return new Intl.DateTimeFormat(LANG === 'ja' ? 'ja-JP' : 'en-US', opts).format(new Date(epochSec * 1000));
+  };
+  const row = (label, win, withDate) => win == null ? null : h('div', { class: 'usage-row' },
+    h('span', { class: 'usage-row-label', text: label }),
+    h('span', { class: 'usage-bar' + gaugeClass(win) },
+      h('span', { class: 'usage-bar-fill', style: `width:${pctWidth(win)}` })),
+    h('span', { class: 'usage-row-value', text: `${Math.round(win.used_percentage)}%` }),
+    h('span', { class: 'usage-row-reset', text: T(`リセット ${fmtReset(win.resets_at, withDate)}`, `Resets ${fmtReset(win.resets_at, withDate)}`) }));
+  const captured = snap.age_seconds < 90
+    ? T('たった今取得した値です。', 'Captured just now.')
+    : T(`${fmtAgeCore(snap.age_seconds)}に取得した値です。`, `Captured ${fmtAgeCore(snap.age_seconds)}.`);
+  return h('div', { class: 'usage-readout' + (snap.age_seconds > USAGE_STALE_SECS ? ' stale' : '') },
+    row(T('セッション（5時間）', 'Session (5h)'), snap.five_hour, false),
+    row(T('週間', 'Week'), snap.seven_day, true),
+    h('p', { class: 'path-caption', text: captured }));
+}
+
+async function doSetUsage(name, enabled) {
+  try {
+    await invoke('set_usage_display', { name, enabled });
+    await refreshUsage();
+    showDetail(name);
+    showToast(enabled ? T('利用量を表示します', 'Usage display turned on') : T('利用量の表示をやめました', 'Usage display turned off'));
+  } catch (err) {
+    showToast('切り替えられませんでした。この環境の settings.json が壊れていないか確認してください。', true);
+    showDetail(name);
+  }
 }
 
 // Clone is a quiet, infrequent management action. It is presented as a labeled row
@@ -1053,6 +1185,16 @@ async function revalidateRunning() {
   if (!el.viewDetail.hidden && selectedName) showDetail(selectedName);
 }
 
+// Usage values: local file reads only (no network), re-read every minute and on
+// focus so the bars and their age dimming track reality while the app is open.
+async function refreshUsage() {
+  let next = {};
+  try { next = (await invoke('get_usage_snapshots')) || {}; } catch (e) { next = {}; }
+  const changed = JSON.stringify(next) !== JSON.stringify(usageSnapshots);
+  usageSnapshots = next;
+  if (changed) renderSidebar();
+}
+
 // --- Init -------------------------------------------------------------------
 function wireEvents() {
   el.btnCreate.addEventListener('click', () => withTransition(showCreate));
@@ -1079,6 +1221,8 @@ function wireEvents() {
 
   window.addEventListener('focus', revalidateRunning);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) revalidateRunning(); });
+  window.addEventListener('focus', refreshUsage);
+  setInterval(refreshUsage, 60000);
 
   el.emptyScroll.addEventListener('scroll', () => fadeFor(el.emptyScroll, el.emptyFade), { passive: true });
   el.detailScroll.addEventListener('scroll', () => fadeFor(el.detailScroll, el.detailFade), { passive: true });
@@ -1212,6 +1356,7 @@ async function init() {
   wireFooter();
   wireDmgBanner();
   checkDmgLeftover();
+  await refreshUsage();
   await refreshProfiles();
   checkFirstRun();
   showEmpty();
@@ -1266,6 +1411,30 @@ function devInvoke(cmd, args) {
       // Browser/screenshot mode never shows the banner; QA forces it via eval.
       return Promise.resolve([]);
     case 'eject_dmg':
+      return Promise.resolve(null);
+    case 'get_usage_snapshots': {
+      // Two environments depicted as opted in with fresh values, so screenshots
+      // show the bars on some rows and the quiet default on others (opt-in).
+      const now = Math.floor(Date.now() / 1000);
+      return Promise.resolve({
+        [NM.work]: {
+          five_hour: { used_percentage: 42, resets_at: now + 2 * 3600 },
+          seven_day: { used_percentage: 13, resets_at: now + 4 * 86400 },
+          captured_at: now - 180, age_seconds: 180,
+        },
+        [NM.research]: {
+          five_hour: { used_percentage: 92, resets_at: now + 1 * 3600 },
+          seven_day: { used_percentage: 74, resets_at: now + 2 * 86400 },
+          captured_at: now - 300, age_seconds: 300,
+        },
+      });
+    }
+    case 'get_usage_display_status':
+      return Promise.resolve({
+        enabled: args.name === NM.work || args.name === NM.research,
+        can_enable: true,
+      });
+    case 'set_usage_display':
       return Promise.resolve(null);
     case 'app_version': {
       // The real version lives in tauri.conf.json, which the browser mock cannot
