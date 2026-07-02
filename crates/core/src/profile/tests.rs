@@ -56,6 +56,26 @@ fn test_create_profile() {
 }
 
 #[test]
+fn delete_profile_removes_usage_display_artifacts() {
+    let (provider, manager, _tmp_dir) = setup_test_manager();
+
+    let profile = manager
+        .create_profile("work", SharingConfig::default(), None)
+        .unwrap();
+    let usage_paths = crate::usage::UsagePaths::for_provider(provider.as_ref());
+    crate::usage::enable(&usage_paths, &profile).unwrap();
+    let usage_file = usage_paths.usage_file_path("work");
+    std::fs::create_dir_all(usage_file.parent().unwrap()).unwrap();
+    std::fs::write(&usage_file, "{}").unwrap();
+
+    manager.delete_profile("work").unwrap();
+
+    assert!(!usage_paths.script_path("work").exists());
+    assert!(!usage_paths.backup_path("work").exists());
+    assert!(!usage_file.exists());
+}
+
+#[test]
 fn test_delete_profile() {
     let (_, manager, _tmp_dir) = setup_test_manager();
 
