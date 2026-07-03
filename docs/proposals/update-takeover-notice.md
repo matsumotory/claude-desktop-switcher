@@ -22,7 +22,7 @@ Claude Desktop の更新機構 Squirrel.Mac は、更新後の自動再起動で
 
 ## 対象ユーザーと規模
 
-環境を使う全ユーザー。Claude の更新は頻繁で、ユーザー自身が「よく再起動して更新がくる」と確認している。実装はコアの判定関数 1 つ、デスクトップの監視ループへの数十行、バナー 1 枚で、right-size。
+環境を使う全ユーザー。Claude の更新は頻繁で、ユーザー自身が「よく再起動して更新がくる」と確認している。実装はコアの判定関数 1 つ、デスクトップの監視ループへの数十行、バナー 1 枚で、対象の広さに見合う軽さに収まっている。
 
 ## 設計
 
@@ -43,7 +43,7 @@ Claude Desktop の更新機構 Squirrel.Mac は、更新後の自動再起動で
 | `crates/desktop/ui/main.js` | バナー表示 (フォーカス時再検証に載せる)、日英文言、QA 用モック |
 | `crates/desktop/ui/index.html` / `style.css` | バナー要素 (DMG バナーと同じ型) |
 | `docs/SPECIFICATION.md` | §5.A に乗り移り検知の仕様を追記 |
-| `docs/USER_GUIDE.md` / `USER_GUIDE_EN.md` | FAQ「アプリの更新が来たらどうなりますか?」を追加 |
+| `docs/USER_GUIDE.md` / `USER_GUIDE_EN.md` | FAQ「Claude Desktop の更新のあと、環境から外れてしまうことはありますか？」を追加 |
 
 ### RED テスト一覧 (期待値は本仕様から導出)
 

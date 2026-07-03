@@ -176,3 +176,6 @@ Memory is the distilled, summarized insight carried over from the past; it comes
 **Q. Are the Desktop app's settings and MCP connectors shared?**
 No. The Desktop side handles account authentication and rewrites parts of its config at startup, so it cannot be shared safely. The connector and app settings (claude_desktop_config.json) are always separate, and that file is where MCP connectors are configured. What carries over is centered on the Claude Code (CLI) side: common rules, skills, plugins, and tool permissions.
 
+**Q. Can an update to Claude Desktop take me out of my environment?**
+Yes, it can happen. The automatic relaunch after an update does not go through CSW, so the reopened Claude runs on Existing Claude's data. The window looks the same, but the "In use" marker in CSW moves to Existing Claude, and if CSW is running, the settings window shows a notice. To continue in your environment, quit Claude and press "Switch and launch" again.
+

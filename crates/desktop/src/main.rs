@@ -18,6 +18,13 @@ use csw_core::switcher::{ContextSwitcher, desktop_dir_running};
 struct AppState {
     provider: Arc<dyn csw_core::platform::PlatformProvider + Send + Sync>,
     profile_manager: Arc<ProfileManager>,
+    /// Set when the running-state watcher sees an environment's Claude vanish
+    /// and a Claude launched outside CSW appear right after (Squirrel's
+    /// post-update relaunch drops the launch arguments). Holds the name of the
+    /// environment the user was in; cleared on dismissal or when the
+    /// outside-CSW Claude quits. Volatile on purpose: after a CSW restart the
+    /// transition cannot be observed, so no stale notice survives.
+    takeover_from: std::sync::Mutex<Option<String>>,
 }
 
 // Tauri commands exposed to frontend settings UI
@@ -382,6 +389,12 @@ async fn get_running_profiles(state: State<'_, AppState>) -> Result<Vec<String>,
 /// running from the live Claude main processes' `--user-data-dir`.
 fn running_profile_names(state: &AppState) -> Vec<String> {
     let args = state.provider.running_desktop_args().unwrap_or_default();
+    running_profile_names_from(state, &args)
+}
+
+/// Same resolution against an already-taken process snapshot, so callers that
+/// also inspect the raw args (the takeover watcher) see one consistent state.
+fn running_profile_names_from(state: &AppState, args: &[String]) -> Vec<String> {
     let default_dir = state.provider.claude_desktop_default_dir();
     let names = state.profile_manager.list_profiles().unwrap_or_default();
     names
@@ -391,11 +404,25 @@ fn running_profile_names(state: &AppState) -> Vec<String> {
                 .profile_manager
                 .get_profile(name)
                 .map(|p| {
-                    desktop_dir_running(&p.isolation.desktop_user_data_dir, &args, &default_dir)
+                    desktop_dir_running(&p.isolation.desktop_user_data_dir, args, &default_dir)
                 })
                 .unwrap_or(false)
         })
         .collect()
+}
+
+/// The environment name recorded by the update-takeover watcher, if a notice
+/// is pending (SPECIFICATION.md §5.A 乗り移りの検知). None otherwise.
+#[tauri::command]
+async fn get_takeover_notice(state: State<'_, AppState>) -> Result<Option<String>, String> {
+    Ok(state.takeover_from.lock().unwrap().clone())
+}
+
+/// Dismiss the pending takeover notice (the banner's 閉じる).
+#[tauri::command]
+async fn dismiss_takeover_notice(state: State<'_, AppState>) -> Result<(), String> {
+    *state.takeover_from.lock().unwrap() = None;
+    Ok(())
 }
 
 /// Report whether the standard existing-Claude data dirs (Desktop / CLI) hold
@@ -567,6 +594,7 @@ fn main() {
     let app_state = AppState {
         provider,
         profile_manager,
+        takeover_from: std::sync::Mutex::new(None),
     };
 
     tauri::Builder::default()
@@ -629,23 +657,74 @@ fn main() {
             // profile actions, so without this it would show a stale marker (e.g.
             // keep "利用中" after the user quit Claude). Poll the running state and
             // rebuild only when it actually changes.
+            //
+            // The same loop watches for the update-takeover transition: an
+            // environment's Claude vanishes and, within a short window, a Claude
+            // launched outside CSW (no --user-data-dir: the Dock, or Squirrel's
+            // post-update relaunch) appears. That relaunched Claude runs on the
+            // default data directory, so the user silently lands in the existing
+            // Claude; record the transition for the settings window to explain.
             let watch_handle = app.handle().clone();
             std::thread::spawn(move || {
-                let mut last_running: Option<bool> = None;
+                const TAKEOVER_WINDOW_SECS: u64 = 12;
+                let mut prev_names: Vec<String> = Vec::new();
+                let mut prev_unmanaged = false;
+                let mut recently_gone: Vec<(String, std::time::Instant)> = Vec::new();
                 loop {
                     std::thread::sleep(std::time::Duration::from_secs(3));
-                    let running = watch_handle
-                        .state::<AppState>()
-                        .provider
-                        .is_claude_desktop_running()
-                        .unwrap_or(false);
-                    if last_running != Some(running) {
-                        last_running = Some(running);
+                    let state = watch_handle.state::<AppState>();
+                    // One process snapshot per tick: unmanaged and names must
+                    // come from the same view of the world.
+                    let args = state.provider.running_desktop_args().unwrap_or_default();
+                    let unmanaged = csw_core::switcher::unmanaged_default_running(&args);
+                    let names = running_profile_names_from(&state, &args);
+                    let now = std::time::Instant::now();
+
+                    let mut newly_gone = false;
+                    for name in &prev_names {
+                        if name != "default" && !names.contains(name) {
+                            recently_gone.push((name.clone(), now));
+                            newly_gone = true;
+                        }
+                    }
+                    recently_gone.retain(|(_, at)| {
+                        now.duration_since(*at).as_secs() <= TAKEOVER_WINDOW_SECS
+                    });
+
+                    {
+                        let mut takeover = state.takeover_from.lock().unwrap();
+                        // Trigger on the outside-CSW Claude appearing, or on an
+                        // environment vanishing while one already runs (an update
+                        // can restart everything while a Dock-launched Claude was
+                        // running the whole time). Pick the newest vanished
+                        // environment that is still gone, and consume the entry so
+                        // a dismissed notice is not re-raised by the same event.
+                        if unmanaged
+                            && (!prev_unmanaged || newly_gone)
+                            && takeover.is_none()
+                            && let Some(pos) =
+                                recently_gone.iter().rposition(|(n, _)| !names.contains(n))
+                        {
+                            let (from, _) = recently_gone.remove(pos);
+                            *takeover = Some(from);
+                        }
+                        // The situation resolves itself when the outside-CSW
+                        // Claude quits or the environment is running again.
+                        if let Some(from) = takeover.clone()
+                            && (!unmanaged || names.contains(&from))
+                        {
+                            *takeover = None;
+                        }
+                    }
+
+                    if prev_names != names || prev_unmanaged != unmanaged {
                         let rebuild_handle = watch_handle.clone();
                         let _ = watch_handle.run_on_main_thread(move || {
                             let _ = update_tray_menu(&rebuild_handle);
                         });
                     }
+                    prev_names = names;
+                    prev_unmanaged = unmanaged;
                 }
             });
 
@@ -671,6 +750,8 @@ fn main() {
             reveal_profile_dir,
             switch_profile,
             set_profile_note,
+            get_takeover_notice,
+            dismiss_takeover_notice,
             launch_additional_window,
             get_desktop_running_status,
             get_running_profiles,

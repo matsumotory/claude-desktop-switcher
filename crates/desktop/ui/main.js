@@ -432,6 +432,10 @@ const el = {
   dmgBanner: $('dmgBanner'),
   btnDmgEject: $('btnDmgEject'),
   btnDmgLater: $('btnDmgLater'),
+  takeoverBanner: $('takeoverBanner'),
+  takeoverText: $('takeoverText'),
+  btnTakeoverSwitch: $('btnTakeoverSwitch'),
+  btnTakeoverClose: $('btnTakeoverClose'),
   btnCreate: $('btnCreate'),
   btnCreateEmpty: $('btnCreateEmpty'),
   viewEmpty: $('viewEmpty'),
@@ -1503,6 +1507,26 @@ async function refreshRunning() {
   catch (e) { runningProfiles = []; }
   try { desktopRunning = await invoke('get_desktop_running_status'); }
   catch (e) { desktopRunning = false; }
+  try { takeoverFrom = await invoke('get_takeover_notice'); }
+  catch (e) { takeoverFrom = null; }
+  renderTakeover();
+}
+
+// The update-takeover notice. The watcher (Rust) records the transition; this
+// banner explains it and points back to the environment the user was in. All
+// text is built with T(): it embeds the environment name (user data).
+let takeoverFrom = null;
+function renderTakeover() {
+  const name = takeoverFrom;
+  if (!name || !profiles.some((p) => p.name === name)) {
+    el.takeoverBanner.hidden = true;
+    return;
+  }
+  el.takeoverText.textContent = T(
+    `Claude が CSW を経由せずに開き直されました。アプリの更新のあとに起きることがあります。開き直された Claude は、既存の Claude のデータで動いています。「${name}」で続けるには、切り替えて起動し直してください。`,
+    `Claude was relaunched outside CSW. This can happen after an app update. The relaunched Claude runs on Existing Claude's data. To continue in "${name}", switch and launch it again.`);
+  el.btnTakeoverSwitch.textContent = T(`「${name}」に切り替える`, `Switch to "${name}"`);
+  el.takeoverBanner.hidden = false;
 }
 
 // When the window regains focus or becomes visible again, the user may have just
@@ -1552,6 +1576,22 @@ function wireEvents() {
 
   window.addEventListener('focus', revalidateRunning);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) revalidateRunning(); });
+
+  el.btnTakeoverClose.addEventListener('click', async () => {
+    try { await invoke('dismiss_takeover_notice'); } catch (e) { /* the banner hides regardless */ }
+    takeoverFrom = null;
+    el.takeoverBanner.hidden = true;
+  });
+  el.btnTakeoverSwitch.addEventListener('click', async () => {
+    const name = takeoverFrom;
+    if (!name) return;
+    let d = null;
+    try { d = await invoke('get_profile_details', { name }); } catch (e) { return; }
+    await showDetail(name);
+    // The switch flow itself guides the quit: while the outside-CSW Claude is
+    // running, doSwitch shows the standard blocked footer with instructions.
+    doSwitch(name, !!d.supports_concurrent_windows);
+  });
 
   el.emptyScroll.addEventListener('scroll', () => fadeFor(el.emptyScroll, el.emptyFade), { passive: true });
   el.detailScroll.addEventListener('scroll', () => fadeFor(el.detailScroll, el.detailFade), { passive: true });
@@ -1799,6 +1839,12 @@ function devInvoke(cmd, args) {
       return Promise.resolve(null);
     case 'set_profile_note':
       DEV_NOTES.set(args.name, args.note);
+      return Promise.resolve(null);
+    case 'get_takeover_notice':
+      // Browser QA: drive the takeover scenario via window.__DEV_TAKEOVER.
+      return Promise.resolve(window.__DEV_TAKEOVER || null);
+    case 'dismiss_takeover_notice':
+      window.__DEV_TAKEOVER = null;
       return Promise.resolve(null);
     case 'inspect_profile': {
       // Healthy sample report for browser QA / screenshots, shaped exactly like

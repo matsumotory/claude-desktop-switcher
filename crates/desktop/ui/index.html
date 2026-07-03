@@ -106,6 +106,16 @@
         </div>
       </div>
 
+      <!-- Update-takeover notice: text and the switch button are built at
+           runtime with T() because they embed the environment name. -->
+      <div class="takeover-banner" id="takeoverBanner" hidden>
+        <p class="dmg-banner-text" id="takeoverText"></p>
+        <div class="dmg-banner-actions">
+          <button type="button" class="btn btn-ghost" id="btnTakeoverClose">閉じる</button>
+          <button type="button" class="btn btn-primary" id="btnTakeoverSwitch"></button>
+        </div>
+      </div>
+
       <!-- (a) Empty / welcome -->
       <section class="view" id="viewEmpty">
         <div class="view-main">
