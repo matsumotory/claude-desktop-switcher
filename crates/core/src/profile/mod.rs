@@ -466,6 +466,18 @@ impl ProfileManager {
         Ok(state::load_state(&profiles_dir.join(name))?.last_launched_at)
     }
 
+    /// RFC 3339 time of the first CSW-initiated launch, if any. Stamped once
+    /// and never moved; None for the default environment and for environments
+    /// recorded before this field existed.
+    pub fn first_launched_at(&self, name: &str) -> Result<Option<String>> {
+        if name == "default" {
+            return Ok(None);
+        }
+        validate_profile_name(name)?;
+        let profiles_dir = self.app_config.lock().unwrap().profiles_dir.clone();
+        Ok(state::load_state(&profiles_dir.join(name))?.first_launched_at)
+    }
+
     /// Read-only isolation check of one profile's link points (csw doctor).
     /// The default profile has no links, so inspecting it is rejected.
     pub fn inspect_profile_isolation(&self, name: &str) -> Result<inspector::ProfileReport> {

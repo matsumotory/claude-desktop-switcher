@@ -88,7 +88,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
 1. If the environment you are about to open shares settings and another Claude Desktop app is running, quit it first: environments that share settings open one at a time to avoid configuration conflicts. An environment set to "separate everything" can be opened in a new window without quitting.
 2. In the settings window, select the "Work" environment you created. You can also open the settings window from the menu bar or Dock icon. The list shows each environment's note and when it was last launched, so you can find the right one at a glance even as you add more environments.
 3. **Press "Switch and launch", and that environment's dedicated Claude Desktop app launches.**
-   This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.
+   This window has a completely independent, dedicated data directory. Sign in with your work account the first time you open it. CSW also shows a short guide card with the same reminder on that first launch.
 
 > **Note: running environments at the same time**
 > Environments created with "separate conversations & memory too" or "separate the account only" share settings, so they open one at a time to avoid configuration conflicts. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual. An environment set to "separate everything" shares nothing, so you can open it alongside a running Claude with "Launch alongside" in the detail view, without quitting.

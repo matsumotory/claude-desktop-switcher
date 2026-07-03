@@ -33,7 +33,7 @@ CSW writes files only inside its own folder, `~/.context-switcher-claude/`. The 
 |---|---|
 | `~/.context-switcher-claude/config.toml` | The name of the currently selected environment |
 | `~/.context-switcher-claude/profiles/<name>/profile.toml` | That environment's settings (name, note, creation record, and sharing mode) |
-| `~/.context-switcher-claude/profiles/<name>/state.toml` | When CSW last launched that environment |
+| `~/.context-switcher-claude/profiles/<name>/state.toml` | When CSW first and last launched that environment |
 | `~/.context-switcher-claude/profiles/<name>/desktop-data/` | That environment's data for the Claude Desktop App |
 | `~/.context-switcher-claude/profiles/<name>/cli-data/` | That environment's data for Claude Code |
 

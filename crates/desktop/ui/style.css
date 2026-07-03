@@ -238,6 +238,13 @@ code, .code-line { font-family: var(--font-mono); }
 .note-edit-row { flex-wrap: wrap; }
 .note-edit-row .input { min-width: 160px; }
 
+/* The one-time sign-in signpost reuses the note-card look; the paragraphs
+   stack and the dismiss action sits at the end. The quoted note can hold
+   unbroken strings, so it breaks anywhere. */
+.signpost-card { display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
+.signpost-card p { margin: 0; }
+.signpost-actions { display: flex; justify-content: flex-end; }
+
 .sidebar-spacer { flex: 1; min-height: 12px; }
 .sidebar-create { width: 100%; margin-top: 10px; }
 

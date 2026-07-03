@@ -1191,6 +1191,94 @@ fn record_last_launch_rejects_default() {
     assert_eq!(manager.last_launched_at("default").unwrap(), None);
 }
 
+// ---- First launch (sign-in signpost) ----
+// Spec: docs/proposals/first-launch-signpost.md.
+
+#[test]
+fn first_record_stamps_first_and_last_equally() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("fresh", SharingConfig::default(), None)
+        .unwrap();
+
+    assert_eq!(manager.first_launched_at("fresh").unwrap(), None);
+
+    manager.record_last_launch("fresh").unwrap();
+    let first = manager.first_launched_at("fresh").unwrap();
+    let last = manager.last_launched_at("fresh").unwrap();
+    assert!(first.is_some());
+    assert_eq!(first, last, "the very first launch is both first and last");
+
+    // The stamp lives in state.toml, never in the safety declaration.
+    let profile_dir = provider.app_data_dir().join("profiles").join("fresh");
+    assert!(profile_dir.join("state.toml").exists());
+}
+
+#[test]
+fn second_record_moves_last_but_keeps_first() {
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("again", SharingConfig::default(), None)
+        .unwrap();
+
+    manager.record_last_launch("again").unwrap();
+    let first = manager.first_launched_at("again").unwrap();
+    // Stamps carry millisecond precision, so a short pause is enough for the
+    // second launch to get a distinct timestamp.
+    std::thread::sleep(std::time::Duration::from_millis(30));
+    manager.record_last_launch("again").unwrap();
+
+    assert_eq!(
+        manager.first_launched_at("again").unwrap(),
+        first,
+        "the first-launch stamp must never move"
+    );
+    assert_ne!(manager.last_launched_at("again").unwrap(), first);
+}
+
+#[test]
+fn clone_does_not_carry_launch_state() {
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("mother", SharingConfig::default(), None)
+        .unwrap();
+    manager.record_last_launch("mother").unwrap();
+
+    // A duplicate starts unsigned-in, so its first launch must count as a
+    // first launch again: the launch state does not travel with the copy.
+    let cloned = manager.clone_profile("mother", "child").unwrap();
+    assert_eq!(cloned.profile.name, "child");
+    assert_eq!(manager.first_launched_at("child").unwrap(), None);
+    assert_eq!(manager.last_launched_at("child").unwrap(), None);
+}
+
+#[test]
+fn state_toml_with_only_last_launched_still_loads() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("legacy2", SharingConfig::default(), None)
+        .unwrap();
+    // The shape a build with only PR #159 would write: last only, no first.
+    let profile_dir = provider.app_data_dir().join("profiles").join("legacy2");
+    std::fs::write(
+        profile_dir.join("state.toml"),
+        "last_launched_at = \"2026-07-03T00:00:00Z\"\n",
+    )
+    .unwrap();
+
+    assert_eq!(
+        manager.last_launched_at("legacy2").unwrap().as_deref(),
+        Some("2026-07-03T00:00:00Z")
+    );
+    assert_eq!(manager.first_launched_at("legacy2").unwrap(), None);
+
+    // A launched-before environment must not get a backfilled first launch:
+    // its user is already signed in and must never see the signpost.
+    manager.record_last_launch("legacy2").unwrap();
+    assert_eq!(manager.first_launched_at("legacy2").unwrap(), None);
+    assert!(manager.last_launched_at("legacy2").unwrap().is_some());
+}
+
 #[test]
 fn launch_desktop_stamps_last_launch_but_never_for_default() {
     let (provider, manager, _tmp) = setup_test_manager();
