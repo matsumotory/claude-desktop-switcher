@@ -2,6 +2,7 @@ pub mod config;
 pub mod data_map;
 pub mod inspector;
 pub mod linker;
+pub mod state;
 
 use std::fs;
 use std::path::PathBuf;
@@ -41,6 +42,25 @@ pub fn validate_profile_name(name: &str) -> Result<()> {
     Ok(())
 }
 
+use state::now_rfc3339;
+
+/// Validate a free-form environment note: a single line of at most 200
+/// characters. Callers (GUI create dialog) can check the note before creating
+/// the environment, so a bad note never leaves a half-finished creation.
+pub fn validate_profile_note(note: &str) -> Result<()> {
+    if note.chars().count() > 200 {
+        return Err(CswError::Other(
+            "The note must be 200 characters or fewer".to_string(),
+        ));
+    }
+    if note.chars().any(char::is_control) {
+        return Err(CswError::Other(
+            "The note must be a single line without control characters".to_string(),
+        ));
+    }
+    Ok(())
+}
+
 /// Sharing mode for a configuration component.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -73,6 +93,17 @@ pub struct ProfileMeta {
     /// Whether this is the default (existing environment) profile.
     #[serde(default)]
     pub is_default: bool,
+    /// Free-form single-line user note (purpose, sign-in account, …). User
+    /// data: never translated and never parsed for meaning.
+    #[serde(default)]
+    pub note: String,
+    /// RFC 3339 creation time. None for environments created before this
+    /// field existed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    /// Environment this one was duplicated from, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cloned_from: Option<String>,
 }
 
 /// Paths for isolated session data (always per-profile).
@@ -309,6 +340,9 @@ impl ProfileManager {
                     icon: String::new(),
                     color: "#9E9E9E".to_string(),
                     is_default: true,
+                    note: String::new(),
+                    created_at: None,
+                    cloned_from: None,
                 },
                 isolation: IsolationConfig {
                     desktop_user_data_dir: self.provider.claude_desktop_default_dir(),
@@ -368,6 +402,9 @@ impl ProfileManager {
                 icon: icon.unwrap_or_default(),
                 color: "#4A90D9".to_string(),
                 is_default: false,
+                note: String::new(),
+                created_at: Some(now_rfc3339()),
+                cloned_from: None,
             },
             isolation: IsolationConfig {
                 desktop_user_data_dir: profile_dir.join("desktop-data"),
@@ -384,6 +421,49 @@ impl ProfileManager {
         linker.link_profile(&profile, &source_profile)?;
 
         Ok(profile)
+    }
+
+    /// Set or clear the free-form note of an environment (an empty string
+    /// clears it). The note is user data: single line, length-capped, stored
+    /// in profile.toml and never interpreted by CSW.
+    pub fn set_profile_note(&self, name: &str, note: &str) -> Result<()> {
+        if name == "default" {
+            return Err(CswError::Other(
+                "The default environment (existing Claude) does not hold a note".to_string(),
+            ));
+        }
+        validate_profile_note(note)?;
+        let mut profile = self.get_profile(name)?;
+        profile.profile.note = note.to_string();
+        let profiles_dir = self.app_config.lock().unwrap().profiles_dir.clone();
+        config::save_profile(&profile, &profiles_dir.join(name).join("profile.toml"))
+    }
+
+    /// Stamp the time of a CSW-initiated launch of this environment. The stamp
+    /// lives in profiles/<name>/state.toml so the safety declaration
+    /// (profile.toml) is never rewritten by routine launches.
+    pub fn record_last_launch(&self, name: &str) -> Result<()> {
+        if name == "default" {
+            return Err(CswError::Other(
+                "The default environment (existing Claude) is launched outside CSW and is not tracked"
+                    .to_string(),
+            ));
+        }
+        // get_profile validates the name and rejects unknown environments.
+        self.get_profile(name)?;
+        let profiles_dir = self.app_config.lock().unwrap().profiles_dir.clone();
+        state::record_last_launch(&profiles_dir.join(name))
+    }
+
+    /// RFC 3339 time of the last CSW-initiated launch, if any. Always None for
+    /// the default environment (it is launched outside CSW).
+    pub fn last_launched_at(&self, name: &str) -> Result<Option<String>> {
+        if name == "default" {
+            return Ok(None);
+        }
+        validate_profile_name(name)?;
+        let profiles_dir = self.app_config.lock().unwrap().profiles_dir.clone();
+        Ok(state::load_state(&profiles_dir.join(name))?.last_launched_at)
     }
 
     /// Read-only isolation check of one profile's link points (csw doctor).
@@ -462,6 +542,11 @@ impl ProfileManager {
                 icon: source_profile.profile.icon.clone(),
                 color: source_profile.profile.color.clone(),
                 is_default: false,
+                // The note travels with the duplicate as a starting point; the
+                // create dialog and `csw profile note` can edit it right away.
+                note: source_profile.profile.note.clone(),
+                created_at: Some(now_rfc3339()),
+                cloned_from: Some(source_name.to_string()),
             },
             isolation: IsolationConfig {
                 desktop_user_data_dir: target_dir.join("desktop-data"),

@@ -147,15 +147,19 @@ code, .code-line { font-family: var(--font-mono); }
   color: var(--ink);
 }
 
-.sidebar-section { display: flex; flex-direction: column; min-height: 0; margin-top: 4px; }
+/* The list scrolls internally when the window is short: without overflow-y the
+   flex child shrinks below its content (min-height: 0) and rows paint over the
+   create button below. The focus ring is inset (outline-offset: -2px), so the
+   scroll container never clips it. */
+.sidebar-section { display: flex; flex-direction: column; min-height: 0; margin-top: 4px; overflow-y: auto; }
 .profile-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
 
 .profile-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 44px;
-  padding: 0 10px;
+  min-height: 44px;
+  padding: 6px 10px;
   border-radius: 8px;
   cursor: pointer;
   scroll-margin: 8px; /* WCAG 2.4.11: keep focused row clear of the scroll edge */
@@ -199,6 +203,40 @@ code, .code-line { font-family: var(--font-mono); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Name + optional sub lines (note, launch stamp) stack inside the row. The
+   sub lines are secondary information: muted color and smaller size only,
+   no extra rules or borders. */
+.profile-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.profile-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.profile-note,
+.profile-meta {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Detail view: the note card and the environment's record line. The note and
+   the record can contain unbroken strings (mail addresses, 64-char names), so
+   both break anywhere rather than overflow the card. */
+.note-box { display: flex; flex-direction: column; gap: 8px; }
+.detail-note { font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+.detail-note.note-empty { color: var(--ink-muted); }
+.detail-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 0 2px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+/* Edit mode: at narrow widths the buttons wrap to a second row instead of
+   squeezing the input below a usable width. */
+.note-edit-row { flex-wrap: wrap; }
+.note-edit-row .input { min-width: 160px; }
 
 .sidebar-spacer { flex: 1; min-height: 12px; }
 .sidebar-create { width: 100%; margin-top: 10px; }

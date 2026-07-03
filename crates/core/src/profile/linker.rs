@@ -370,6 +370,9 @@ mod tests {
                 icon: String::new(),
                 color: String::new(),
                 is_default: false,
+                note: String::new(),
+                created_at: None,
+                cloned_from: None,
             },
             isolation: IsolationConfig {
                 desktop_user_data_dir: desktop_dir.path().to_path_buf(),

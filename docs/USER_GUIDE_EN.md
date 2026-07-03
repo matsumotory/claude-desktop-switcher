@@ -51,6 +51,7 @@ For other cases (such as "I want to reuse my common rules and skills, but route 
 3. Enter the environment information.
    * **Name**: (e.g., `Work`, `Research`)
    * **Icon (optional)**: pick from the prepared icons
+   * **Note (optional)**: write down what the environment is for and which account signs in. The note appears in the environment list and can be edited later on the detail screen.
 4. **Choose how it should be separated: pick one of three modes**
    The account is always separate in every mode (the create screen states this once up front). The three modes differ only in what else carries over, listed from most carried over to least. Open **"Configure in detail, item by item"** if you want to change individual components.
 
@@ -85,7 +86,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
 
 ### Scenario A: Starting work with your Work account
 1. If the environment you are about to open shares settings and another Claude Desktop app is running, quit it first: environments that share settings open one at a time to avoid configuration conflicts. An environment set to "separate everything" can be opened in a new window without quitting.
-2. In the settings window, select the "Work" environment you created. You can also open the settings window from the menu bar or Dock icon.
+2. In the settings window, select the "Work" environment you created. You can also open the settings window from the menu bar or Dock icon. The list shows each environment's note and when it was last launched, so you can find the right one at a glance even as you add more environments.
 3. **Press "Switch and launch", and that environment's dedicated Claude Desktop app launches.**
    This window has a completely independent, dedicated data directory. Log in with your work account the first time you open it.
 

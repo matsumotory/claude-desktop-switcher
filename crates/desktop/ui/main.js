@@ -196,6 +196,9 @@ const EN = {
   // Static create-view strings and chrome aria-labels.
   '環境一覧': 'Environments', 'テーマカラー': 'Accent color', 'ヘルプ': 'Help', 'アイコンを選ぶ': 'Choose an icon', '分け方': 'How to separate',
   '名前': 'Name', '例: 仕事用、検証用': 'e.g. Work, Testing', 'アイコン（任意）': 'Icon (optional)',
+  'メモ（任意）': 'Note (optional)', 'この環境のメモ': 'Note for this environment',
+  '編集': 'Edit', '保存': 'Save', 'メモを書く': 'Add a note',
+  '例: 仕事用。会社の Google アカウントでサインイン': 'e.g. Work. Signs in with the company Google account',
   '既存の Claude から、どう分けますか?': 'How do you want to separate this from your existing Claude?',
   'どのモードでも、サインインするアカウントは環境ごとに分かれます。課金や利用量はそのアカウントにひも付きます。違いは、会話・メモリ・設定をどこまで引き継ぐかです。':
     'In every mode the signed-in account is separate per environment, and billing and usage follow that account. What differs is how much of your conversations, memory, and settings carry over.',
@@ -219,7 +222,7 @@ const EN = {
 // must never be run through the dictionary: a user could name an environment
 // "仕事" and it must not become "Work". The default row's "既存の Claude" is
 // translated at construction with T() instead, so these can be skipped wholesale.
-const I18N_SKIP = '.profile-name, .detail-name, .path-code, .code-line, code';
+const I18N_SKIP = '.profile-name, .detail-name, .profile-note, .detail-note, .path-code, .code-line, code';
 const setEN = (v) => (Object.prototype.hasOwnProperty.call(EN, v) ? EN[v] : null);
 
 function applyI18nText(node) {
@@ -439,6 +442,7 @@ const el = {
   emptyFirstRun: $('emptyFirstRun'),
   firstRunExtra: $('firstRunExtra'),
   inputName: $('inputName'),
+  inputNote: $('inputNote'),
   iconPicker: $('iconPicker'),
   createNotice: $('createNotice'),
   nameError: $('nameError'),
@@ -505,6 +509,16 @@ function renderSidebar() {
     const pill = isInUse
       ? h('span', { class: 'pill pill-active', text: '利用中' })
       : null;
+    // Sub lines under the name: the user's own note first (never translated),
+    // then the launch stamp. Rows without them keep the compact height.
+    const subs = [];
+    if (!isDefault && p.note) subs.push(h('span', { class: 'profile-note', text: p.note }));
+    if (!isDefault && p.last_launched_at) {
+      subs.push(h('span', {
+        class: 'profile-meta',
+        text: T(`最終起動: ${relTime(p.last_launched_at)}`, `Last launched ${relTime(p.last_launched_at)}`),
+      }));
+    }
     return h('li', {
       class: 'profile-item' + (p.name === selectedName ? ' selected' : ''),
       role: 'button', tabindex: '0', onclick: open,
@@ -513,8 +527,11 @@ function renderSidebar() {
       onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
     },
       h('span', { class: 'profile-avatar' }, isDefault ? icon('i-monitor') : avatarContent(p.icon, p.name)),
-      h('span', { class: 'profile-name', text: isDefault ? T('既存の Claude', 'Existing Claude') : p.name }),
-      pill);
+      h('span', { class: 'profile-text' },
+        h('span', { class: 'profile-top' },
+          h('span', { class: 'profile-name', text: isDefault ? T('既存の Claude', 'Existing Claude') : p.name }),
+          pill),
+        ...subs));
   });
   el.profileList.replaceChildren(...rows);
 }
@@ -542,6 +559,13 @@ async function showDetail(name) {
     isInUse ? h('span', { class: 'pill pill-active', style: 'margin-left:auto', 'aria-label': '利用中', text: '利用中' }) : null);
 
   const nodes = [header];
+
+  if (!isDefault) {
+    // Identity first: the user's own note and the environment's record (created,
+    // duplicated from, last launched) answer "which environment is this?" before
+    // the sharing state below answers "what does it inherit?".
+    nodes.push(noteSection(d));
+  }
 
   if (isDefault) {
     // Keep only the reassurance (the user's real worry: "will this break my
@@ -750,6 +774,90 @@ function fmtBytes(n) {
 function fmtEpoch(epoch) {
   const d = new Date(epoch * 1000);
   return d.toLocaleDateString(LANG === 'ja' ? 'ja-JP' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// RFC 3339 string (created_at / last_launched_at) to a localized date.
+function fmtDate(rfc3339) {
+  const t = Date.parse(rfc3339);
+  if (Number.isNaN(t)) return '';
+  return new Date(t).toLocaleDateString(LANG === 'ja' ? 'ja-JP' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Relative time for the launch stamp. Dynamic strings are built per language
+// with T() because runtime-concatenated text never matches the EN dictionary.
+function relTime(rfc3339) {
+  const then = Date.parse(rfc3339);
+  if (Number.isNaN(then)) return '';
+  const mins = Math.floor(Math.max(0, Date.now() - then) / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  if (mins < 1) return T('たった今', 'just now');
+  if (hours < 1) return T(`${mins} 分前`, mins === 1 ? '1 minute ago' : `${mins} minutes ago`);
+  if (days < 1) return T(`${hours} 時間前`, hours === 1 ? '1 hour ago' : `${hours} hours ago`);
+  if (days < 30) return T(`${days} 日前`, days === 1 ? '1 day ago' : `${days} days ago`);
+  return fmtDate(rfc3339);
+}
+
+// The note and record card: the free-form note (editable in place) with the
+// environment's record underneath. Never shown for the default environment.
+function noteSection(d) {
+  const name = d.name;
+  const box = h('div', { class: 'note-box' });
+
+  const facts = [];
+  if (d.created_at) facts.push(T(`作成: ${fmtDate(d.created_at)}`, `Created ${fmtDate(d.created_at)}`));
+  if (d.cloned_from) facts.push(T(`複製元: ${d.cloned_from}`, `Duplicated from ${d.cloned_from}`));
+  facts.push(d.last_launched_at
+    ? T(`最終起動: ${relTime(d.last_launched_at)}`, `Last launched ${relTime(d.last_launched_at)}`)
+    : T('最終起動: まだありません', 'Never launched'));
+  const factsRow = h('div', { class: 'detail-facts' }, ...facts.map((f) => h('span', { text: f })));
+
+  const renderRead = () => {
+    box.replaceChildren(
+      h('div', { class: 'manage-row' },
+        h('p', {
+          class: 'manage-text detail-note' + (d.note ? '' : ' note-empty'),
+          text: d.note || T('メモはまだありません。用途や、サインインに使うアカウントを書いておけます。',
+            'No note yet. You can write down what this environment is for and which account signs in.'),
+        }),
+        h('button', { type: 'button', class: 'btn btn-ghost manage-action', onclick: renderEdit },
+          d.note ? '編集' : 'メモを書く')),
+      factsRow);
+  };
+
+  const renderEdit = () => {
+    const save = async (val) => {
+      try {
+        await invoke('set_profile_note', { name, note: val });
+        d.note = val;
+        await refreshProfiles();
+        renderRead();
+        showToast(T('メモを保存しました', 'Saved the note'));
+      } catch (err) {
+        showToast(T('メモを保存できませんでした。', 'Could not save the note.'), true);
+      }
+    };
+    const input = h('input', {
+      type: 'text', class: 'input', value: d.note || '', maxlength: '200',
+      placeholder: '例: 仕事用。会社の Google アカウントでサインイン',
+      autocomplete: 'off', spellcheck: 'false', style: 'flex:1',
+      // IME guard: Enter while composing Japanese must confirm the conversion,
+      // not submit (e.isComposing, plus keyCode 229 for older WebKit).
+      onkeydown: (e) => {
+        if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) save(input.value.trim());
+      },
+    });
+    box.replaceChildren(
+      h('div', { class: 'manage-row note-edit-row' },
+        input,
+        h('button', { type: 'button', class: 'btn btn-ghost', onclick: renderRead }, 'やめる'),
+        h('button', { type: 'button', class: 'btn btn-primary', onclick: () => save(input.value.trim()) }, '保存')),
+      factsRow);
+    input.focus();
+  };
+
+  renderRead();
+  return section('この環境のメモ', [box]);
 }
 
 function renderDataMap(map) {
@@ -1120,6 +1228,7 @@ function showEmpty() {
 function showCreate() {
   localStorage.setItem('csw_onboarded', '1');
   el.inputName.value = '';
+  el.inputNote.value = '';
   createIcon = '';
   renderIconPicker();
   el.nameError.hidden = true;
@@ -1272,7 +1381,7 @@ async function submitCreate() {
   if (err) { el.nameError.textContent = err; el.nameError.hidden = false; el.inputName.focus(); return; }
   el.nameError.hidden = true;
 
-  const args = { name, mode: currentMode, icon: iconVal || null };
+  const args = { name, mode: currentMode, icon: iconVal || null, note: el.inputNote.value.trim() || null };
   if (advancedCustomized) args.sharingOverrides = { ...overrides };
 
   const confirmBtn = el.createFooter.querySelector('.btn-primary');
@@ -1540,26 +1649,36 @@ function devInvoke(cmd, args) {
   // Locale-aware sample names so English screenshots read naturally. Real user
   // environment names are never translated (they are not run through the dictionary).
   const NM = LANG === 'ja' ? { work: '仕事用', research: '研究用', testing: '検証用' } : { work: 'Work', research: 'Research', testing: 'Testing' };
-  const prof = (name, iconVal, concurrent, sharing) => ({
+  // Sample notes are user data in the real app; here they are locale-aware so
+  // screenshots read naturally in both languages.
+  const NOTE = LANG === 'ja'
+    ? { work: '会社の Google アカウントでサインイン', research: '研究室の Anthropic アカウントでサインイン' }
+    : { work: 'Signs in with the company Google account', research: 'Signs in with the lab Anthropic account' };
+  const ago = (hours) => new Date(Date.now() - hours * 3600 * 1000).toISOString();
+  const prof = (name, iconVal, concurrent, sharing, extra) => ({
     name, icon: iconVal, is_default: false, supports_concurrent_windows: concurrent,
     desktop_path: `~/.context-switcher-claude/profiles/${name}/desktop-data`,
     cli_path: `~/.context-switcher-claude/profiles/${name}/cli-data`,
     sharing,
+    note: '', created_at: null, cloned_from: null, last_launched_at: null,
+    ...extra,
   });
   const sample = {
     default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', supports_concurrent_windows: false, sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
-    [NM.work]: prof(NM.work, 'briefcase', false, { ...PRESETS.share_settings }),
-    [NM.research]: prof(NM.research, 'graduation-cap', false, { ...PRESETS.share_workspace }),
-    [NM.testing]: prof(NM.testing, 'flask', true, { ...PRESETS.isolate }),
+    [NM.work]: prof(NM.work, 'briefcase', false, { ...PRESETS.share_settings },
+      { note: NOTE.work, created_at: ago(24 * 40), last_launched_at: ago(3) }),
+    [NM.research]: prof(NM.research, 'graduation-cap', false, { ...PRESETS.share_workspace },
+      { note: NOTE.research, created_at: ago(24 * 20), last_launched_at: ago(24 * 3) }),
+    [NM.testing]: prof(NM.testing, 'flask', true, { ...PRESETS.isolate },
+      { created_at: ago(2), cloned_from: NM.work }),
   };
   switch (cmd) {
     case 'list_profiles':
-      return Promise.resolve([
-        { name: 'default', icon: '', is_default: true },
-        { name: NM.work, icon: 'briefcase', is_default: false },
-        { name: NM.research, icon: 'graduation-cap', is_default: false },
-        { name: NM.testing, icon: 'flask', is_default: false },
-      ]);
+      return Promise.resolve([sample.default, sample[NM.work], sample[NM.research], sample[NM.testing]]
+        .map((p) => ({
+          name: p.name, icon: p.icon, is_default: p.is_default,
+          note: p.note || '', last_launched_at: p.last_launched_at || null,
+        })));
     case 'get_active_profile':
       return Promise.resolve('default');
     case 'get_profile_details':
@@ -1602,6 +1721,8 @@ function devInvoke(cmd, args) {
       });
     }
     case 'reveal_profile_dir':
+      return Promise.resolve(null);
+    case 'set_profile_note':
       return Promise.resolve(null);
     case 'inspect_profile': {
       // Healthy sample report for browser QA / screenshots, shaped exactly like
