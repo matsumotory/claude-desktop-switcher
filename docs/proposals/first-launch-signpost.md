@@ -1,7 +1,7 @@
 ---
 title: 新しい環境の初回起動に置くサインインの道しるべ
 created: 2026-07-03
-status: in-progress
+status: completed
 pr: 161
 related_prs: [159]
 related_issues: []

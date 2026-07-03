@@ -1,7 +1,7 @@
 ---
 title: 環境の用途メモと最終起動・来歴の表示
 created: 2026-07-03
-status: in-progress
+status: completed
 pr: 159
 related_prs: []
 related_issues: []
