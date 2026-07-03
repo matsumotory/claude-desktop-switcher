@@ -482,6 +482,40 @@ fn tray_settings_label(ja: bool) -> &'static str {
     if ja { "設定..." } else { "Settings..." }
 }
 
+fn tray_whereami_label(ja: bool) -> &'static str {
+    if ja {
+        "いまの環境を確認"
+    } else {
+        "Check the current environment"
+    }
+}
+
+/// Resolve which environment the frontmost Claude runs, for the tray's
+/// "いまの環境を確認". Kinds: "claude" (with "environment": name or null),
+/// "self" (the settings window itself is frontmost), "other".
+fn frontmost_payload(state: &AppState) -> serde_json::Value {
+    match state.provider.frontmost_app() {
+        Ok(csw_core::platform::FrontmostApp::Claude(line)) => {
+            let names = state.profile_manager.list_profiles().unwrap_or_default();
+            let envs: Vec<(String, std::path::PathBuf)> = names
+                .into_iter()
+                .filter_map(|name| {
+                    state
+                        .profile_manager
+                        .get_profile(&name)
+                        .ok()
+                        .map(|p| (name, p.isolation.desktop_user_data_dir))
+                })
+                .collect();
+            let default_dir = state.provider.claude_desktop_default_dir();
+            let env = csw_core::switcher::environment_for_args_line(&line, &envs, &default_dir);
+            serde_json::json!({ "kind": "claude", "environment": env })
+        }
+        Ok(csw_core::platform::FrontmostApp::ThisApp) => serde_json::json!({ "kind": "self" }),
+        _ => serde_json::json!({ "kind": "other" }),
+    }
+}
+
 fn tray_quit_label(ja: bool) -> &'static str {
     if ja { "終了" } else { "Quit" }
 }
@@ -534,6 +568,14 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
     // 3. Footer Operations
     let sep2 = PredefinedMenuItem::separator(app).map_err(|e| e.to_string())?;
     menu_items.push(Box::new(sep2) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
+
+    // Answers "which environment is the Claude in front of me?": resolved at
+    // click time (menu clicks keep the frontmost app unchanged) and shown in
+    // the settings window.
+    let whereami_item =
+        MenuItem::with_id(app, "whereami", tray_whereami_label(ja), true, None::<&str>)
+            .map_err(|e| e.to_string())?;
+    menu_items.push(Box::new(whereami_item) as Box<dyn tauri::menu::IsMenuItem<Wry>>);
 
     let settings_item =
         MenuItem::with_id(app, "settings", tray_settings_label(ja), true, None::<&str>)
@@ -624,6 +666,17 @@ fn main() {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }
+                    } else if id == "whereami" {
+                        // Resolve the frontmost app BEFORE showing the settings
+                        // window: menu clicks do not change the frontmost app,
+                        // but showing our window would.
+                        let payload = frontmost_payload(&app.state::<AppState>());
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                        use tauri::Emitter;
+                        let _ = app.emit("whereami", payload);
                     } else if let Some(profile_name) = id.strip_prefix("profile_") {
                         let state = app.state::<AppState>();
                         let switcher = ContextSwitcher::new(

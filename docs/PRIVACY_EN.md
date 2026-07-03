@@ -47,6 +47,7 @@ In addition, the settings window stores its own display preferences (the accent 
   2. **Creating and re-pointing shared links**: for items you set to Shared when creating an environment, it creates symbolic links inside the new environment that point to the existing Claude's originals. The isolation check's repair command, `csw doctor --fix`, likewise only re-points share links that no longer point at their declared source. Only the link is swapped; real files are never touched. The links live in the environment's folder; nothing is written on the existing Claude's side.
   3. **Copying**: for items you set to Copy when creating an environment, it reads those files and copies them into the new environment. Only the items you chose are read, and the existing Claude's side is never modified.
 - To tell which environment a running Claude is using, CSW reads the list of running processes and their launch arguments. It reads nothing else about those processes and no communication contents.
+- The identifier of the frontmost application is read only when you press "Check the current environment" in the menu bar icon's menu, to answer which environment the Claude in front is using. Only the process identifier and its launch arguments are read; screen contents and window titles are never read. CSW never polls for it.
 
 ## About duplicating an environment
 

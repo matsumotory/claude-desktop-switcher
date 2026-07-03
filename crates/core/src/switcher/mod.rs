@@ -81,6 +81,31 @@ pub fn desktop_dir_running(target_dir: &Path, running_args: &[String], default_d
     target_dir == default_dir && running_args.iter().any(|a| !a.contains("--user-data-dir="))
 }
 
+/// Resolve one Claude main-process args line to the environment it runs.
+/// A `--user-data-dir` value matching an environment's data directory names
+/// that environment; a line without the flag runs on the default data
+/// directory (the existing Claude); anything else is no CSW environment.
+/// `envs` pairs each environment name with its desktop data directory.
+pub fn environment_for_args_line(
+    line: &str,
+    envs: &[(String, std::path::PathBuf)],
+    default_dir: &Path,
+) -> Option<String> {
+    for (name, dir) in envs {
+        let needle = format!("--user-data-dir={}", dir.display());
+        if flag_value_present(line, &needle) {
+            return Some(name.clone());
+        }
+    }
+    if !line.contains("--user-data-dir=") {
+        return envs
+            .iter()
+            .find(|(_, dir)| dir == default_dir)
+            .map(|(name, _)| name.clone());
+    }
+    None
+}
+
 /// True when a live Claude main process was launched without `--user-data-dir`,
 /// meaning it runs on the default data directory and was not started by CSW:
 /// the Dock, or Squirrel's post-update relaunch, which drops the arguments.
@@ -224,6 +249,57 @@ mod tests {
         let work = Path::new("/w");
         assert!(!desktop_dir_running(work, &[], default_dir));
         assert!(!desktop_dir_running(default_dir, &[], default_dir));
+    }
+
+    // Spec: docs/proposals/frontmost-environment-check.md. Resolve one main
+    // process line to the environment it runs, mirroring desktop_dir_running.
+    #[test]
+    fn environment_for_args_line_resolves_env_default_and_unknown() {
+        let default_dir = Path::new("/Users/u/Library/Application Support/Claude");
+        let envs = [
+            (
+                "Work".to_string(),
+                std::path::PathBuf::from("/p/Work/desktop-data"),
+            ),
+            (
+                "Work2".to_string(),
+                std::path::PathBuf::from("/p/Work2/desktop-data"),
+            ),
+            ("default".to_string(), default_dir.to_path_buf()),
+        ];
+
+        // A --user-data-dir match names that environment; a sibling with the
+        // matched dir as a prefix must not be confused with it.
+        assert_eq!(
+            environment_for_args_line(
+                "...MacOS/Claude --user-data-dir=/p/Work/desktop-data",
+                &envs,
+                default_dir
+            ),
+            Some("Work".to_string())
+        );
+        assert_eq!(
+            environment_for_args_line(
+                "...MacOS/Claude --user-data-dir=/p/Work2/desktop-data",
+                &envs,
+                default_dir
+            ),
+            Some("Work2".to_string())
+        );
+        // No flag means the default data directory: the existing Claude.
+        assert_eq!(
+            environment_for_args_line("...MacOS/Claude", &envs, default_dir),
+            Some("default".to_string())
+        );
+        // A dir CSW does not manage resolves to no environment.
+        assert_eq!(
+            environment_for_args_line(
+                "...MacOS/Claude --user-data-dir=/elsewhere",
+                &envs,
+                default_dir
+            ),
+            None
+        );
     }
 
     // Spec: docs/proposals/update-takeover-notice.md. A main process without
