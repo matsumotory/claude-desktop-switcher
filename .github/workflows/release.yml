@@ -137,3 +137,21 @@ jobs:
             crates/cli/csw-cli_aarch64-apple-darwin.cdx.json \
             crates/cli/csw-cli_x86_64-apple-darwin.cdx.json \
             --clobber
+
+      # Unexplained assets on the release page read as an accident or a leak, so
+      # every release ships a RELEASE-README.md describing each file, and the same
+      # guide is appended to the release notes. Templates live in .github/.
+      - name: Attach the release README and asset guide
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          VERSION="${TAG_NAME#v}"
+          sed "s/__VERSION__/${VERSION}/g" .github/release-readme.md > RELEASE-README.md
+          gh release upload "$TAG_NAME" RELEASE-README.md --clobber
+          BODY="$(gh release view "$TAG_NAME" --json body --jq .body)"
+          if ! printf '%s' "$BODY" | grep -q '### 添付ファイルの説明'; then
+            sed "s/__VERSION__/${VERSION}/g" .github/release-notes-assets.md > asset-guide.md
+            { printf '%s\n\n' "$BODY"; cat asset-guide.md; } > new-body.md
+            gh release edit "$TAG_NAME" --notes-file new-body.md
+          fi
