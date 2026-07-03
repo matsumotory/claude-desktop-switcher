@@ -36,10 +36,18 @@ async fn list_profiles(state: State<'_, AppState>) -> Result<Vec<serde_json::Val
     let mut list = Vec::new();
     for name in names {
         if let Ok(p) = state.profile_manager.get_profile(&name) {
+            // The launch stamp is informational; a missing or unreadable
+            // state file must never drop the row from the list.
+            let last_launched_at = state
+                .profile_manager
+                .last_launched_at(&name)
+                .unwrap_or(None);
             list.push(serde_json::json!({
                 "name": p.profile.name,
                 "icon": p.profile.icon,
                 "is_default": p.profile.is_default,
+                "note": p.profile.note,
+                "last_launched_at": last_launched_at,
             }));
         }
     }
@@ -62,6 +70,10 @@ async fn get_profile_details(
         "icon": p.profile.icon,
         "color": p.profile.color,
         "is_default": p.profile.is_default,
+        "note": p.profile.note,
+        "created_at": p.profile.created_at,
+        "cloned_from": p.profile.cloned_from,
+        "last_launched_at": state.profile_manager.last_launched_at(&name).unwrap_or(None),
         "desktop_path": p.isolation.desktop_user_data_dir,
         "cli_path": p.isolation.cli_config_dir,
         // Only fully-isolated (すべて分ける) non-default environments may be opened
@@ -147,21 +159,49 @@ async fn create_profile(
     name: String,
     mode: String,
     icon: Option<String>,
+    note: Option<String>,
     sharing_overrides: Option<HashMap<String, String>>,
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<(), String> {
     let sharing = build_sharing_config(&mode, sharing_overrides);
 
+    // Validate the note before creating: a rejected note after creation would
+    // leave the environment half-made behind a "creation failed" message.
+    let note = note.as_deref().filter(|n| !n.is_empty());
+    if let Some(n) = note {
+        csw_core::profile::validate_profile_note(n).map_err(|e| e.to_string())?;
+    }
+
     state
         .profile_manager
         .create_profile(&name, sharing, icon)
         .map_err(|e| e.to_string())?;
 
+    if let Some(n) = note {
+        state
+            .profile_manager
+            .set_profile_note(&name, n)
+            .map_err(|e| e.to_string())?;
+    }
+
     // Update system tray menu after change
     update_tray_menu(&app)?;
 
     Ok(())
+}
+
+/// Set or clear the free-form note of an environment (empty string clears).
+#[tauri::command]
+async fn set_profile_note(
+    name: String,
+    note: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    state
+        .profile_manager
+        .set_profile_note(&name, &note)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -201,6 +241,8 @@ async fn clone_profile(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<(), String> {
+    // The note carries over from the source inside clone_profile; the detail
+    // screen edits it afterwards, so the clone flow takes no note input.
     state
         .profile_manager
         .clone_profile(&source, &target)
@@ -627,6 +669,7 @@ fn main() {
             get_profile_data_map,
             reveal_profile_dir,
             switch_profile,
+            set_profile_note,
             launch_additional_window,
             get_desktop_running_status,
             get_running_profiles,

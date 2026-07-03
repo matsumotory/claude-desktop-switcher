@@ -74,9 +74,21 @@ enum ProfileAction {
             value_parser = ["isolate", "share_settings", "share_workspace", "share"]
         )]
         mode: String,
+        /// Free-form note stored with the profile (single line, 200 characters
+        /// max). For example, what the environment is for and which account
+        /// signs in.
+        #[arg(long)]
+        note: Option<String>,
     },
     /// List all profiles
     List,
+    /// Set or clear the free-form note of a profile
+    Note {
+        /// Profile name
+        name: String,
+        /// Note text (single line, 200 characters max). Pass "" to clear.
+        text: String,
+    },
     /// Show profile details
     Show {
         /// Profile name
@@ -122,7 +134,7 @@ fn main() -> anyhow::Result<()> {
         Commands::Profile { action } => {
             let manager = ProfileManager::new(provider.clone())?;
             match action {
-                ProfileAction::Create { name, mode } => {
+                ProfileAction::Create { name, mode, note } => {
                     println!(
                         "Creating profile '{}' with preset '{}'...",
                         name.cyan(),
@@ -143,6 +155,17 @@ fn main() -> anyhow::Result<()> {
 
                     match manager.create_profile(&name, sharing, None) {
                         Ok(_) => {
+                            if let Some(n) = note.as_deref().filter(|n| !n.is_empty()) {
+                                // The profile itself exists at this point, so a bad
+                                // note is a warning, not a failure.
+                                if let Err(e) = manager.set_profile_note(&name, n) {
+                                    eprintln!(
+                                        "{} The profile was created, but the note was not saved: {}",
+                                        "Warning:".yellow(),
+                                        e
+                                    );
+                                }
+                            }
                             println!(
                                 "{} Profile '{}' created successfully!",
                                 "OK".green(),
@@ -186,6 +209,33 @@ fn main() -> anyhow::Result<()> {
                         } else {
                             println!("    {}", name);
                         }
+                        // The default environment carries no note or launch stamp.
+                        if name == "default" {
+                            continue;
+                        }
+                        if let Ok(p) = manager.get_profile(&name)
+                            && !p.profile.note.is_empty()
+                        {
+                            println!("      Note: {}", p.profile.note);
+                        }
+                        if let Ok(Some(ts)) = manager.last_launched_at(&name) {
+                            println!("      Last launched: {}", ts.dimmed());
+                        }
+                    }
+                }
+                ProfileAction::Note { name, text } => {
+                    match manager.set_profile_note(&name, &text) {
+                        Ok(_) => {
+                            if text.is_empty() {
+                                println!("{} Note cleared for '{}'.", "OK".green(), name.cyan());
+                            } else {
+                                println!("{} Note saved for '{}'.", "OK".green(), name.cyan());
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("{} Failed to save the note: {}", "Error:".red(), e);
+                            std::process::exit(1);
+                        }
                     }
                 }
                 ProfileAction::Show { name } => match manager.get_profile(&name) {
@@ -194,6 +244,18 @@ fn main() -> anyhow::Result<()> {
                         println!("  Icon: {}", p.profile.icon);
                         println!("  Color: {}", p.profile.color);
                         println!("  Is Default: {}", p.profile.is_default);
+                        if !p.profile.note.is_empty() {
+                            println!("  Note: {}", p.profile.note);
+                        }
+                        if let Some(created) = &p.profile.created_at {
+                            println!("  Created: {}", created);
+                        }
+                        if let Some(from) = &p.profile.cloned_from {
+                            println!("  Duplicated from: {}", from);
+                        }
+                        if let Ok(Some(ts)) = manager.last_launched_at(&name) {
+                            println!("  Last launched: {}", ts);
+                        }
                         println!("  Desktop Path: {:?}", p.isolation.desktop_user_data_dir);
                         println!("  CLI Path: {:?}", p.isolation.cli_config_dir);
                         println!("  Sharing Configurations:");

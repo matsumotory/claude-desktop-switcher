@@ -1046,3 +1046,167 @@ fn purge_profile_rejects_default_and_active() {
         "a rejected purge must leave the environment untouched"
     );
 }
+
+// ---- Notes, history and last launch ----
+// Spec: docs/proposals/environment-notes-and-last-launch.md. Expectations are
+// derived from the plan, not from the implementation (RED first).
+
+#[test]
+fn legacy_profile_toml_without_new_fields_still_loads() {
+    let (_, manager, _tmp) = setup_test_manager();
+    let created = manager
+        .create_profile("legacy", SharingConfig::default(), None)
+        .unwrap();
+    // Rewrite profile.toml in the v0.19.1 shape: no note / created_at /
+    // cloned_from. Existing environments on disk must keep loading.
+    let toml_path = created
+        .isolation
+        .desktop_user_data_dir
+        .parent()
+        .unwrap()
+        .join("profile.toml");
+    let legacy = format!(
+        "[profile]\nname = \"legacy\"\nicon = \"\"\ncolor = \"#4A90D9\"\nis_default = false\n\n\
+         [isolation]\ndesktop_user_data_dir = \"{}\"\ncli_config_dir = \"{}\"\n\n\
+         [sharing]\n[sharing.source]\nprofile = \"default\"\n",
+        created.isolation.desktop_user_data_dir.display(),
+        created.isolation.cli_config_dir.display()
+    );
+    std::fs::write(&toml_path, legacy).unwrap();
+
+    let p = manager.get_profile("legacy").unwrap();
+    assert_eq!(p.profile.note, "");
+    assert!(p.profile.created_at.is_none());
+    assert!(p.profile.cloned_from.is_none());
+}
+
+#[test]
+fn create_profile_stamps_created_at() {
+    let (_, manager, _tmp) = setup_test_manager();
+    let p = manager
+        .create_profile("stamped", SharingConfig::default(), None)
+        .unwrap();
+    assert!(p.profile.created_at.is_some());
+    assert!(p.profile.cloned_from.is_none());
+
+    let reloaded = manager.get_profile("stamped").unwrap();
+    assert!(reloaded.profile.created_at.is_some());
+}
+
+#[test]
+fn clone_profile_stamps_cloned_from_and_carries_note() {
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("origin", SharingConfig::default(), None)
+        .unwrap();
+    manager
+        .set_profile_note("origin", "研究室の共有アカウントでサインイン")
+        .unwrap();
+
+    let cloned = manager.clone_profile("origin", "copy1").unwrap();
+    assert_eq!(cloned.profile.cloned_from.as_deref(), Some("origin"));
+    assert!(cloned.profile.created_at.is_some());
+    // SPECIFICATION §5.A: the duplicate starts with the source's note.
+    assert_eq!(cloned.profile.note, "研究室の共有アカウントでサインイン");
+
+    let reloaded = manager.get_profile("copy1").unwrap();
+    assert_eq!(reloaded.profile.cloned_from.as_deref(), Some("origin"));
+    assert_eq!(reloaded.profile.note, "研究室の共有アカウントでサインイン");
+}
+
+#[test]
+fn set_profile_note_saves_overwrites_and_clears() {
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("noted", SharingConfig::default(), None)
+        .unwrap();
+
+    manager
+        .set_profile_note("noted", "B社納品用。b-corp の Google でサインイン")
+        .unwrap();
+    assert_eq!(
+        manager.get_profile("noted").unwrap().profile.note,
+        "B社納品用。b-corp の Google でサインイン"
+    );
+
+    manager.set_profile_note("noted", "個人用に変更").unwrap();
+    assert_eq!(
+        manager.get_profile("noted").unwrap().profile.note,
+        "個人用に変更"
+    );
+
+    manager.set_profile_note("noted", "").unwrap();
+    assert_eq!(manager.get_profile("noted").unwrap().profile.note, "");
+}
+
+#[test]
+fn set_profile_note_rejects_default_too_long_and_control_chars() {
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("guard", SharingConfig::default(), None)
+        .unwrap();
+
+    // The default profile is synthetic; there is no profile.toml to hold a note.
+    assert!(manager.set_profile_note("default", "x").is_err());
+
+    let too_long = "あ".repeat(201);
+    assert!(manager.set_profile_note("guard", &too_long).is_err());
+    // Single-line spec: newlines and other control characters are rejected.
+    assert!(manager.set_profile_note("guard", "line1\nline2").is_err());
+    assert!(manager.set_profile_note("guard", "tab\there").is_err());
+
+    let exactly_200 = "あ".repeat(200);
+    assert!(manager.set_profile_note("guard", &exactly_200).is_ok());
+}
+
+#[test]
+fn record_last_launch_writes_state_and_leaves_profile_toml_untouched() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("launchy", SharingConfig::default(), None)
+        .unwrap();
+    let profile_dir = provider.app_data_dir().join("profiles").join("launchy");
+    let toml_before = std::fs::read(profile_dir.join("profile.toml")).unwrap();
+
+    assert_eq!(manager.last_launched_at("launchy").unwrap(), None);
+
+    manager.record_last_launch("launchy").unwrap();
+    let ts = manager.last_launched_at("launchy").unwrap();
+    assert!(ts.is_some());
+    assert!(!ts.unwrap().is_empty());
+    assert!(
+        profile_dir.join("state.toml").exists(),
+        "launch state lives in its own file, not in profile.toml"
+    );
+
+    // The safety declaration (profile.toml) must not be rewritten on launch.
+    let toml_after = std::fs::read(profile_dir.join("profile.toml")).unwrap();
+    assert_eq!(toml_before, toml_after);
+}
+
+#[test]
+fn record_last_launch_rejects_default() {
+    let (_, manager, _tmp) = setup_test_manager();
+    assert!(manager.record_last_launch("default").is_err());
+    assert_eq!(manager.last_launched_at("default").unwrap(), None);
+}
+
+#[test]
+fn launch_desktop_stamps_last_launch_but_never_for_default() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("runner", SharingConfig::default(), None)
+        .unwrap();
+    let runner = manager.get_profile("runner").unwrap();
+    crate::switcher::desktop::launch_desktop(&runner, provider.as_ref()).unwrap();
+    assert!(manager.last_launched_at("runner").unwrap().is_some());
+
+    // Zero-impact: launching the default environment must not drop a
+    // state.toml next to the user's real Claude data directory.
+    let default = manager.get_profile("default").unwrap();
+    crate::switcher::desktop::launch_desktop(&default, provider.as_ref()).unwrap();
+    let default_dir = provider.claude_desktop_default_dir();
+    let real_parent = default_dir.parent().unwrap();
+    assert!(!real_parent.join("state.toml").exists());
+    assert_eq!(manager.last_launched_at("default").unwrap(), None);
+}

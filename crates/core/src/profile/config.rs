@@ -10,13 +10,16 @@ pub fn load_profile(path: &Path) -> Result<Profile> {
     Ok(profile)
 }
 
-/// Save a profile to a TOML file.
+/// Save a profile to a TOML file. Written via a temp file + rename so a crash
+/// mid-write can never leave a truncated safety declaration behind.
 pub fn save_profile(profile: &Profile, path: &Path) -> Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
     let content = toml::to_string_pretty(profile)?;
-    std::fs::write(path, content)?;
+    let tmp = path.with_extension("toml.tmp");
+    std::fs::write(&tmp, content)?;
+    std::fs::rename(&tmp, path)?;
     Ok(())
 }
 
@@ -88,6 +91,9 @@ mod tests {
                 icon: "\u{1f4bc}".to_string(),
                 color: "#4A90D9".to_string(),
                 is_default: false,
+                note: "仕事用。会社の Google でサインイン".to_string(),
+                created_at: Some("2026-07-03T00:00:00Z".to_string()),
+                cloned_from: None,
             },
             isolation: IsolationConfig {
                 desktop_user_data_dir: PathBuf::from("/tmp/test/desktop-data"),
