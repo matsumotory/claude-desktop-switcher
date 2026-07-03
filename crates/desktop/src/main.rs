@@ -73,6 +73,7 @@ async fn get_profile_details(
         "note": p.profile.note,
         "created_at": p.profile.created_at,
         "cloned_from": p.profile.cloned_from,
+        "first_launched_at": state.profile_manager.first_launched_at(&name).unwrap_or(None),
         "last_launched_at": state.profile_manager.last_launched_at(&name).unwrap_or(None),
         "desktop_path": p.isolation.desktop_user_data_dir,
         "cli_path": p.isolation.cli_config_dir,

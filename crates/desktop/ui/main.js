@@ -561,7 +561,11 @@ async function showDetail(name) {
   const nodes = [header];
 
   if (!isDefault) {
-    // Identity first: the user's own note and the environment's record (created,
+    // The sign-in signpost comes first: it exists only during the environment's
+    // very first launch, exactly when the empty Claude window is on screen.
+    const signpost = signpostSection(d);
+    if (signpost) nodes.push(signpost);
+    // Identity next: the user's own note and the environment's record (created,
     // duplicated from, last launched) answer "which environment is this?" before
     // the sharing state below answers "what does it inherit?".
     nodes.push(noteSection(d));
@@ -798,6 +802,61 @@ function relTime(rfc3339) {
   return fmtDate(rfc3339);
 }
 
+// The sign-in signpost: a one-time card shown while an environment has been
+// launched exactly once, which is precisely when the freshly opened Claude is
+// empty and asks for a sign-in. Environments from before the first-launch
+// stamp existed (no created_at) never show it, so nobody who is already
+// signed in gets told to sign in. Sign-in completion is deliberately not
+// detected: that would require reading file contents (docs/PRIVACY.md), so
+// the card simply stays until dismissed or until the second launch.
+// All lines are built with T(): they embed the user's note, and runtime-
+// concatenated text never matches the EN dictionary.
+function signpostSection(d) {
+  if (d.is_default || !d.created_at || !d.first_launched_at) return null;
+  if (d.first_launched_at !== d.last_launched_at) return null;
+  // Keyed by name + creation stamp: deleting an environment and recreating it
+  // under the same name is a new environment whose first launch needs the
+  // card again, so an old dismissal must not suppress it.
+  const key = `csw_signpost_${d.name}_${d.created_at}`;
+  if (localStorage.getItem(key)) return null;
+
+  const wrap = h('div', { class: 'section' });
+  const card = h('div', { class: 'note-card signpost-card' },
+    h('p', {
+      text: T('開いた Claude がまっさらでサインインを求めてくるのは正常です。この環境には専用のデータ領域が用意されています。',
+        'It is normal that the Claude you just opened is empty and asks you to sign in. This environment starts with its own dedicated data.'),
+    }),
+    h('p', {
+      text: T('この環境で使うアカウントでサインインしてください。',
+        'Sign in with the account you use for this environment.'),
+    }));
+  if (d.note) {
+    // The user's own words, quoted so they never read as part of CSW's copy.
+    card.append(h('p', {
+      text: T(`メモには「${d.note}」と書いてあります。`, `Your note says: "${d.note}".`),
+    }));
+  }
+  card.append(h('p', {
+    text: T('これまでのチャットや設定は、既存の Claude に無傷で残っています。いつでも戻れます。',
+      'Your existing chats and settings are untouched in Existing Claude. You can always go back.'),
+  }));
+  if (d.sharing && d.sharing.cli_project_memory !== 'isolate') {
+    // Shared or copied: either way the local Claude Code history is here,
+    // while the empty desktop window still needs its sign-in.
+    card.append(h('p', {
+      text: T('Claude Code の会話履歴と自動メモリは、この環境に引き継ぎ済みです。デスクトップには、サインインしたアカウントの会話が表示されます。',
+        'Your Claude Code conversation history and auto-memory have carried over into this environment. Desktop conversations follow the account you sign in with.'),
+    }));
+  }
+  card.append(h('div', { class: 'signpost-actions' },
+    h('button', {
+      type: 'button', class: 'btn btn-ghost',
+      onclick: () => { localStorage.setItem(key, '1'); wrap.remove(); },
+    }, '閉じる')));
+  wrap.append(card);
+  return wrap;
+}
+
 // The note and record card: the free-form note (editable in place) with the
 // environment's record underneath. Never shown for the default environment.
 function noteSection(d) {
@@ -831,7 +890,9 @@ function noteSection(d) {
         await invoke('set_profile_note', { name, note: val });
         d.note = val;
         await refreshProfiles();
-        renderRead();
+        // Rebuild the whole detail view, not just this card: the sign-in
+        // signpost quotes the note and must follow the edit immediately.
+        await showDetail(name);
         showToast(T('メモを保存しました', 'Saved the note'));
       } catch (err) {
         showToast(T('メモを保存できませんでした。', 'Could not save the note.'), true);
@@ -1645,6 +1706,11 @@ document.addEventListener('DOMContentLoaded', init);
 // Dev-only mock (used only when window.__TAURI__ is absent, e.g. screenshots).
 // The shipped app sets withGlobalTauri:true and never reaches this path.
 // ============================================================================
+// Browser-QA state: notes saved through the mock survive within the session,
+// so flows that re-fetch details (note edit -> signpost quote) behave like the
+// real backend, which re-reads profile.toml.
+const DEV_NOTES = new Map();
+
 function devInvoke(cmd, args) {
   // Locale-aware sample names so English screenshots read naturally. Real user
   // environment names are never translated (they are not run through the dictionary).
@@ -1666,12 +1732,21 @@ function devInvoke(cmd, args) {
   const sample = {
     default: { name: 'default', icon: '', is_default: true, desktop_path: '~/Library/Application Support/Claude', cli_path: '~/.claude', supports_concurrent_windows: false, sharing: Object.fromEntries(ALL_KEYS.map((k) => [k, 'share'])) },
     [NM.work]: prof(NM.work, 'briefcase', false, { ...PRESETS.share_settings },
-      { note: NOTE.work, created_at: ago(24 * 40), last_launched_at: ago(3) }),
-    [NM.research]: prof(NM.research, 'graduation-cap', false, { ...PRESETS.share_workspace },
-      { note: NOTE.research, created_at: ago(24 * 20), last_launched_at: ago(24 * 3) }),
+      { note: NOTE.work, created_at: ago(24 * 40), first_launched_at: ago(24 * 40), last_launched_at: ago(3) }),
+    // Launched exactly once: the sign-in signpost state, for browser QA. One
+    // shared timestamp: three ago() calls could straddle a millisecond and
+    // break the first == last equality this fixture exists to represent.
+    [NM.research]: (() => {
+      const t = ago(24 * 3);
+      return prof(NM.research, 'graduation-cap', false, { ...PRESETS.share_workspace },
+        { note: NOTE.research, created_at: t, first_launched_at: t, last_launched_at: t });
+    })(),
     [NM.testing]: prof(NM.testing, 'flask', true, { ...PRESETS.isolate },
       { created_at: ago(2), cloned_from: NM.work }),
   };
+  for (const [name, note] of DEV_NOTES) {
+    if (sample[name]) sample[name].note = note;
+  }
   switch (cmd) {
     case 'list_profiles':
       return Promise.resolve([sample.default, sample[NM.work], sample[NM.research], sample[NM.testing]]
@@ -1723,6 +1798,7 @@ function devInvoke(cmd, args) {
     case 'reveal_profile_dir':
       return Promise.resolve(null);
     case 'set_profile_note':
+      DEV_NOTES.set(args.name, args.note);
       return Promise.resolve(null);
     case 'inspect_profile': {
       // Healthy sample report for browser QA / screenshots, shaped exactly like
