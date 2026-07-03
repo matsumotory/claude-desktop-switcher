@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.20.0...v0.21.0) (2026-07-03)
+
+
+### Features
+
+* **desktop:** 前面の Claude の環境をトレイから確認できるようにする ([c5e7ab1](https://github.com/matsumotory/claude-desktop-switcher/commit/c5e7ab10a6a841a2f887f3932e9af72c9d7665c9))
+* **desktop:** 更新後の乗り移りを検知して案内する ([6f3baca](https://github.com/matsumotory/claude-desktop-switcher/commit/6f3baca0c22a3c98d2a4ea27894a84b920ef8d60))
+
 ## [0.20.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.19.1...v0.20.0) (2026-07-03)
 
 
