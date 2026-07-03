@@ -174,6 +174,42 @@ impl PlatformProvider for MacOsProvider {
             &output.stdout,
         )))
     }
+
+    fn frontmost_app(&self) -> Result<super::FrontmostApp> {
+        // Only the application's PID is read; window titles and contents are
+        // never touched. Called from an explicit user action (tray item).
+        let pid = {
+            let workspace = objc2_app_kit::NSWorkspace::sharedWorkspace();
+            match workspace.frontmostApplication() {
+                Some(app) => app.processIdentifier(),
+                None => return Ok(super::FrontmostApp::OtherApp),
+            }
+        };
+        if pid == std::process::id() as i32 {
+            return Ok(super::FrontmostApp::ThisApp);
+        }
+        // `ps -o args=` for just that process; a non-Claude frontmost app (or a
+        // Claude helper process, which never owns the frontmost window) yields
+        // no main-process line.
+        let output = Command::new("ps")
+            .arg("-p")
+            .arg(pid.to_string())
+            .arg("-o")
+            .arg("args=")
+            .output()?;
+        if !output.status.success() {
+            return Ok(super::FrontmostApp::OtherApp);
+        }
+        Ok(
+            match main_process_arg_lines(&String::from_utf8_lossy(&output.stdout))
+                .into_iter()
+                .next()
+            {
+                Some(line) => super::FrontmostApp::Claude(line),
+                None => super::FrontmostApp::OtherApp,
+            },
+        )
+    }
 }
 
 /// Keep only the Claude Desktop *main* process lines from `ps -o args=` output.

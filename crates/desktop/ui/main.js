@@ -1512,6 +1512,33 @@ async function refreshRunning() {
   renderTakeover();
 }
 
+// Answer to the tray's "いまの環境を確認". Payload kinds: "claude" with the
+// resolved environment (or null for a data directory CSW does not manage),
+// "self" (this settings window was frontmost), "other". Text is built with
+// T() because it embeds the environment name (user data).
+function handleWhereami(p) {
+  if (!p || !p.kind) return;
+  if (p.kind === 'claude' && p.environment) {
+    const name = p.environment;
+    if (profiles.some((x) => x.name === name)) withTransition(() => showDetail(name));
+    showToast(name === 'default'
+      ? T('前面の Claude は既存の Claude です。', 'The Claude in front is Existing Claude.')
+      : T(`前面の Claude は「${name}」です。`, `The Claude in front is "${name}".`));
+    return;
+  }
+  if (p.kind === 'claude') {
+    showToast(T('前面の Claude は、CSW のどの環境でもないデータで動いています。',
+      "The Claude in front runs on data outside CSW's environments."));
+    return;
+  }
+  if (p.kind === 'self') {
+    showToast(T('この設定ウィンドウが前面です。確かめたい Claude のウィンドウをクリックしてから、もう一度お試しください。',
+      'This settings window is in front. Click the Claude window you want to check, then try again.'));
+    return;
+  }
+  showToast(T('前面のウィンドウは Claude ではありません。', 'The window in front is not Claude.'));
+}
+
 // The update-takeover notice. The watcher (Rust) records the transition; this
 // banner explains it and points back to the environment the user was in. All
 // text is built with T(): it embeds the environment name (user data).
@@ -1576,6 +1603,15 @@ function wireEvents() {
 
   window.addEventListener('focus', revalidateRunning);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) revalidateRunning(); });
+
+  // The tray's "いまの環境を確認": the Rust side resolves the frontmost app
+  // before showing this window, then emits the result here.
+  if (HAS_TAURI && window.__TAURI__.event) {
+    window.__TAURI__.event.listen('whereami', (e) => handleWhereami(e.payload));
+  } else {
+    // Browser QA drives the same handler directly.
+    window.__DEV_WHEREAMI = handleWhereami;
+  }
 
   el.btnTakeoverClose.addEventListener('click', async () => {
     try { await invoke('dismiss_takeover_notice'); } catch (e) { /* the banner hides regardless */ }

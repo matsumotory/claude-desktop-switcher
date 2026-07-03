@@ -67,6 +67,22 @@ pub trait PlatformProvider: Send + Sync {
     /// command line, used to tell which environment (`--user-data-dir`) is running.
     /// Empty when no Claude is running.
     fn running_desktop_args(&self) -> Result<Vec<String>>;
+
+    /// What owns the frontmost window right now. Read on demand only (the
+    /// tray's "which environment is this?" action), never polled: reading the
+    /// frontmost application is a privacy-relevant lookup and stays tied to an
+    /// explicit user action (docs/PRIVACY.md).
+    fn frontmost_app(&self) -> Result<FrontmostApp>;
+}
+
+/// The owner of the frontmost window, as far as CSW needs to know: another
+/// app, CSW itself (the settings window), or a Claude Desktop main process
+/// carrying its args line for environment resolution.
+#[derive(Debug, Clone, PartialEq)]
+pub enum FrontmostApp {
+    OtherApp,
+    ThisApp,
+    Claude(String),
 }
 
 /// Create the platform provider for the current OS.

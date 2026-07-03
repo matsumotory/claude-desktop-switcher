@@ -15,6 +15,8 @@ pub struct MockPlatformProvider {
     fail_trash: AtomicBool,
     /// Test knob: arg lines returned by `running_desktop_args` (running main procs).
     running_args: std::sync::Mutex<Vec<String>>,
+    /// Test knob: what `frontmost_app` reports.
+    frontmost: std::sync::Mutex<crate::platform::FrontmostApp>,
 }
 
 impl MockPlatformProvider {
@@ -27,7 +29,14 @@ impl MockPlatformProvider {
             fail_symlink: AtomicBool::new(false),
             fail_trash: AtomicBool::new(false),
             running_args: std::sync::Mutex::new(Vec::new()),
+            frontmost: std::sync::Mutex::new(crate::platform::FrontmostApp::OtherApp),
         }
+    }
+
+    /// Builder: set what `frontmost_app` reports.
+    pub fn with_frontmost(self, front: crate::platform::FrontmostApp) -> Self {
+        *self.frontmost.lock().unwrap() = front;
+        self
     }
 
     /// Builder: make `is_claude_desktop_running` report `running`.
@@ -122,6 +131,10 @@ impl PlatformProvider for MockPlatformProvider {
 
     fn running_desktop_args(&self) -> Result<Vec<String>> {
         Ok(self.running_args.lock().unwrap().clone())
+    }
+
+    fn frontmost_app(&self) -> Result<crate::platform::FrontmostApp> {
+        Ok(self.frontmost.lock().unwrap().clone())
     }
 
     fn move_to_trash(&self, path: &std::path::Path) -> Result<()> {

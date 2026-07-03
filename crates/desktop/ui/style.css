@@ -1052,13 +1052,18 @@ code, .code-line { font-family: var(--font-mono); }
 /* --------------------------------------------------------------------- Toast */
 .toast-area {
   position: fixed;
-  right: 16px; bottom: 16px;
+  /* Both margins guarded: toasts can quote an unbroken 64-character
+     environment name, which must wrap inside the window at its 600px
+     minimum instead of running off the left edge. */
+  left: 16px; right: 16px; bottom: 16px;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 8px;
   z-index: 50;
   pointer-events: none;
 }
+.toast span { overflow-wrap: anywhere; }
 .toast {
   display: flex;
   align-items: center;

@@ -19,6 +19,9 @@ humantime = "2.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 trash = "5.2.6"
+# Same version tauri already pulls in; used only to read the frontmost
+# application's PID for the on-demand "which environment is this?" action.
+objc2-app-kit = { version = "0.3", features = ["NSWorkspace", "NSRunningApplication"] }
 
 [dev-dependencies]
 tempfile = "3.10"

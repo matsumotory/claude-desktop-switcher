@@ -1,0 +1,7 @@
+{
+  "$schema": "gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The settings window subscribes to events emitted from the tray (whereami). Tauri v2 rejects core plugin IPC (plugin:event|listen) unless a capability grants it, so this is required for the tray-to-window answer path.",
+  "windows": ["main"],
+  "permissions": ["core:event:default"]
+}
