@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.20.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.19.1...v0.20.0) (2026-07-03)
+
+
+### Features
+
+* **desktop:** 初回起動にサインインの道しるべカードを表示する ([cc62c0a](https://github.com/matsumotory/claude-desktop-switcher/commit/cc62c0aa66fd5e20b71bbaed033a241724399519))
+* 環境の用途メモと最終起動・来歴を追加する ([0ba447a](https://github.com/matsumotory/claude-desktop-switcher/commit/0ba447ace5ff8f3bc53263ecc75c73311d4751a1))
+
 ## [0.19.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.19.0...v0.19.1) (2026-07-02)
 
 
