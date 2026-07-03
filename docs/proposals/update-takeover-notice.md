@@ -1,7 +1,8 @@
 ---
 title: 更新後の乗り移り検知と案内
 created: 2026-07-03
-status: approved
+status: in-progress
+pr: 163
 related_prs: []
 related_issues: []
 ---
