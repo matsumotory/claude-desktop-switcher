@@ -405,8 +405,10 @@ code, .code-line { font-family: var(--font-mono); }
    the primary action on the right (macOS button order). */
 /* display:flex would defeat the hidden attribute (author styles beat the UA's
    [hidden]{display:none}), so re-assert it like .view[hidden] does. */
-.dmg-banner[hidden] { display: none; }
-.dmg-banner {
+.dmg-banner[hidden],
+.takeover-banner[hidden] { display: none; }
+.dmg-banner,
+.takeover-banner {
   display: flex;
   /* At the real window minimum (600px) the actions wrap below the text and
      stay right-aligned via margin-left:auto. */
@@ -427,6 +429,28 @@ code, .code-line { font-family: var(--font-mono); }
   line-height: 1.55;
   line-break: strict;
   color: var(--ink);
+  /* The takeover text embeds the environment name (user data, up to 64
+     unbroken characters): break anywhere instead of overflowing the banner.
+     Harmless for the DMG banner's fixed copy. */
+  overflow-wrap: anywhere;
+}
+/* The switch button also embeds the environment name: the action row and the
+   button must both be allowed to shrink so the name truncates with an
+   ellipsis instead of pushing past the viewport (buttons are otherwise
+   nowrap + flex-shrink: 0). */
+.takeover-banner .dmg-banner-actions {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+.takeover-banner .btn-primary {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 /* Keep the short closing question unbroken so the Japanese line break lands on
    the sentence boundary, never inside a word (only present in the JA markup;

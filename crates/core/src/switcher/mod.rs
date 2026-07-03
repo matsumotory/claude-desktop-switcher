@@ -81,6 +81,15 @@ pub fn desktop_dir_running(target_dir: &Path, running_args: &[String], default_d
     target_dir == default_dir && running_args.iter().any(|a| !a.contains("--user-data-dir="))
 }
 
+/// True when a live Claude main process was launched without `--user-data-dir`,
+/// meaning it runs on the default data directory and was not started by CSW:
+/// the Dock, or Squirrel's post-update relaunch, which drops the arguments.
+/// The takeover notice uses this to tell "the update restarted Claude outside
+/// the environment" apart from a CSW-launched existing Claude.
+pub fn unmanaged_default_running(running_args: &[String]) -> bool {
+    running_args.iter().any(|a| !a.contains("--user-data-dir="))
+}
+
 /// True if `args` contains `needle` as a whole token: followed by a space or the
 /// end of the string. This keeps a value like `.../Claude` from matching a longer
 /// sibling `.../Claude2`, while still allowing the value itself to contain spaces
@@ -215,5 +224,21 @@ mod tests {
         let work = Path::new("/w");
         assert!(!desktop_dir_running(work, &[], default_dir));
         assert!(!desktop_dir_running(default_dir, &[], default_dir));
+    }
+
+    // Spec: docs/proposals/update-takeover-notice.md. A main process without
+    // --user-data-dir was launched outside CSW (Dock, or Squirrel's post-update
+    // relaunch) and runs on the default data directory.
+    #[test]
+    fn unmanaged_default_running_detects_argless_main_process() {
+        assert!(unmanaged_default_running(&[
+            "...MacOS/Claude".to_string(),
+            "...MacOS/Claude --user-data-dir=/w".to_string(),
+        ]));
+        assert!(!unmanaged_default_running(&[
+            "...MacOS/Claude --user-data-dir=/w".to_string(),
+            "...MacOS/Claude --user-data-dir=/d".to_string(),
+        ]));
+        assert!(!unmanaged_default_running(&[]));
     }
 }
