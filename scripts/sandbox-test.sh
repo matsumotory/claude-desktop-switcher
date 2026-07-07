@@ -353,17 +353,50 @@ test_v7_hooks_via_symlink() {
         log_info "  Hooks in symlinked settings.json:"
         echo "$hooks" | head -20
 
-        if echo "$hooks" | grep -q "matsumotory-memory"; then
-            log_ok "V7: matsumotory-memory hooks visible through symlink"
+        if [ -n "$hooks" ] && [ "$hooks" != "{}" ] && [ "$hooks" != "parse error" ]; then
+            log_ok "V7: Hooks visible through symlink"
 
-            # Check if the hook script exists
-            local hook_script="/Users/r-matsumoto/matsumotory-memory/bin/sync.py"
-            if [ -f "$hook_script" ]; then
-                log_ok "V7: Hook script exists at $hook_script"
-                append_result 7 "Hooks via symlinked settings.json" "PASS" "Hooks visible and script exists"
+            # Check that the script files referenced by hook commands exist
+            local hook_scripts
+            hook_scripts=$(echo "$hooks" | python3 -c "
+import json, shlex, sys
+
+def commands(node):
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == 'command' and isinstance(value, str):
+                yield value
+            else:
+                yield from commands(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from commands(item)
+
+for command in commands(json.load(sys.stdin)):
+    for token in shlex.split(command):
+        if token.startswith('/'):
+            print(token)
+            break
+" 2>/dev/null || true)
+
+            if [ -z "$hook_scripts" ]; then
+                append_result 7 "Hooks via symlinked settings.json" "PASS" "Hooks visible (no script paths referenced)"
             else
-                log_warn "V7: Hook script not found at $hook_script"
-                append_result 7 "Hooks via symlinked settings.json" "PARTIAL" "Hooks visible but script not found"
+                local missing=0 script
+                while IFS= read -r script; do
+                    if [ -f "$script" ]; then
+                        log_ok "V7: Hook script exists at $script"
+                    else
+                        log_warn "V7: Hook script not found at $script"
+                        missing=1
+                    fi
+                done <<< "$hook_scripts"
+
+                if [ "$missing" -eq 0 ]; then
+                    append_result 7 "Hooks via symlinked settings.json" "PASS" "Hooks visible and scripts exist"
+                else
+                    append_result 7 "Hooks via symlinked settings.json" "PARTIAL" "Hooks visible but some scripts not found"
+                fi
             fi
         else
             log_warn "V7: No hooks found in settings"
