@@ -1,7 +1,8 @@
 ---
 title: 前回開いていた環境をまとめて開き直す
 created: 2026-07-07
-status: approved
+status: in-progress
+pr: 169
 related_prs: [163]
 related_issues: []
 ---
