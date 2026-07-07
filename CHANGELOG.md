@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.21.0...v0.22.0) (2026-07-07)
+
+
+### Features
+
+* **desktop:** 前回開いていた環境をまとめて開き直せるようにする ([1825210](https://github.com/matsumotory/claude-desktop-switcher/commit/18252106ef9f437f8250373a04b3cbcee05e6da0))
+
 ## [0.21.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.20.0...v0.21.0) (2026-07-03)
 
 
