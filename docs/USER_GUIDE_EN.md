@@ -182,3 +182,6 @@ Yes. Press **"Check the current environment"** in the menu bar icon's menu: CSW 
 **Q. Can an update to Claude Desktop take me out of my environment?**
 Yes, it can happen. The automatic relaunch after an update does not go through CSW, so the reopened Claude runs on Existing Claude's data. The window looks the same, but the "In use" marker in CSW moves to Existing Claude, and if CSW is running, the settings window shows a notice. To continue in your environment, quit Claude and press "Switch and launch" again.
 
+**Q. Reopening every environment by hand after each update is tedious.**
+Applying an update requires quitting every running Claude (the app's updater waits for them all to quit before it swaps the app). So CSW remembers the environments that were open together the last time you quit them all, and a single "Reopen" in the settings window banner opens them again. Environments already running are skipped automatically. If a shared environment cannot run alongside another Claude, only that one is flagged with "quit the Claude that is running" first. Nothing launches automatically; it opens only when you press the button.
+

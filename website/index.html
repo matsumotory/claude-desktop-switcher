@@ -281,6 +281,10 @@
                     <p class="faq-a">Environments set to "separate everything" can be opened side by side in a new window, without quitting a running Claude: they share nothing, so concurrent instances cannot clash over the same file. The detail view shows a dedicated "Launch alongside" button for them. Environments created with "separate conversations & memory too" or "separate the account only" share settings, so they open one at a time, because a running instance can write back to a shared file and clash with the switch; quit the running Claude before switching to one of those.</p>
                 </div>
                 <div class="faq-item">
+                    <p class="faq-q">Reopening every environment after a Claude update is tedious.</p>
+                    <p class="faq-a">Applying an update requires quitting every running Claude, because the app's updater waits for them all to quit before it swaps the app. CSW remembers the environments that were open together the last time you quit them all, and a single "Reopen" in the settings window banner opens them again. Environments already running are skipped automatically. Nothing launches on its own; it opens only when you press the button.</p>
+                </div>
+                <div class="faq-item">
                     <p class="faq-q">Can CSW list each environment's Claude usage?</p>
                     <p class="faq-a">Not at the moment. This app makes no internet connection and never touches your passwords or sign-in. There is currently no way to obtain an accurate figure for Claude usage against its limits, including desktop-app activity, while keeping to that approach, so it is not offered as a feature. If an official, safe way becomes available, we will consider adding it. You can check each environment's Claude usage in Claude itself by opening Claude for that environment.</p>
                 </div>

@@ -418,6 +418,100 @@ async fn get_takeover_notice(state: State<'_, AppState>) -> Result<Option<String
     Ok(state.takeover_from.lock().unwrap().clone())
 }
 
+/// Build the launch classification of every known environment, for
+/// `plan_relaunch`. The default environment is included.
+fn relaunch_envs(state: &AppState) -> Vec<csw_core::switcher::RelaunchEnv> {
+    state
+        .profile_manager
+        .list_profiles()
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|name| {
+            state
+                .profile_manager
+                .get_profile(&name)
+                .ok()
+                .map(|p| csw_core::switcher::RelaunchEnv {
+                    name,
+                    is_default: p.profile.is_default,
+                    is_fully_isolated: p.sharing.is_fully_isolated(),
+                })
+        })
+        .collect()
+}
+
+/// The recorded reopen set, minus environments currently running, for the
+/// settings window's "reopen the previous set" banner. Empty when there is
+/// nothing to offer (SPECIFICATION.md §5.A 前回開いていた環境の復元).
+#[tauri::command]
+async fn get_reopen_offer(state: State<'_, AppState>) -> Result<Vec<String>, String> {
+    let recorded = csw_core::session::load_reopen_set(&state.provider.app_data_dir());
+    let running = running_profile_names(&state);
+    let known: Vec<String> = relaunch_envs(&state).into_iter().map(|e| e.name).collect();
+    Ok(recorded
+        .into_iter()
+        .filter(|n| !running.contains(n) && known.contains(n))
+        .collect())
+}
+
+/// Reopen the previously-open set. Launches the environments that are safe to
+/// open now and reports which ones need the running Claude quit first.
+#[tauri::command]
+async fn reopen_previous_set(
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<ReopenResult, String> {
+    let recorded = csw_core::session::load_reopen_set(&state.provider.app_data_dir());
+    let running = running_profile_names(&state);
+    let envs = relaunch_envs(&state);
+    let plan = csw_core::switcher::plan_relaunch(&recorded, &running, &envs);
+
+    let mut launched: Vec<String> = Vec::new();
+    let mut blocked = plan.blocked;
+    // Seat the single non-concurrent environment first: switch_to is refused
+    // while Claude runs, so it must go before any additional windows.
+    if let Some(name) = &plan.active {
+        let switcher = ContextSwitcher::new(state.provider.clone(), state.profile_manager.clone());
+        if switcher.switch_to(name).is_ok()
+            && let Ok(profile) = state.profile_manager.get_profile(name)
+        {
+            let _ = csw_core::switcher::desktop::launch_desktop(&profile, state.provider.as_ref());
+            launched.push(name.clone());
+        } else {
+            // A Claude may have started between planning and now, so the switch
+            // was refused: report it instead of dropping it silently.
+            blocked.push(name.clone());
+        }
+    }
+    for name in &plan.additional {
+        if let Ok(profile) = state.profile_manager.get_profile(name) {
+            let _ = csw_core::switcher::desktop::launch_desktop(&profile, state.provider.as_ref());
+            launched.push(name.clone());
+        }
+    }
+
+    // Keep the recorded set while anything is still blocked, so the banner can
+    // re-offer those environments after the user quits the running Claude.
+    // Clear it once there is nothing left to reopen.
+    if blocked.is_empty() {
+        let _ = csw_core::session::clear_reopen_set(&state.provider.app_data_dir());
+    }
+    update_tray_menu(&app)?;
+    Ok(ReopenResult { launched, blocked })
+}
+
+#[derive(serde::Serialize)]
+struct ReopenResult {
+    launched: Vec<String>,
+    blocked: Vec<String>,
+}
+
+/// Dismiss the reopen offer: clear the recorded set so it does not prompt again.
+#[tauri::command]
+async fn dismiss_reopen(state: State<'_, AppState>) -> Result<(), String> {
+    csw_core::session::clear_reopen_set(&state.provider.app_data_dir()).map_err(|e| e.to_string())
+}
+
 /// Dismiss the pending takeover notice (the banner's 閉じる).
 #[tauri::command]
 async fn dismiss_takeover_notice(state: State<'_, AppState>) -> Result<(), String> {
@@ -723,6 +817,10 @@ fn main() {
                 let mut prev_names: Vec<String> = Vec::new();
                 let mut prev_unmanaged = false;
                 let mut recently_gone: Vec<(String, std::time::Instant)> = Vec::new();
+                // High-water union of environments seen running together since
+                // the last all-quit; persisted as the reopen set when everything
+                // has quit, so the settings window can offer to reopen them.
+                let mut session_union: Vec<String> = Vec::new();
                 loop {
                     std::thread::sleep(std::time::Duration::from_secs(3));
                     let state = watch_handle.state::<AppState>();
@@ -732,6 +830,25 @@ fn main() {
                     let unmanaged = csw_core::switcher::unmanaged_default_running(&args);
                     let names = running_profile_names_from(&state, &args);
                     let now = std::time::Instant::now();
+
+                    // Record the reopen set. Accumulate everything seen open in
+                    // this session; when all Claude have quit, freeze the union
+                    // as the set to offer and start the next session fresh.
+                    if names.is_empty() {
+                        if !session_union.is_empty() {
+                            let _ = csw_core::session::save_reopen_set(
+                                &state.provider.app_data_dir(),
+                                &session_union,
+                            );
+                            session_union.clear();
+                        }
+                    } else {
+                        for n in &names {
+                            if !session_union.contains(n) {
+                                session_union.push(n.clone());
+                            }
+                        }
+                    }
 
                     let mut newly_gone = false;
                     for name in &prev_names {
@@ -805,6 +922,9 @@ fn main() {
             set_profile_note,
             get_takeover_notice,
             dismiss_takeover_notice,
+            get_reopen_offer,
+            reopen_previous_set,
+            dismiss_reopen,
             launch_additional_window,
             get_desktop_running_status,
             get_running_profiles,
