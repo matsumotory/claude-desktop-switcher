@@ -62,7 +62,7 @@ jobs:
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # action-v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
