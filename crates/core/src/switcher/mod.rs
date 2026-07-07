@@ -115,6 +115,76 @@ pub fn unmanaged_default_running(running_args: &[String]) -> bool {
     running_args.iter().any(|a| !a.contains("--user-data-dir="))
 }
 
+/// One environment's launch classification for [`plan_relaunch`]: its name, and
+/// whether it can run concurrently. `is_default` is the existing Claude; a
+/// non-fully-isolated environment shares files and must run alone.
+#[derive(Debug, Clone)]
+pub struct RelaunchEnv {
+    pub name: String,
+    pub is_default: bool,
+    pub is_fully_isolated: bool,
+}
+
+/// What to launch to reopen a previously-open set of environments, and what
+/// cannot be launched right now.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct RelaunchPlan {
+    /// The single non-concurrent environment (existing Claude, or a shared/copy
+    /// environment) to switch to first. At most one, and only when nothing else
+    /// is running.
+    pub active: Option<String>,
+    /// Fully-isolated environments to open alongside, in additional windows.
+    pub additional: Vec<String>,
+    /// Environments that cannot be reopened now because another Claude is
+    /// running (they share files and run one at a time). The UI tells the user
+    /// to quit the running Claude first.
+    pub blocked: Vec<String>,
+}
+
+/// Plan how to reopen a recorded set of environments safely.
+///
+/// - Environments already running are excluded outright (default and
+///   fully-isolated alike): `open -n` always spawns a new process, so
+///   relaunching a running one would double it on the same data directory.
+/// - Fully-isolated environments share nothing and run side by side, so they go
+///   to `additional`.
+/// - The existing Claude and shared/copy environments run one at a time. With
+///   nothing running, one is chosen as `active`; the rest go to `blocked`. If
+///   any Claude is already running, `switch_to` would be refused, so all
+///   non-concurrent candidates are `blocked`.
+///
+/// `envs` describes every known environment; entries in `recorded` or `running`
+/// with no matching env are ignored (e.g. an environment deleted since capture).
+pub fn plan_relaunch(
+    recorded: &[String],
+    running: &[String],
+    envs: &[RelaunchEnv],
+) -> RelaunchPlan {
+    let lookup = |name: &str| envs.iter().find(|e| e.name == name);
+    // Any Claude running at all blocks a switch_to (its guard refuses while
+    // Claude Desktop runs), so a non-concurrent environment can only seat when
+    // nothing is running.
+    let anything_running = running.iter().any(|n| lookup(n).is_some());
+
+    let mut plan = RelaunchPlan::default();
+    for name in recorded {
+        if running.contains(name) {
+            continue; // already up; never relaunch a running instance
+        }
+        let Some(env) = lookup(name) else {
+            continue; // unknown/deleted environment
+        };
+        if !env.is_default && env.is_fully_isolated {
+            plan.additional.push(name.clone());
+        } else if !anything_running && plan.active.is_none() {
+            plan.active = Some(name.clone());
+        } else {
+            plan.blocked.push(name.clone());
+        }
+    }
+    plan
+}
+
 /// True if `args` contains `needle` as a whole token: followed by a space or the
 /// end of the string. This keeps a value like `.../Claude` from matching a longer
 /// sibling `.../Claude2`, while still allowing the value itself to contain spaces
@@ -316,5 +386,99 @@ mod tests {
             "...MacOS/Claude --user-data-dir=/d".to_string(),
         ]));
         assert!(!unmanaged_default_running(&[]));
+    }
+
+    // Spec: docs/proposals/reopen-previous-set.md. Reopen a recorded set safely.
+    fn envs() -> Vec<RelaunchEnv> {
+        vec![
+            RelaunchEnv {
+                name: "default".into(),
+                is_default: true,
+                is_fully_isolated: false,
+            },
+            RelaunchEnv {
+                name: "Iso1".into(),
+                is_default: false,
+                is_fully_isolated: true,
+            },
+            RelaunchEnv {
+                name: "Iso2".into(),
+                is_default: false,
+                is_fully_isolated: true,
+            },
+            RelaunchEnv {
+                name: "Shared".into(),
+                is_default: false,
+                is_fully_isolated: false,
+            },
+        ]
+    }
+
+    #[test]
+    fn plan_relaunch_excludes_running_default_and_isolated() {
+        // The existing Claude already relaunched (default running) and Iso1 is
+        // up; only the still-closed isolated environment gets reopened.
+        let plan = plan_relaunch(
+            &["default".into(), "Iso1".into(), "Iso2".into()],
+            &["default".into(), "Iso1".into()],
+            &envs(),
+        );
+        assert_eq!(plan.active, None); // default already running, not relaunched
+        assert_eq!(plan.additional, vec!["Iso2".to_string()]);
+        assert!(plan.blocked.is_empty());
+    }
+
+    #[test]
+    fn plan_relaunch_seats_one_primary_and_adds_isolated_when_idle() {
+        // Nothing running: the existing Claude seats as active, the isolated
+        // environments open alongside it.
+        let plan = plan_relaunch(
+            &["default".into(), "Iso1".into(), "Iso2".into()],
+            &[],
+            &envs(),
+        );
+        assert_eq!(plan.active.as_deref(), Some("default"));
+        assert_eq!(
+            plan.additional,
+            vec!["Iso1".to_string(), "Iso2".to_string()]
+        );
+        assert!(plan.blocked.is_empty());
+    }
+
+    #[test]
+    fn plan_relaunch_blocks_second_non_concurrent() {
+        // Both the existing Claude and a shared environment were recorded, and
+        // nothing runs: only one non-concurrent can seat; the other is blocked.
+        let plan = plan_relaunch(
+            &["default".into(), "Shared".into(), "Iso1".into()],
+            &[],
+            &envs(),
+        );
+        assert_eq!(plan.active.as_deref(), Some("default"));
+        assert_eq!(plan.additional, vec!["Iso1".to_string()]);
+        assert_eq!(plan.blocked, vec!["Shared".to_string()]);
+    }
+
+    #[test]
+    fn plan_relaunch_blocks_shared_while_something_runs() {
+        // The existing Claude is up (e.g. relaunched by the update). A recorded
+        // shared environment cannot be switched to while Claude runs, but a
+        // recorded isolated environment still opens alongside.
+        let plan = plan_relaunch(
+            &["Shared".into(), "Iso1".into()],
+            &["default".into()],
+            &envs(),
+        );
+        assert_eq!(plan.active, None);
+        assert_eq!(plan.additional, vec!["Iso1".to_string()]);
+        assert_eq!(plan.blocked, vec!["Shared".to_string()]);
+    }
+
+    #[test]
+    fn plan_relaunch_ignores_deleted_environment() {
+        let plan = plan_relaunch(&["Gone".into(), "Iso1".into()], &[], &envs());
+        assert_eq!(plan.additional, vec!["Iso1".to_string()]);
+        assert_eq!(plan.active, None);
+        assert!(plan.blocked.is_empty());
     }
 }

@@ -116,6 +116,16 @@
         </div>
       </div>
 
+      <!-- Reopen the previously-open set. The text lists the actual environment
+           names, so it is built at runtime with T(). -->
+      <div class="takeover-banner" id="reopenBanner" hidden>
+        <p class="dmg-banner-text" id="reopenText"></p>
+        <div class="dmg-banner-actions">
+          <button type="button" class="btn btn-ghost" id="btnReopenClose">閉じる</button>
+          <button type="button" class="btn btn-primary" id="btnReopen">開き直す</button>
+        </div>
+      </div>
+
       <!-- (a) Empty / welcome -->
       <section class="view" id="viewEmpty">
         <div class="view-main">

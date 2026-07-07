@@ -104,7 +104,7 @@ const EN = {
   'この環境は、起動中の Claude を終了せずに開けます。': 'You can open this environment without quitting a running Claude.',
   '起動中の Claude を終了してから、もう一度押してください。設定の衝突を防ぐため、共有を含む環境の Claude は同時に開けません。':
     'Quit the running Claude, then press this again. To avoid configuration conflicts, environments that share settings cannot be open at once.',
-  '閉じる': 'Close', 'もう一度試す': 'Try again',
+  '閉じる': 'Close', 'もう一度試す': 'Try again', '開き直す': 'Reopen',
   // Create flow
   '新しい環境を作る': 'Create a new environment',
   'この環境を作る': 'Create this environment', '作成する': 'Create',
@@ -433,6 +433,10 @@ const el = {
   btnDmgEject: $('btnDmgEject'),
   btnDmgLater: $('btnDmgLater'),
   takeoverBanner: $('takeoverBanner'),
+  reopenBanner: $('reopenBanner'),
+  reopenText: $('reopenText'),
+  btnReopen: $('btnReopen'),
+  btnReopenClose: $('btnReopenClose'),
   takeoverText: $('takeoverText'),
   btnTakeoverSwitch: $('btnTakeoverSwitch'),
   btnTakeoverClose: $('btnTakeoverClose'),
@@ -1509,7 +1513,30 @@ async function refreshRunning() {
   catch (e) { desktopRunning = false; }
   try { takeoverFrom = await invoke('get_takeover_notice'); }
   catch (e) { takeoverFrom = null; }
+  try { reopenOffer = await invoke('get_reopen_offer'); }
+  catch (e) { reopenOffer = []; }
   renderTakeover();
+  renderReopen();
+}
+
+// The reopen-previous-set offer. The watcher records which environments were
+// open together before the last all-quit; this banner offers to reopen the ones
+// not already running. The names are user data, built with T(). Suppressed
+// while the takeover banner is up so only one banner shows at a time.
+let reopenOffer = [];
+function renderReopen() {
+  const takeoverShowing = takeoverFrom && profiles.some((p) => p.name === takeoverFrom);
+  if (!reopenOffer.length || takeoverShowing) {
+    el.reopenBanner.hidden = true;
+    return;
+  }
+  const disp = (n) => (n === 'default' ? T('既存の Claude', 'Existing Claude') : n);
+  const listJa = reopenOffer.map((n) => `「${disp(n)}」`).join('');
+  const listEn = reopenOffer.map((n) => `"${disp(n)}"`).join(', ');
+  el.reopenText.textContent = T(
+    `前回開いていた${listJa}を開き直せます。更新などで全部閉じたときに使えます。`,
+    `You can reopen ${listEn}, which you had open last time. Use it after you quit everything for an update.`);
+  el.reopenBanner.hidden = false;
 }
 
 // Answer to the tray's "いまの環境を確認". Payload kinds: "claude" with the
@@ -1627,6 +1654,31 @@ function wireEvents() {
     // The switch flow itself guides the quit: while the outside-CSW Claude is
     // running, doSwitch shows the standard blocked footer with instructions.
     doSwitch(name, !!d.supports_concurrent_windows);
+  });
+
+  el.btnReopenClose.addEventListener('click', async () => {
+    try { await invoke('dismiss_reopen'); } catch (e) { /* the banner hides regardless */ }
+    reopenOffer = [];
+    el.reopenBanner.hidden = true;
+  });
+  el.btnReopen.addEventListener('click', async () => {
+    let res;
+    try { res = await invoke('reopen_previous_set'); }
+    catch (e) { showToast(T('環境を開き直せませんでした。', 'Could not reopen the environments.'), true); return; }
+    reopenOffer = [];
+    el.reopenBanner.hidden = true;
+    const disp = (n) => (n === 'default' ? T('既存の Claude', 'Existing Claude') : n);
+    if (res.launched && res.launched.length) {
+      showToast(T(`${res.launched.length} 個の環境を開き直しました。`,
+        `Reopened ${res.launched.length} environment${res.launched.length === 1 ? '' : 's'}.`));
+    }
+    if (res.blocked && res.blocked.length) {
+      const listJa = res.blocked.map((n) => `「${disp(n)}」`).join('');
+      const listEn = res.blocked.map((n) => `"${disp(n)}"`).join(', ');
+      showToast(T(`${listJa}を開くには、いま動いている Claude を終了してください。`,
+        `To reopen ${listEn}, quit the Claude that is running.`), true);
+    }
+    await refreshRunning();
   });
 
   el.emptyScroll.addEventListener('scroll', () => fadeFor(el.emptyScroll, el.emptyFade), { passive: true });
@@ -1881,6 +1933,20 @@ function devInvoke(cmd, args) {
       return Promise.resolve(window.__DEV_TAKEOVER || null);
     case 'dismiss_takeover_notice':
       window.__DEV_TAKEOVER = null;
+      return Promise.resolve(null);
+    case 'get_reopen_offer':
+      // Browser QA: drive the reopen scenario via window.__DEV_REOPEN (array of names).
+      return Promise.resolve(window.__DEV_REOPEN || []);
+    case 'reopen_previous_set': {
+      const offer = window.__DEV_REOPEN || [];
+      window.__DEV_REOPEN = [];
+      // Mirror the plan: the existing Claude / a shared env is "blocked" here
+      // for QA when marked, isolated ones "launched".
+      const blocked = (window.__DEV_REOPEN_BLOCKED || []).filter((n) => offer.includes(n));
+      return Promise.resolve({ launched: offer.filter((n) => !blocked.includes(n)), blocked });
+    }
+    case 'dismiss_reopen':
+      window.__DEV_REOPEN = [];
       return Promise.resolve(null);
     case 'inspect_profile': {
       // Healthy sample report for browser QA / screenshots, shaped exactly like

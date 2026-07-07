@@ -32,6 +32,7 @@ CSW がファイルを書き込むのは、自分専用のフォルダ `~/.conte
 | パス | 内容 |
 |---|---|
 | `~/.context-switcher-claude/config.toml` | いま選ばれている環境の名前 |
+| `~/.context-switcher-claude/session.toml` | 前回すべて閉じたときに同時に開いていた環境の名前 |
 | `~/.context-switcher-claude/profiles/<環境名>/profile.toml` | その環境の名前・メモ・作成の記録・共有モード |
 | `~/.context-switcher-claude/profiles/<環境名>/state.toml` | その環境を CSW から最初と最後に起動した日時 |
 | `~/.context-switcher-claude/profiles/<環境名>/desktop-data/` | その環境の Claude Desktop App 用データ |
