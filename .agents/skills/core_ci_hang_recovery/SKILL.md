@@ -126,4 +126,5 @@ done
 ## 7. 関連
 
 - 関連スキル: `core_pr_review_cycle` (PR フロー / マージ判定), `modern-rust-workflow` (cargo 検証コマンド全般), `core_bug_fix_protocol` (rerun でも直らない = コード側のとき)
+- 反復の安全装置: 同一の失敗への修正上限・悪化時の revert・未収束時の報告は `core_ai_workflow` の「ループの安全装置」を参照
 - 上位ルール: CI green を待ってから `gh pr merge --squash`、`--admin` / `--no-verify` は使わない。`main` への直接 push 禁止、作業は `.claude/worktrees/<name>` で隔離
