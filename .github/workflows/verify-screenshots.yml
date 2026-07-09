@@ -27,7 +27,8 @@ jobs:
       - name: Require regenerated screenshots when the captured UI changes
         run: |
           git fetch --no-tags origin main
-          changed="$(git diff --name-only origin/main...HEAD)"
+          base="$(git merge-base origin/main HEAD)"
+          changed="$(git diff --name-only "$base" HEAD)"
           ui_changed="$(printf '%s\n' "$changed" | grep -E '^crates/desktop/ui/(index\.html|main\.js|style\.css)$' || true)"
           if [ -z "$ui_changed" ]; then
             echo "No captured UI files changed; nothing to enforce."
@@ -39,7 +40,9 @@ jobs:
             printf '%s\n' "$shots_changed"
             exit 0
           fi
-          if git log -1 --format=%B HEAD | grep -q 'Skip-appshot:'; then
+          # pull_request checks out a merge commit, so HEAD's message is "Merge ...".
+          # Scan the PR's own commits (base..HEAD) for the escape-hatch trailer.
+          if git log "$base..HEAD" --format=%B | grep -q 'Skip-appshot:'; then
             echo "A 'Skip-appshot:' trailer is present; treating this UI change as non-visual."
             exit 0
           fi
