@@ -149,8 +149,19 @@ jobs:
           VERSION="${TAG_NAME#v}"
           sed "s/__VERSION__/${VERSION}/g" .github/release-readme.md > RELEASE-README.md
           gh release upload "$TAG_NAME" RELEASE-README.md --clobber
-          BODY="$(gh release view "$TAG_NAME" --json body --jq .body)"
-          if ! printf '%s' "$BODY" | grep -q '### 添付ファイルの説明'; then
+          # release-please sets the body in the previous job, but the API can lag,
+          # so read it back until it is non-empty before this read-modify-write.
+          # Never edit an empty body: writing it back would wipe the changelog
+          # (this clobbered the notes on v0.23.0 and v0.24.0).
+          BODY=""
+          for _ in $(seq 1 15); do
+            BODY="$(gh release view "$TAG_NAME" --json body --jq .body)"
+            [ -n "$BODY" ] && break
+            sleep 4
+          done
+          if [ -z "$BODY" ]; then
+            echo "::warning::Release body is still empty; skipping the asset-guide append so the changelog is not clobbered. RELEASE-README.md is still attached."
+          elif ! printf '%s' "$BODY" | grep -q '### 添付ファイルの説明'; then
             sed "s/__VERSION__/${VERSION}/g" .github/release-notes-assets.md > asset-guide.md
             { printf '%s\n\n' "$BODY"; cat asset-guide.md; } > new-body.md
             gh release edit "$TAG_NAME" --notes-file new-body.md
