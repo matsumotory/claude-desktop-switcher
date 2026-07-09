@@ -68,6 +68,19 @@ pub trait PlatformProvider: Send + Sync {
     /// Empty when no Claude is running.
     fn running_desktop_args(&self) -> Result<Vec<String>>;
 
+    /// The `(pid, args line)` of each running Claude Desktop *main* process. Same
+    /// filtering as [`running_desktop_args`], but keeps the pid so a specific
+    /// environment's instance can be brought to the front. Empty when none run.
+    fn running_desktop_processes(&self) -> Result<Vec<(u32, String)>>;
+
+    /// Bring the running app with this pid to the front (all its windows), via the
+    /// public `NSRunningApplication` API. Returns `Ok(true)` when a running app
+    /// with that pid was found and activation was requested, `Ok(false)` when no
+    /// such process is running. Reads only the target's activation state; never
+    /// injects code and never reads window contents. Tied to an explicit user
+    /// action (the "前面に表示" button), never polled.
+    fn activate_pid(&self, pid: u32) -> Result<bool>;
+
     /// What owns the frontmost window right now. Read on demand only (the
     /// tray's "which environment is this?" action), never polled: reading the
     /// frontmost application is a privacy-relevant lookup and stays tied to an

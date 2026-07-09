@@ -175,6 +175,45 @@ impl PlatformProvider for MacOsProvider {
         )))
     }
 
+    fn running_desktop_processes(&self) -> Result<Vec<(u32, String)>> {
+        let pids = self.claude_desktop_pids()?;
+        if pids.is_empty() {
+            return Ok(vec![]);
+        }
+        let pid_list = pids
+            .iter()
+            .map(|p| p.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        // `ps -o pid=,args=` prints "<pid> <full command line>" per pid, no header.
+        let output = Command::new("ps")
+            .arg("-p")
+            .arg(pid_list)
+            .arg("-o")
+            .arg("pid=,args=")
+            .output()?;
+        if !output.status.success() {
+            return Ok(vec![]);
+        }
+        Ok(main_process_pid_lines(&String::from_utf8_lossy(
+            &output.stdout,
+        )))
+    }
+
+    fn activate_pid(&self, pid: u32) -> Result<bool> {
+        use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
+        // NSRunningApplication is thread-safe. This reads only the target's
+        // activation state and asks the window server to bring its windows
+        // forward; it never injects code into Claude nor reads window contents.
+        // Called only from the explicit "前面に表示" action, never polled.
+        match NSRunningApplication::runningApplicationWithProcessIdentifier(pid as i32) {
+            Some(app) => {
+                Ok(app.activateWithOptions(NSApplicationActivationOptions::ActivateAllWindows))
+            }
+            None => Ok(false),
+        }
+    }
+
     fn frontmost_app(&self) -> Result<super::FrontmostApp> {
         // Only the application's PID is read; window titles and contents are
         // never touched. Called from an explicit user action (tray item).
@@ -227,9 +266,44 @@ fn main_process_arg_lines(ps_output: &str) -> Vec<String> {
         .collect()
 }
 
+/// Parse `ps -o pid=,args=` output into `(pid, args line)` for each Claude main
+/// process. Each line is "<pid> <full command line>"; the leading token is the
+/// pid, the rest is the args line filtered exactly like [`main_process_arg_lines`]
+/// (main process only, Electron helpers dropped).
+fn main_process_pid_lines(ps_output: &str) -> Vec<(u32, String)> {
+    ps_output
+        .lines()
+        .filter_map(|line| {
+            let line = line.trim_start();
+            let (pid_str, args) = line.split_once(char::is_whitespace)?;
+            let pid: u32 = pid_str.trim().parse().ok()?;
+            let args = args.trim();
+            if args.contains("Claude.app/Contents/MacOS/Claude") && !args.contains("--type=") {
+                Some((pid, args.to_string()))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn main_process_pid_lines_pairs_pid_with_main_and_drops_helpers() {
+        let ps = "  101 /Applications/Claude.app/Contents/MacOS/Claude --user-data-dir=/p/A/desktop-data\n\
+                    102 /Applications/Claude.app/Contents/MacOS/Claude --type=renderer --user-data-dir=/p/A/desktop-data\n\
+                    103 /Applications/Claude.app/Contents/MacOS/Claude --type=gpu-process\n\
+                    104 /usr/bin/some-unrelated-process\n\
+                  \n";
+        let pairs = main_process_pid_lines(ps);
+        assert_eq!(pairs.len(), 1, "only the main Claude process survives");
+        assert_eq!(pairs[0].0, 101);
+        assert!(pairs[0].1.contains("--user-data-dir=/p/A/desktop-data"));
+        assert!(!pairs[0].1.contains("--type="));
+    }
 
     #[test]
     fn main_process_arg_lines_keeps_main_drops_helpers_and_others() {

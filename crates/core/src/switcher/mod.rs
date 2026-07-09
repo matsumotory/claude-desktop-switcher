@@ -106,6 +106,26 @@ pub fn environment_for_args_line(
     None
 }
 
+/// The pid of the running Claude main process that belongs to the `target`
+/// environment, so its window can be brought to the front. Each `(pid, line)`
+/// is resolved the same way as [`environment_for_args_line`]: a `--user-data-dir`
+/// match names the environment, and a line without the flag is the existing
+/// Claude (`default`). Returns the first matching pid, or `None` when that
+/// environment has no running Claude.
+pub fn pid_for_environment(
+    processes: &[(u32, String)],
+    envs: &[(String, std::path::PathBuf)],
+    default_dir: &Path,
+    target: &str,
+) -> Option<u32> {
+    processes.iter().find_map(|(pid, line)| {
+        match environment_for_args_line(line, envs, default_dir) {
+            Some(name) if name == target => Some(*pid),
+            _ => None,
+        }
+    })
+}
+
 /// True when a live Claude main process was launched without `--user-data-dir`,
 /// meaning it runs on the default data directory and was not started by CSW:
 /// the Dock, or Squirrel's post-update relaunch, which drops the arguments.
@@ -368,6 +388,45 @@ mod tests {
                 &envs,
                 default_dir
             ),
+            None
+        );
+    }
+
+    // Spec: docs/SPECIFICATION.md「利用中の環境を前面に表示する」. Resolve which
+    // running main process (pid) belongs to a target environment, so its Claude
+    // can be brought to the front. Mirrors environment_for_args_line per process.
+    #[test]
+    fn pid_for_environment_matches_env_default_and_missing() {
+        let default_dir = Path::new("/Users/u/Library/Application Support/Claude");
+        let envs = [
+            (
+                "Work".to_string(),
+                std::path::PathBuf::from("/p/Work/desktop-data"),
+            ),
+            ("default".to_string(), default_dir.to_path_buf()),
+        ];
+        let processes = [
+            (
+                101u32,
+                "...MacOS/Claude --user-data-dir=/p/Work/desktop-data".to_string(),
+            ),
+            (202u32, "...MacOS/Claude".to_string()),
+        ];
+
+        // A managed environment resolves to the pid of its main process.
+        assert_eq!(
+            pid_for_environment(&processes, &envs, default_dir, "Work"),
+            Some(101)
+        );
+        // The existing Claude (no --user-data-dir) resolves to its pid.
+        assert_eq!(
+            pid_for_environment(&processes, &envs, default_dir, "default"),
+            Some(202)
+        );
+        // An environment with no running Claude yields no pid.
+        assert_eq!(pid_for_environment(&[], &envs, default_dir, "Work"), None);
+        assert_eq!(
+            pid_for_environment(&processes, &envs, default_dir, "Other"),
             None
         );
     }

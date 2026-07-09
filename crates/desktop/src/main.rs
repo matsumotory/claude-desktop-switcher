@@ -377,6 +377,36 @@ async fn launch_additional_window(
     Ok(())
 }
 
+/// Bring the running Claude for `name` to the front (all its windows). Resolves
+/// that environment's live main process by its `--user-data-dir` and activates it
+/// via the public `NSRunningApplication` API (no code injection). `Ok(false)` when
+/// no Claude is running for that environment: the "前面に表示" button only appears
+/// while it is in use, so this is a rare race and the UI just refreshes the list.
+/// Synchronous so it runs on the main thread, where AppKit activation belongs.
+#[tauri::command]
+fn activate_environment(name: String, state: State<'_, AppState>) -> Result<bool, String> {
+    let processes = state
+        .provider
+        .running_desktop_processes()
+        .map_err(|e| e.to_string())?;
+    let default_dir = state.provider.claude_desktop_default_dir();
+    let names = state.profile_manager.list_profiles().unwrap_or_default();
+    let envs: Vec<(String, std::path::PathBuf)> = names
+        .into_iter()
+        .filter_map(|n| {
+            state
+                .profile_manager
+                .get_profile(&n)
+                .ok()
+                .map(|p| (n, p.isolation.desktop_user_data_dir))
+        })
+        .collect();
+    match csw_core::switcher::pid_for_environment(&processes, &envs, &default_dir, &name) {
+        Some(pid) => state.provider.activate_pid(pid).map_err(|e| e.to_string()),
+        None => Ok(false),
+    }
+}
+
 /// Names of environments whose Claude Desktop is currently running. With
 /// fully-isolated environments able to run side by side, this can be more than one.
 /// Each profile's `--user-data-dir` is matched against the live main processes.
@@ -926,6 +956,7 @@ fn main() {
             reopen_previous_set,
             dismiss_reopen,
             launch_additional_window,
+            activate_environment,
             get_desktop_running_status,
             get_running_profiles,
             get_default_roots_status,
