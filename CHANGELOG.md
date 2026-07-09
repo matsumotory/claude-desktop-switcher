@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.23.0...v0.24.0) (2026-07-09)
+
+
+### Features
+
+* **desktop:** 起動ボタンの「切り替え」を廃し「この環境を起動」に統一する ([648a297](https://github.com/matsumotory/claude-desktop-switcher/commit/648a297630714f67bea4c1677ea4cac45176ef56))
+
 ## [0.23.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.22.0...v0.23.0) (2026-07-09)
 
 
