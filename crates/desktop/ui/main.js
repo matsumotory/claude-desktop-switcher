@@ -52,8 +52,8 @@ const EN = {
   'あなたが普段使っている Claudeデスクトップアプリと Claude Code の環境は「既存の Claude」として保護され、設定・履歴・ログインは変更されません。':
     'Your everyday Claude Desktop App and Claude Code setup is protected as "Existing Claude"; its settings, history, and sign-in are never changed.',
   '環境を切り替えて使えます': 'Switch between environments',
-  '「利用中」は、いま Claude が起動している環境です。Claude を終了すれば「利用中」は外れ、その環境はまた「切り替えて起動」から開き直せます。設定を共有する環境は衝突を防ぐため一度に1つずつ開くので、別の環境に切り替えるときは先に起動中の Claude を終了します。「すべて分ける」で作った環境は何も共有しないので、起動中の Claude を終了せず、新しいウィンドウで並べて開けます。':
-    '"In use" marks the environment Claude is currently running for. Quit Claude and it clears, so you can reopen that environment from "Switch and launch". Environments that share settings open one at a time to avoid conflicts, so quit the running Claude before switching to another. An environment set to "separate everything" shares nothing, so you can open it in a new window alongside a running Claude, without quitting.',
+  '「利用中」は、いま Claude が起動している環境です。Claude を終了すれば「利用中」は外れ、その環境はまた「この環境を起動」から開き直せます。設定を共有する環境は衝突を防ぐため一度に1つずつ開くので、別の環境を開くときは先に起動中の Claude を終了します。「すべて分ける」で作った環境は何も共有しないので、起動中の Claude を終了せず、新しいウィンドウで並べて開けます。':
+    '"In use" marks the environment Claude is currently running for. Quit Claude and it clears, so you can reopen that environment from "Launch this environment". Environments that share settings open one at a time to avoid conflicts, so quit the running Claude before opening another. An environment set to "separate everything" shares nothing, so you can open it in a new window alongside a running Claude, without quitting.',
   'ターミナルの Claude Code も同じ環境で使えます': 'Claude Code in the terminal uses the same environment',
   // Detail: taglines, sections, sharing
   'あなた自身の環境': 'Your own setup',
@@ -86,9 +86,9 @@ const EN = {
   'この環境の複製': 'Duplicate this environment',
   '設定をそのままコピーして、別の名前の環境を作ります。元の環境は変わりません。': 'Copies the settings as they are to create a new environment under a different name. The original is left unchanged.',
   '起動のしかた': 'How to launch',
-  '切り替えて起動': 'Switch and launch', '重複して起動': 'Launch alongside', '前面に表示': 'Bring to front',
-  'この環境に切り替えて Claude を開きます。ほかの環境の Claude が起動しているときは切り替えられないので、先に終了してください。':
-    'Opens this environment and switches to it. If another environment’s Claude is running you cannot switch, so quit it first.',
+  'この環境を起動': 'Launch this environment', '重複して起動': 'Launch alongside', '前面に表示': 'Bring to front',
+  'この環境で Claude を開きます。ほかの環境の Claude が起動しているときは、先に終了してから起動してください。':
+    'Opens Claude for this environment. If another environment’s Claude is running, quit it first, then launch.',
   '起動中の Claude を終了せずに、この環境を新しいウィンドウで同時に開きます。':
     'Opens this environment in a new window at the same time, without quitting a running Claude.',
   '既存の Claude を起動': 'Launch Existing Claude',
@@ -117,9 +117,8 @@ const EN = {
   // Misc / toasts (standalone)
   'コピーしました': 'Copied', 'コピーできませんでした。': 'Could not copy.',
   '環境を読み込めませんでした。': 'Could not load the environment.',
-  '切り替えできませんでした。もう一度お試しください。': 'Could not switch. Please try again.',
   '起動できませんでした。もう一度お試しください。': 'Could not launch. Please try again.',
-  '削除できませんでした。利用中の環境は切り替えてから削除してください。': 'Could not delete. Switch away from an in-use environment before deleting it.',
+  '削除できませんでした。利用中の環境は、起動中の Claude を終了してから削除してください。': 'Could not delete. Quit the running Claude for an in-use environment before deleting it.',
   '複製できませんでした。同じ名前がすでにあるか確認してください。': 'Could not duplicate. Check whether the same name already exists.',
   '作成できませんでした。同じ名前がすでにあるか確認してください。': 'Could not create. Check whether the same name already exists.',
   'モードを変えたので高度設定をリセットしました': 'Changed the mode, so advanced settings were reset',
@@ -437,7 +436,6 @@ const el = {
   btnReopen: $('btnReopen'),
   btnReopenClose: $('btnReopenClose'),
   takeoverText: $('takeoverText'),
-  btnTakeoverSwitch: $('btnTakeoverSwitch'),
   btnTakeoverClose: $('btnTakeoverClose'),
   btnCreate: $('btnCreate'),
   btnCreateEmpty: $('btnCreateEmpty'),
@@ -721,7 +719,7 @@ function launchHelp(supportsConcurrent) {
     h('p', { class: 'firstrun-head', text: head }),
     h('p', { class: 'firstrun-body', text: body }));
   const ways = [
-    way('切り替えて起動', 'この環境に切り替えて Claude を開きます。ほかの環境の Claude が起動しているときは切り替えられないので、先に終了してください。'),
+    way('この環境を起動', 'この環境で Claude を開きます。ほかの環境の Claude が起動しているときは、先に終了してから起動してください。'),
   ];
   if (supportsConcurrent) {
     ways.push(way('重複して起動', '起動中の Claude を終了せずに、この環境を新しいウィンドウで同時に開きます。'));
@@ -1078,14 +1076,14 @@ function renderDetailFooter(name, isDefault, isInUse, supportsConcurrent) {
   // running. While it runs, it brings that Claude's window to the front (the way
   // to tell side-by-side instances apart, since the Dock shows one shared icon).
   // While it is not running, it launches: the existing Claude opens the standard
-  // data dir ("既存の Claude を起動"), other environments switch and launch.
+  // data dir ("既存の Claude を起動"), other non-default environments launch.
   // The "利用中" state is carried by the pill, so the button stays an action.
   // Text-only: a switch/arrow glyph on the label only added noise; launchHelp()
   // in the body above spells out the meaning of each short label.
   const switchBtn = h('button', {
     type: 'button', class: 'btn btn-primary',
     onclick: () => isInUse ? doBringToFront(name) : doSwitch(name, supportsConcurrent),
-  }, h('span', { text: isInUse ? '前面に表示' : (isDefault ? '既存の Claude を起動' : '切り替えて起動') }));
+  }, h('span', { text: isInUse ? '前面に表示' : (isDefault ? '既存の Claude を起動' : 'この環境を起動') }));
 
   if (isDefault) {
     el.detailFooter.replaceChildren(
@@ -1201,7 +1199,7 @@ async function doSwitch(name, supportsConcurrent) {
     showToast(name === 'default' ? T('既存の Claude を起動しました', 'Launched Existing Claude') : T(`${name} の Claude を起動しました`, `Launched Claude for ${name}`));
   } catch (err) {
     if (String(err || '').includes('Claude Desktop is running')) { showSwitchBlocked(name, supportsConcurrent); return; }
-    showToast('切り替えできませんでした。もう一度お試しください。', true);
+    showToast('起動できませんでした。もう一度お試しください。', true);
   }
 }
 
@@ -1254,7 +1252,7 @@ async function doDelete(name) {
     if (String(err).includes('could not move to the Trash')) {
       showToast('ゴミ箱へ移動できませんでした。すぐに消す場合は「完全に削除」を選んでください。', true);
     } else {
-      showToast('削除できませんでした。利用中の環境は切り替えてから削除してください。', true);
+      showToast('削除できませんでした。利用中の環境は、起動中の Claude を終了してから削除してください。', true);
     }
   }
 }
@@ -1268,7 +1266,7 @@ async function doPurge(name) {
     withTransition(() => (remaining.length ? showDetail(remaining[0].name) : showEmpty()));
     showToast(T(`「${name}」を完全に削除しました`, `Permanently deleted "${name}"`));
   } catch (err) {
-    showToast('削除できませんでした。利用中の環境は切り替えてから削除してください。', true);
+    showToast('削除できませんでした。利用中の環境は、起動中の Claude を終了してから削除してください。', true);
   }
 }
 
@@ -1600,9 +1598,8 @@ function renderTakeover() {
     return;
   }
   el.takeoverText.textContent = T(
-    `Claude が CSW を経由せずに開き直されました。アプリの更新のあとに起きることがあります。開き直された Claude は、既存の Claude のデータで動いています。「${name}」で続けるには、切り替えて起動し直してください。`,
-    `Claude was relaunched outside CSW. This can happen after an app update. The relaunched Claude runs on Existing Claude's data. To continue in "${name}", switch and launch it again.`);
-  el.btnTakeoverSwitch.textContent = T(`「${name}」に切り替える`, `Switch to "${name}"`);
+    `Claude がアプリの更新などで、CSW を経由せずに既存の Claude として開き直されました。「${name}」で使い直すには、起動中の Claude を一度終了してから、CSW で「${name}」を選んで起動し直してください。`,
+    `Claude was relaunched outside CSW as Existing Claude, which can happen after an app update. To use "${name}" again, quit the running Claude, then select "${name}" in CSW and launch it.`);
   el.takeoverBanner.hidden = false;
 }
 
@@ -1668,17 +1665,6 @@ function wireEvents() {
     takeoverFrom = null;
     el.takeoverBanner.hidden = true;
   });
-  el.btnTakeoverSwitch.addEventListener('click', async () => {
-    const name = takeoverFrom;
-    if (!name) return;
-    let d = null;
-    try { d = await invoke('get_profile_details', { name }); } catch (e) { return; }
-    await showDetail(name);
-    // The switch flow itself guides the quit: while the outside-CSW Claude is
-    // running, doSwitch shows the standard blocked footer with instructions.
-    doSwitch(name, !!d.supports_concurrent_windows);
-  });
-
   el.btnReopenClose.addEventListener('click', async () => {
     try { await invoke('dismiss_reopen'); } catch (e) { /* the banner hides regardless */ }
     reopenOffer = [];

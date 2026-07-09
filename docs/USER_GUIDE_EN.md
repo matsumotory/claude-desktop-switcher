@@ -87,7 +87,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
 ### Scenario A: Starting work with your Work account
 1. If the environment you are about to open shares settings and another Claude Desktop app is running, quit it first: environments that share settings open one at a time to avoid configuration conflicts. An environment set to "separate everything" can be opened in a new window without quitting.
 2. In the settings window, select the "Work" environment you created. You can also open the settings window from the menu bar or Dock icon. The list shows each environment's note and when it was last launched, so you can find the right one at a glance even as you add more environments.
-3. **Press "Switch and launch", and that environment's dedicated Claude Desktop app launches.**
+3. **Press "Launch this environment", and that environment's dedicated Claude Desktop app launches.**
    This window has a completely independent, dedicated data directory. Sign in with your work account the first time you open it. CSW also shows a short guide card with the same reminder on that first launch.
 
 > **Note: running environments at the same time**
@@ -180,7 +180,7 @@ No. The Desktop side handles account authentication and rewrites parts of its co
 Yes. Press **"Check the current environment"** in the menu bar icon's menu: CSW resolves which environment the frontmost Claude is using and answers by selecting that environment in the settings window. Useful when fully isolated environments run side by side and the identical-looking windows are easy to mix up. The frontmost application is read only for this action.
 
 **Q. Can an update to Claude Desktop take me out of my environment?**
-Yes, it can happen. The automatic relaunch after an update does not go through CSW, so the reopened Claude runs on Existing Claude's data. The window looks the same, but the "In use" marker in CSW moves to Existing Claude, and if CSW is running, the settings window shows a notice. To continue in your environment, quit Claude and press "Switch and launch" again.
+Yes, it can happen. The automatic relaunch after an update does not go through CSW, so the reopened Claude runs on Existing Claude's data. The window looks the same, but the "In use" marker in CSW moves to Existing Claude, and if CSW is running, the settings window shows a notice. To continue in your environment, quit Claude and press "Launch this environment" again.
 
 **Q. Reopening every environment by hand after each update is tedious.**
 Applying an update requires quitting every running Claude (the app's updater waits for them all to quit before it swaps the app). So CSW remembers the environments that were open together the last time you quit them all, and a single "Reopen" in the settings window banner opens them again. Environments already running are skipped automatically. If a shared environment cannot run alongside another Claude, only that one is flagged with "quit the Claude that is running" first. Nothing launches automatically; it opens only when you press the button.
