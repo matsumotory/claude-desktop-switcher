@@ -86,12 +86,12 @@ const EN = {
   'この環境の複製': 'Duplicate this environment',
   '設定をそのままコピーして、別の名前の環境を作ります。元の環境は変わりません。': 'Copies the settings as they are to create a new environment under a different name. The original is left unchanged.',
   '起動のしかた': 'How to launch',
-  '切り替えて起動': 'Switch and launch', '重複して起動': 'Launch alongside',
+  '切り替えて起動': 'Switch and launch', '重複して起動': 'Launch alongside', '前面に表示': 'Bring to front',
   'この環境に切り替えて Claude を開きます。ほかの環境の Claude が起動しているときは切り替えられないので、先に終了してください。':
     'Opens this environment and switches to it. If another environment’s Claude is running you cannot switch, so quit it first.',
   '起動中の Claude を終了せずに、この環境を新しいウィンドウで同時に開きます。':
     'Opens this environment in a new window at the same time, without quitting a running Claude.',
-  '既存の Claude に切り替える': 'Switch to Existing Claude',
+  '既存の Claude を起動': 'Launch Existing Claude',
   '既存の Claude は変更・削除できません': 'Existing Claude cannot be changed or deleted',
   '完全に削除': 'Delete permanently',
   'ゴミ箱へ移動': 'Move to Trash',
@@ -124,7 +124,6 @@ const EN = {
   '作成できませんでした。同じ名前がすでにあるか確認してください。': 'Could not create. Check whether the same name already exists.',
   'モードを変えたので高度設定をリセットしました': 'Changed the mode, so advanced settings were reset',
   'リンクを開けませんでした。': 'Could not open the link.',
-  '既存の Claude に切り替えました': 'Switched to Existing Claude',
   '取り出す': 'Eject', 'あとで': 'Later',
   'ディスクイメージを取り出しました': 'Disk image ejected',
   '取り出せませんでした。ディスクイメージを使用中のウィンドウを閉じてから、もう一度お試しください。': 'Could not eject. Close any window using the disk image, then try again.',
@@ -1075,15 +1074,18 @@ function badge(mode) {
 
 function renderDetailFooter(name, isDefault, isInUse, supportsConcurrent) {
   el.detailFooter.className = 'view-footer split';
-  // Disable the action only while this environment's Claude is actually running
-  // (nothing to launch). When it is not running, the action stays available so the
-  // active environment can be relaunched after Claude was quit.
-  // Text-only: a switch/arrow glyph on a launch action only added noise. The
-  // meaning of each short label is spelled out by launchHelp() in the body above.
+  // The primary button's role depends on whether this environment's Claude is
+  // running. While it runs, it brings that Claude's window to the front (the way
+  // to tell side-by-side instances apart, since the Dock shows one shared icon).
+  // While it is not running, it launches: the existing Claude opens the standard
+  // data dir ("既存の Claude を起動"), other environments switch and launch.
+  // The "利用中" state is carried by the pill, so the button stays an action.
+  // Text-only: a switch/arrow glyph on the label only added noise; launchHelp()
+  // in the body above spells out the meaning of each short label.
   const switchBtn = h('button', {
-    type: 'button', class: 'btn btn-primary', disabled: isInUse,
-    onclick: () => { if (!isInUse) doSwitch(name, supportsConcurrent); },
-  }, h('span', { text: isInUse ? '利用中の環境' : (isDefault ? '既存の Claude に切り替える' : '切り替えて起動') }));
+    type: 'button', class: 'btn btn-primary',
+    onclick: () => isInUse ? doBringToFront(name) : doSwitch(name, supportsConcurrent),
+  }, h('span', { text: isInUse ? '前面に表示' : (isDefault ? '既存の Claude を起動' : '切り替えて起動') }));
 
   if (isDefault) {
     el.detailFooter.replaceChildren(
@@ -1196,7 +1198,7 @@ async function doSwitch(name, supportsConcurrent) {
     await invoke('switch_profile', { name, noLaunch: false });
     await refreshProfiles();
     withTransition(() => showDetail(name));
-    showToast(name === 'default' ? T('既存の Claude に切り替えました', 'Switched to Existing Claude') : T(`${name} の Claude を起動しました`, `Launched Claude for ${name}`));
+    showToast(name === 'default' ? T('既存の Claude を起動しました', 'Launched Existing Claude') : T(`${name} の Claude を起動しました`, `Launched Claude for ${name}`));
   } catch (err) {
     if (String(err || '').includes('Claude Desktop is running')) { showSwitchBlocked(name, supportsConcurrent); return; }
     showToast('切り替えできませんでした。もう一度お試しください。', true);
@@ -1213,6 +1215,27 @@ async function doLaunchNewWindow(name) {
     showToast(T(`${name} を新しいウィンドウで起動しました`, `Launched ${name} in a new window`));
   } catch (err) {
     showToast('起動できませんでした。もう一度お試しください。', true);
+  }
+}
+
+// Bring the running Claude for this environment to the front. The button only
+// appears while the environment is in use; if its Claude was quit in the
+// meantime the backend returns false, so refresh to return the button to a
+// launch action instead of leaving a dead "前面に表示".
+async function doBringToFront(name) {
+  try {
+    const brought = await invoke('activate_environment', { name });
+    if (brought) {
+      showToast(T('前面に表示しました', 'Brought to front'));
+      return;
+    }
+    await refreshProfiles();
+    withTransition(() => showDetail(name));
+    showToast(T('この環境の Claude は動いていないようです。一覧を更新しました。',
+      'That environment’s Claude does not seem to be running. Refreshed the list.'), true);
+  } catch (err) {
+    showToast(T('前面に表示できませんでした。もう一度お試しください。',
+      'Could not bring it to front. Please try again.'), true);
   }
 }
 
@@ -1895,6 +1918,9 @@ function devInvoke(cmd, args) {
       return Promise.resolve(['default']);
     case 'launch_additional_window':
       return Promise.resolve(null);
+    case 'activate_environment':
+      // Dev mock: pretend the environment's Claude was found and raised.
+      return Promise.resolve(true);
     case 'get_profile_data_map': {
       // Plausible healthy map shaped like the Rust serde output (lowercase
       // modes, LINK_ITEMS order, share_settings-style environment).

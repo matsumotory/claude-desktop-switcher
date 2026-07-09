@@ -91,7 +91,7 @@ Here is the daily usage flow after setup. No manual configuration is required.
    This window has a completely independent, dedicated data directory. Sign in with your work account the first time you open it. CSW also shows a short guide card with the same reminder on that first launch.
 
 > **Note: running environments at the same time**
-> Environments created with "separate conversations & memory too" or "separate the account only" share settings, so they open one at a time to avoid configuration conflicts. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and switch to it, then launch Claude as usual. An environment set to "separate everything" shares nothing, so you can open it alongside a running Claude with "Launch alongside" in the detail view, without quitting.
+> Environments created with "separate conversations & memory too" or "separate the account only" share settings, so they open one at a time to avoid configuration conflicts. To go back to your personal setup, quit the running Claude, select "Existing Claude" in the sidebar and press "Launch Existing Claude". It returns to your Existing Claude and opens it. An environment set to "separate everything" shares nothing, so you can open it alongside a running Claude with "Launch alongside" in the detail view, without quitting.
 
 ### Scenario B: Using Claude Code in the terminal
 There are two kinds of terminal, and they need different steps. In either case, the first time you use Claude Code in an environment, you need to sign in to the CLI once (see "First time only: signing in to Claude Code" below).
@@ -122,7 +122,7 @@ The Claude Code (CLI) sign-in is managed separately from the desktop app's sign-
 * **It's safe even if you forget to launch the app**
   Claude Desktop Switcher never silently alters system environment variables. If you launch Claude normally without using this app, it acts as your Existing Claude 100% of the time. Your existing setup cannot be broken.
 * **How to prevent accidental token consumption**
-  If you are unsure which account your terminal is using, simply run the `csw status` command. This safely shows the current active environment.
+  If you are unsure which account your terminal is using, run the `csw status` command to see the current active environment. When you have several environments open side by side in the desktop app and cannot tell which window is which, select that environment in CSW and press "Bring to front" to raise its Claude. macOS groups multiple windows of the same app under a single Dock icon, so you cannot tell them apart by the Dock icon; CSW raises the one you name instead.
 * **Pick the accent color**
   Use the swatches at the bottom of the sidebar to choose the accent: blue (default), teal, indigo, or terracotta. Your choice is saved and applied next time (the semantic colors for shared, isolated, and delete stay the same).
 * **Help and version**

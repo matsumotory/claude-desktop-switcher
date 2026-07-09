@@ -15,6 +15,11 @@ pub struct MockPlatformProvider {
     fail_trash: AtomicBool,
     /// Test knob: arg lines returned by `running_desktop_args` (running main procs).
     running_args: std::sync::Mutex<Vec<String>>,
+    /// Test knob: `(pid, args line)` returned by `running_desktop_processes`.
+    running_processes: std::sync::Mutex<Vec<(u32, String)>>,
+    /// Records the pids passed to `activate_pid`, so tests can assert which
+    /// environment's Claude was brought to the front.
+    activated: std::sync::Mutex<Vec<u32>>,
     /// Test knob: what `frontmost_app` reports.
     frontmost: std::sync::Mutex<crate::platform::FrontmostApp>,
 }
@@ -29,6 +34,8 @@ impl MockPlatformProvider {
             fail_symlink: AtomicBool::new(false),
             fail_trash: AtomicBool::new(false),
             running_args: std::sync::Mutex::new(Vec::new()),
+            running_processes: std::sync::Mutex::new(Vec::new()),
+            activated: std::sync::Mutex::new(Vec::new()),
             frontmost: std::sync::Mutex::new(crate::platform::FrontmostApp::OtherApp),
         }
     }
@@ -50,6 +57,18 @@ impl MockPlatformProvider {
     pub fn with_running_args(self, args: Vec<String>) -> Self {
         *self.running_args.lock().unwrap() = args;
         self
+    }
+
+    /// Builder: set the `(pid, args line)` pairs returned by
+    /// `running_desktop_processes`, for "bring to front" tests.
+    pub fn with_running_processes(self, procs: Vec<(u32, String)>) -> Self {
+        *self.running_processes.lock().unwrap() = procs;
+        self
+    }
+
+    /// The pids passed to `activate_pid` so far, in call order.
+    pub fn activated_pids(&self) -> Vec<u32> {
+        self.activated.lock().unwrap().clone()
     }
 
     /// Builder: make `create_symlink` fail, to test rollback/atomicity paths.
@@ -131,6 +150,21 @@ impl PlatformProvider for MockPlatformProvider {
 
     fn running_desktop_args(&self) -> Result<Vec<String>> {
         Ok(self.running_args.lock().unwrap().clone())
+    }
+
+    fn running_desktop_processes(&self) -> Result<Vec<(u32, String)>> {
+        Ok(self.running_processes.lock().unwrap().clone())
+    }
+
+    fn activate_pid(&self, pid: u32) -> Result<bool> {
+        self.activated.lock().unwrap().push(pid);
+        let known = self
+            .running_processes
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|(p, _)| *p == pid);
+        Ok(known)
     }
 
     fn frontmost_app(&self) -> Result<crate::platform::FrontmostApp> {
