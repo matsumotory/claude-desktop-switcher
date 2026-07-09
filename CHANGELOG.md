@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.23.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.22.0...v0.23.0) (2026-07-09)
+
+
+### Features
+
+* **desktop:** 利用中の環境の Claude を前面に表示できるようにする ([8438ce2](https://github.com/matsumotory/claude-desktop-switcher/commit/8438ce250574698e740b8011ff9990e0aee06336))
+
 ## [0.22.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.21.0...v0.22.0) (2026-07-07)
 
 
