@@ -437,7 +437,6 @@ const el = {
   btnReopen: $('btnReopen'),
   btnReopenClose: $('btnReopenClose'),
   takeoverText: $('takeoverText'),
-  btnTakeoverSwitch: $('btnTakeoverSwitch'),
   btnTakeoverClose: $('btnTakeoverClose'),
   btnCreate: $('btnCreate'),
   btnCreateEmpty: $('btnCreateEmpty'),
@@ -1600,9 +1599,8 @@ function renderTakeover() {
     return;
   }
   el.takeoverText.textContent = T(
-    `Claude が CSW を経由せずに開き直されました。アプリの更新のあとに起きることがあります。開き直された Claude は、既存の Claude のデータで動いています。「${name}」で続けるには、切り替えて起動し直してください。`,
-    `Claude was relaunched outside CSW. This can happen after an app update. The relaunched Claude runs on Existing Claude's data. To continue in "${name}", switch and launch it again.`);
-  el.btnTakeoverSwitch.textContent = T(`「${name}」に切り替える`, `Switch to "${name}"`);
+    `Claude がアプリの更新などで、CSW を経由せずに既存の Claude として開き直されました。「${name}」で使い直すには、起動中の Claude を一度終了してから、CSW で「${name}」を選んで起動し直してください。`,
+    `Claude was relaunched outside CSW as Existing Claude, which can happen after an app update. To use "${name}" again, quit the running Claude, then select "${name}" in CSW and launch it.`);
   el.takeoverBanner.hidden = false;
 }
 
@@ -1668,17 +1666,6 @@ function wireEvents() {
     takeoverFrom = null;
     el.takeoverBanner.hidden = true;
   });
-  el.btnTakeoverSwitch.addEventListener('click', async () => {
-    const name = takeoverFrom;
-    if (!name) return;
-    let d = null;
-    try { d = await invoke('get_profile_details', { name }); } catch (e) { return; }
-    await showDetail(name);
-    // The switch flow itself guides the quit: while the outside-CSW Claude is
-    // running, doSwitch shows the standard blocked footer with instructions.
-    doSwitch(name, !!d.supports_concurrent_windows);
-  });
-
   el.btnReopenClose.addEventListener('click', async () => {
     try { await invoke('dismiss_reopen'); } catch (e) { /* the banner hides regardless */ }
     reopenOffer = [];
