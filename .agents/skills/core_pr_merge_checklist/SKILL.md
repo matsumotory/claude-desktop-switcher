@@ -194,7 +194,7 @@ release PR をマージする前に以下を必ず検証する。「ジョブが
 
 GitHub Release 本文の「変更内容 (What's changed)」はダウンロード時に利用者が読むユーザー向け面なので日英併記にする。コミットと `CHANGELOG.md` は開発者向けなので日本語のまま (線引きは [CLAUDE.md](../../../CLAUDE.md) §コーディング規約 1「日英対応の線引き」)。release-please が生成する本文は CHANGELOG 由来で日本語だけなので、公開後に英語の変更内容を足す。
 
-- [ ] リリース公開後、`gh release view vX.Y.Z --json body` で本文を取り、英語の変更内容を見出し `## Changes (English)` の節にして `gh release edit vX.Y.Z --notes-file` で追記する (機械翻訳の丸写しでなく、その版で実際に変わったことを英語で書く)。この専用見出しは、配布物説明 (`RELEASE-README`) が持つ `## English` と取り違えないための固定マーカー。既存の日英 `RELEASE-README` 添付とは別に、本文の変更内容そのものを日英にする。
+- [ ] **release.yml の run が完了してから**リリースノートを日英にする。`sbom` ジョブが release 本文を read-modify-write で編集する (配布物説明の追記) ため、run の途中で本文を手編集すると競合して本文が壊れる (v0.23.0 で実際に本文が空になった)。run 完了後に `gh release view vX.Y.Z --json body` で本文を取り、英語の変更内容を見出し `## Changes (English)` の節にして `gh release edit vX.Y.Z --notes-file` で追記する (機械翻訳の丸写しでなく、その版で実際に変わったことを英語で書く)。この専用見出しは、配布物説明 (`RELEASE-README`) が持つ `## English` と取り違えないための固定マーカー。既存の日英 `RELEASE-README` 添付とは別に、本文の変更内容そのものを日英にする。追記後は本文が空でないこと・3 節 (日本語の変更内容 / `## Changes (English)` / 添付ファイルの説明) がそろっていることを `gh release view` で実確認する。
 - [ ] `Verify release notes` ワークフロー (`.github/workflows/verify-release-notes.yml`、`on: release [published, edited]`) が緑であることを確認する。このガードは Release 本文に `## Changes (English)` 節が無いと赤くなり、日英化の取りこぼしを機械的に止める。公開直後は英語未追記で一度赤くなるので、上の追記後に自動で再実行され緑になるのを確認する (ガード自体を外して回避しない)。
 
 技術背景 (squash とメッセージのパース注意) は個人メモリ `release-please-squash-parse-pitfall` / `autonomous-merge-after-ci` も参照。
