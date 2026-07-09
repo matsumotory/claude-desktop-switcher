@@ -1,0 +1,49 @@
+name: Verify screenshots
+
+# Hard gate for the failure where the app UI changed but the shipped screenshots
+# were not regenerated (v0.23.0: button labels changed in crates/desktop/ui without
+# refreshing website/assets, caught only when the user asked). A non-blocking hook
+# reminder was not enough. When a PR touches the captured WebView UI, it must also
+# update website/assets/*.png (regenerate with `node scripts/appshot/gen-screenshots.mjs`).
+# Escape hatch for a genuinely non-visual UI edit: add a `Skip-appshot: <reason>` line
+# to the latest commit message. All inputs come from git, never from the event payload.
+on:
+  pull_request:
+    paths:
+      - 'crates/desktop/ui/index.html'
+      - 'crates/desktop/ui/main.js'
+      - 'crates/desktop/ui/style.css'
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots-updated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+      - name: Require regenerated screenshots when the captured UI changes
+        run: |
+          git fetch --no-tags origin main
+          changed="$(git diff --name-only origin/main...HEAD)"
+          ui_changed="$(printf '%s\n' "$changed" | grep -E '^crates/desktop/ui/(index\.html|main\.js|style\.css)$' || true)"
+          if [ -z "$ui_changed" ]; then
+            echo "No captured UI files changed; nothing to enforce."
+            exit 0
+          fi
+          shots_changed="$(printf '%s\n' "$changed" | grep -E '^website/assets/.*\.png$' || true)"
+          if [ -n "$shots_changed" ]; then
+            echo "OK: the app UI change updates screenshots:"
+            printf '%s\n' "$shots_changed"
+            exit 0
+          fi
+          if git log -1 --format=%B HEAD | grep -q 'Skip-appshot:'; then
+            echo "A 'Skip-appshot:' trailer is present; treating this UI change as non-visual."
+            exit 0
+          fi
+          echo "::error::The app UI (crates/desktop/ui) changed but no website/assets/*.png were updated. Regenerate the screenshots with 'node scripts/appshot/gen-screenshots.mjs' and commit them, or add a 'Skip-appshot: <reason>' line to the commit message if this UI change is genuinely non-visual."
+          echo "Changed UI files:"
+          printf '%s\n' "$ui_changed"
+          exit 1
