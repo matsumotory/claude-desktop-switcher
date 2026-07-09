@@ -3,7 +3,7 @@
 Claude Desktop Switcher is a macOS menu bar utility for safely isolating and managing account environments for the Claude Desktop App and Claude Code (CLI).
 
 ### Why do you need this tool? (vs. existing workarounds)
-The official Claude Desktop App lacks multi-account switching. To work around this, users have historically relied on messy hacks, such as forcing separate instances via terminal `--user-data-dir` arguments or using CLI-only switchers like `direnv`. 
+The official Claude Desktop App lacks multi-account switching. To work around this, users have historically relied on messy hacks, such as forcing separate instances via terminal `--user-data-dir` arguments or using CLI-only switchers like `direnv` or shell aliases. 
 However, these methods fail to bridge the gap between "safe desktop app isolation (a dedicated data directory per environment)" and "CLI environment syncing."
 
 This tool eliminates the need for complex shell scripts. It achieves **"Desktop App Isolation"** with a single click in the settings window, and allows **"Linked CLI Launching"** via simple terminal commands. It is based on a "Zero-Impact Principle" that never destroys or mutates your system's global environment variables.
@@ -14,7 +14,7 @@ This tool eliminates the need for complex shell scripts. It achieves **"Desktop 
 
 Understand this one thing and nothing else is confusing.
 
-First, the account. An account is the Claude account you sign in to; your billing and usage attach to it. Each environment signs in with its own account, so the sign-in info (the OAuth token in `config.json`) is always separate per environment, in every mode.
+First, the account. An account is the Claude account you sign in to; your billing and usage attach to it. Each environment signs in with its own account, so the sign-in info (the OAuth token in `config.json`), the device identifiers, and the desktop app settings including connectors are always separate per environment, in every mode. What changes per environment is whether you carry over your conversation history and auto-memory, and whether you carry over settings such as your common rules and skills.
 
 - **"Existing Claude" = your existing setup** (the Claude Desktop and Claude Code you already use). It is the reference point, and CSW never changes it.
 - **Creating a new environment = deciding, item by item, what to inherit from "Existing Claude" and what to keep separate.** The counterpart of share / isolate / copy is always "Existing Claude".
@@ -44,7 +44,7 @@ Create a new isolated environment for work or research.
 
 **By default, this app separates everything to strictly prevent accidental data mixing.**
 
-For other cases (such as "I want to reuse my common rules and skills, but route usage to my Work account"), you can adjust what carries over.
+For other cases (such as "I want to reuse my common rules, skills, and plugins, but route usage to my Work account"), you can adjust what carries over.
 
 1. Use the settings window, which opens automatically on launch (if you closed it, reopen it from the Dock icon or via **"Settings..."** on the menu bar icon).
 2. Click **"New environment"**.
@@ -121,7 +121,7 @@ The Claude Code (CLI) sign-in is managed separately from the desktop app's sign-
 
 * **It's safe even if you forget to launch the app**
   Claude Desktop Switcher never silently alters system environment variables. If you launch Claude normally without using this app, it acts as your Existing Claude 100% of the time. Your existing setup cannot be broken.
-* **How to prevent accidental token consumption**
+* **How to tell which account you are using, to avoid the wrong one**
   If you are unsure which account your terminal is using, run the `csw status` command to see the current active environment. When you have several environments open side by side in the desktop app and cannot tell which window is which, select that environment in CSW and press "Bring to front" to raise its Claude. macOS groups multiple windows of the same app under a single Dock icon, so you cannot tell them apart by the Dock icon; CSW raises the one you name instead.
 * **Pick the accent color**
   Use the swatches at the bottom of the sidebar to choose the accent: blue (default), teal, indigo, or terracotta. Your choice is saved and applied next time (the semantic colors for shared, isolated, and delete stay the same).
@@ -153,7 +153,7 @@ No. If you only want to keep using the same account, you do not need a new envir
 No. Each new environment is created in its own dedicated directory, physically separate from the original. Deleting an environment does not affect your original Claude.
 
 **Q. Do I have to sign in again every time I switch?**
-No. Each environment keeps its own account sign-in info (`config.json`) inside its own directory. Sign in once per environment and it persists across switches. Items set to isolate are not carried over and start empty in the new environment.
+No. Each environment keeps its own account sign-in info (`config.json`) inside its own directory. Sign in once per environment and it persists across switches. Because the account is always separate per environment, you sign in once right after creating a new environment.
 
 **Q. Does switching the desktop app also switch Claude Code in the terminal?**
 A terminal inside the app you launched from CSW is already in the same environment as that app, so no command is needed. A terminal you open separately stays in your usual environment, so pass the target environment name and run `eval $(csw env Work)` to sync it. It applies to that tab only and never affects your usual environment. The environment's config directory is synced automatically, but the first time you use Claude Code in that environment you still need to sign in to the CLI once. See the next Q for details.
@@ -165,7 +165,7 @@ No. The desktop app's sign-in and the Claude Code (CLI) sign-in are managed sepa
 Not at the moment. CSW is designed to make no internet connection and to never touch your passwords or sign-in. There is currently no way to obtain an accurate figure for Claude usage against its limits, including desktop-app activity, while keeping to those principles, so CSW does not offer it. If an official, safe way becomes available, we will consider adding it. You can check each environment's Claude usage in Claude itself by opening Claude for that environment.
 
 **Q. What exactly carries over with "Separate conversations & memory too"?**
-Your common rules (CLAUDE.md), tool permissions and hooks (settings.json), plugins, and skills carry over from "Existing Claude". Conversation history and auto-memory (projects/), prompt history (history.jsonl), and the account sign-in info (config.json) stay separate. The connector and app settings (claude_desktop_config.json, which is where MCP connectors live) and the session state (sessions/) are always separate as well. To fine-tune, use "Configure in detail, item by item" on the create screen.
+Your common rules (CLAUDE.md), tool permissions and hooks (settings.json), plugins, and skills carry over from "Existing Claude". This mode keeps the project conversations and auto-memory (projects/) and the prompt history (history.jsonl) separate for this environment. The account sign-in info (config.json), the connector and app settings (claude_desktop_config.json, where MCP connectors live), and the session state (sessions/) are always separate, regardless of mode. To fine-tune, use "Configure in detail, item by item" on the create screen.
 
 **Q. What changes if I pick "Separate the account only"?**
 On top of the common rules, skills, plugins, and tool permissions, this mode also carries over the per-project conversations and memory (projects/) and the prompt history (history.jsonl). The only thing kept separate is the account (the sign-in info in config.json, which billing and usage are tied to). It suits splitting payment between, say, research and development while keeping one continuous stream of work. The connector and app settings and the session run state stay separate in this mode as well.

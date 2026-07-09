@@ -190,6 +190,13 @@ release PR をマージする前に以下を必ず検証する。「ジョブが
 - [ ] 署名・公証やアセット添付が落ちたら green になるまでデバッグする (成功を仮定しない)。
 - [ ] DMG と `csw` バイナリを実際にダウンロードして署名・公証・staple を実機検証する (`stapler validate` / `spctl` / `codesign --verify --deep --strict` + hardened runtime。CLI バイナリは `spctl -t exec` が "not an app" と返るのが正常)。「ジョブ green = 公証済み」と仮定しない。
 
+### リリースノートの日英併記 (ユーザー向け面・必須)
+
+GitHub Release 本文の「変更内容 (What's changed)」はダウンロード時に利用者が読むユーザー向け面なので日英併記にする。コミットと `CHANGELOG.md` は開発者向けなので日本語のまま (線引きは [CLAUDE.md](../../../CLAUDE.md) §コーディング規約 1「日英対応の線引き」)。release-please が生成する本文は CHANGELOG 由来で日本語だけなので、公開後に英語の変更内容を足す。
+
+- [ ] リリース公開後、`gh release view vX.Y.Z --json body` で本文を取り、英語の変更内容を見出し `## Changes (English)` の節にして `gh release edit vX.Y.Z --notes-file` で追記する (機械翻訳の丸写しでなく、その版で実際に変わったことを英語で書く)。この専用見出しは、配布物説明 (`RELEASE-README`) が持つ `## English` と取り違えないための固定マーカー。既存の日英 `RELEASE-README` 添付とは別に、本文の変更内容そのものを日英にする。
+- [ ] `Verify release notes` ワークフロー (`.github/workflows/verify-release-notes.yml`、`on: release [published, edited]`) が緑であることを確認する。このガードは Release 本文に `## Changes (English)` 節が無いと赤くなり、日英化の取りこぼしを機械的に止める。公開直後は英語未追記で一度赤くなるので、上の追記後に自動で再実行され緑になるのを確認する (ガード自体を外して回避しない)。
+
 技術背景 (squash とメッセージのパース注意) は個人メモリ `release-please-squash-parse-pitfall` / `autonomous-merge-after-ci` も参照。
 
 
