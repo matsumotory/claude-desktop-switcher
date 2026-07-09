@@ -11,6 +11,8 @@
 - **自己捕捉**: スキルを引かずに着手してしまったと気づいたら、即停止・違反を自己申告し、スキルを Read して引用したルールでやり直す。ユーザーに指摘される前に自分で直す。
 - **選び方**: 日本語の UI/LP/見出しは `japanese-typography-qa`、フロント/LP デザインは `design-taste-frontend` / `high-end-visual-design` / `minimalist-ui` 等。用途別の選び方はグローバル `~/.claude/CLAUDE.md` と各スキルの説明を参照。
 - **強制の仕組み（意志力に頼らない）**: `.claude/settings.json` の PreToolUse フック `.claude/hooks/skill-first-reminder.sh` が、`website/`・`docs/`・`README`・`crates/desktop/ui/`・`*.html/*.css/*.md` を Edit/Write する直前に、本ゲート（該当スキルを読む）と全サーフェス伝播（`propagate-changes-to-all-surfaces`）・変更後の `/audit-consistency`・スクショ再生成（`scripts/appshot`）を自動リマインドする。フックの注意が出たら従う。指摘される前に自分でゲートを通す。
+- **ソフトなリマインダは willpower 依存で漏れる（v0.23.0 の実例）**: 上のフックは発火していても、長い実装セッションの後半で無視されうる（`crates/desktop/ui` のボタン文言を変えたのに出荷スクショを再生成せず、指摘されて初めて確認した）。加えて、使い捨ての headless キャプチャで描画を確かめただけで「GUI 検証済み」と取り違えない。出荷される `website/assets` のスクショを実際に再生成することが検証であり、別物の一時キャプチャはその代わりにならない。だから機械で止めるハードなゲートを併用する: `crates/desktop/ui/{index.html,main.js,style.css}` を変えた PR が `website/assets/*.png` を更新していないと CI ワークフロー `Verify screenshots`（`.github/workflows/verify-screenshots.yml`）が落ちる。純粋に非視覚の UI 変更のときだけ、コミットメッセージに `Skip-appshot: <理由>` 行を足して明示的に外す（このゲート自体を無効化して回避しない）。
+- **スキルを読んだら、まず「このタスクに効く出荷前チェックと伝播先」を明示タスクに落とす（着手前・毎回）**: 失敗の型は、最初にスキル/ルールを見ても、作業に没頭したり追加のサブ作業が出た後半で適用を忘れること（matsumotory 2026-07-09「作業に夢中になったり追加作業が出た時に見忘れる。スキルを見た時にまず計画を書くのがいい」）。対策として、該当スキルを Read した直後に、そのスキルの出荷前チェックリストとこの変更の伝播先（アプリ UI・トレイ・docs ja/en・LP ja/en・スクショ・OG 等）を `TaskCreate` か書き出した計画に列挙し、完了報告の前に 1 項目ずつ実測で消し込む。記憶や「さっき読んだ」に頼らない。**作業中に増えたサブ作業にも同じチェックを再適用する**。上のハードなゲートは最後の砦、この計画化は作業中の予防で、両方を併用する。
 - この Gate はグローバル `~/.claude/CLAUDE.md` を一次正典とし、本ファイルで二重化する。
 
 ## プロジェクト概要
