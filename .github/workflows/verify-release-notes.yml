@@ -1,0 +1,45 @@
+name: Verify release notes
+
+# User-facing release notes must be bilingual. release-please builds the body from
+# Japanese commit subjects, so the "what changed" part is Japanese only by default.
+# At release time an English "Changes (English)" section is added to the body (see
+# .agents/skills/core_pr_merge_checklist "リリースノートの日英併記"). This guard fails
+# until that section exists, so a Japanese-only release cannot pass silently. It fires
+# on publish (red until the English section is added) and re-fires on edit (green once
+# added). The developer-facing CHANGELOG.md and commit subjects stay Japanese.
+on:
+  release:
+    types: [published, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  bilingual-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require an English changes section in the release body
+        # The body is fetched via the API from the numeric release id (not passed in
+        # from the event payload), so no untrusted event text reaches the shell.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: |
+          gh api "repos/$REPO/releases/$RELEASE_ID" -q .body > release-body.md
+          python3 - <<'PY'
+          import re, sys
+          body = open('release-body.md', encoding='utf-8').read()
+          has_ja = re.search(r'[぀-ヿ一-鿿]', body) is not None
+          # A dedicated, unambiguous marker, distinct from the asset guide's "## English".
+          has_en_changes = re.search(r'(?im)^#{1,6}\s*Changes\s*\(English\)\s*$', body) is not None
+          if not (has_ja and has_en_changes):
+              print(
+                  "::error::Release notes must be bilingual. Add a '## Changes (English)' "
+                  "section mirroring the Japanese changelog to the release body "
+                  "(see .agents/skills/core_pr_merge_checklist). "
+                  f"has_ja={has_ja} has_en_changes={has_en_changes}"
+              )
+              sys.exit(1)
+          print("Release notes are bilingual: Japanese changelog + Changes (English).")
+          PY
