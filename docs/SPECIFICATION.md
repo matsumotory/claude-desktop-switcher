@@ -89,7 +89,7 @@ CSW が管理する複数の環境は、すべて**同じ利用者本人**のア
 | `cli_project_memory` (会話履歴＋自動メモリ `projects/`) | Share | Isolate | Isolate |
 | `cli_history` (入力履歴 `history.jsonl`) | Share | Isolate | Isolate |
 
-`cli_rules` を持たない古い `profile.toml`（v0.24.0 以前の CSW で作った環境）は、読み込み時に `cli_claude_md` と同じモードとして扱う（`profile::config::load_profile`）。共有を宣言していてもリンクはまだ無いので、分離の検査が「リンクの欠落」として検出し、`csw doctor --fix` がそのリンクを作る。
+`cli_rules` を持たない古い `profile.toml`（v0.24.0 以前の CSW で作った環境）は、読み込み時に `cli_claude_md` と同じモードとして扱う（`profile::config::load_profile`）。共有を宣言していてもリンクはまだ無いので、共有元の `~/.claude/rules/` が実在する場合は分離の検査が「リンクの欠落」として検出し、`csw doctor --fix` がそのリンクを作る（共有元が無ければ「共有元がまだありません」として問題扱いにしない）。
 
 **常に分離する項目（モードや詳細設定でも上書き不可）**: 認証・アカウント状態を含むか、共有しても無意味か、安全に共有できないため、どのモードでも `Isolate` に固定します。
 - `desktop_app_config` (`config.json`): OAuth トークンキャッシュ（`oauth:tokenCache`）とアカウント別状態を含む。共有すると2つのアカウントのログインが1ファイルに混ざる。
