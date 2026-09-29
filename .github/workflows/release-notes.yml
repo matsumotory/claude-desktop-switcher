@@ -1,0 +1,82 @@
+name: Release notes
+
+# Writes the user-facing body of a GitHub Release: the Japanese changelog that
+# release-please generated, an optional "## Changes (English)" section, and the
+# attached-files guide (.github/release-notes-assets.md). The body is assembled
+# by .github/scripts/release_notes.py, which rebuilds the changelog from
+# CHANGELOG.md when the body is empty, so a wiped release can always be restored
+# from the repository.
+#
+# Triggered two ways:
+#   - workflow_call from the release workflow, after every job that uploads an
+#     asset, so the body is written once, last (works under GITHUB_TOKEN).
+#   - workflow_dispatch, to add the English changes to an existing release or to
+#     restore its body. Pass the English section as the english_changes input.
+#
+# The bilingual guard (verify-release-notes.yml) fires only on edits made by a
+# person, not on edits made with GITHUB_TOKEN, so this workflow checks the
+# sections itself.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to write the body of (e.g. v0.24.1)"
+        required: true
+        type: string
+      english_changes:
+        description: "Markdown for the \"## Changes (English)\" section (the heading may be omitted)"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Assemble and write the release body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          ENGLISH_CHANGES: ${{ inputs.english_changes }}
+        run: |
+          set -euo pipefail
+          # release-please sets the body when it creates the release, but the API
+          # can lag; read it back a few times before treating it as empty (an
+          # empty body is then rebuilt from CHANGELOG.md, never written back).
+          BODY=""
+          for _ in $(seq 1 15); do
+            BODY="$(gh release view "$TAG_NAME" --json body --jq .body)"
+            [ -n "$BODY" ] && break
+            sleep 4
+          done
+          printf '%s' "$BODY" > current-body.md
+          printf '%s' "$ENGLISH_CHANGES" > english-changes.md
+          python3 .github/scripts/release_notes.py "$TAG_NAME" current-body.md english-changes.md > new-body.md
+          gh release edit "$TAG_NAME" --notes-file new-body.md
+
+      - name: Verify the written body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          ENGLISH_CHANGES: ${{ inputs.english_changes }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG_NAME" --json body --jq .body > written-body.md
+          if [ -n "$ENGLISH_CHANGES" ]; then
+            python3 .github/scripts/release_notes.py --check --require-english "$TAG_NAME" written-body.md
+          else
+            python3 .github/scripts/release_notes.py --check "$TAG_NAME" written-body.md
+          fi
+          echo "----- release body -----"
+          cat written-body.md
