@@ -572,77 +572,85 @@ impl ProfileManager {
         fs::create_dir_all(&target_profile.isolation.desktop_user_data_dir)?;
         fs::create_dir_all(&target_profile.isolation.cli_config_dir)?;
 
-        // Deep copy files/folders of copy/isolate modes from the source to target.
-        // For shared modes, the linker will build proper symlinks.
-        let source_desktop = &source_profile.isolation.desktop_user_data_dir;
-        let source_cli = &source_profile.isolation.cli_config_dir;
+        // 1. Everything the linker does not manage is copied verbatim (real
+        //    files and directories; symlinks are skipped): the app's own state,
+        //    the sign-in material kept inside the environment, caches. The
+        //    linker's items are handled by their declared mode below.
+        for (dir, source_root, target_root) in [
+            (
+                linker::ItemDir::Desktop,
+                &source_profile.isolation.desktop_user_data_dir,
+                &target_profile.isolation.desktop_user_data_dir,
+            ),
+            (
+                linker::ItemDir::Cli,
+                &source_profile.isolation.cli_config_dir,
+                &target_profile.isolation.cli_config_dir,
+            ),
+        ] {
+            if !source_root.exists() {
+                continue;
+            }
+            for entry in fs::read_dir(source_root)? {
+                let entry = entry?;
+                let path = entry.path();
+                let filename = entry.file_name();
+                let managed = linker::LINK_ITEMS
+                    .iter()
+                    .any(|i| i.dir == dir && filename.to_str() == Some(i.rel_path));
+                if managed || self.provider.is_symlink(&path) {
+                    continue;
+                }
+                let target_path = target_root.join(&filename);
+                if path.is_dir() {
+                    self.copy_dir_recursive(&path, &target_path)?;
+                } else {
+                    fs::copy(&path, &target_path)?;
+                }
+            }
+        }
 
+        // 2. Linker-managed items the duplicate keeps for itself (declared Copy
+        //    or Isolate) carry the source environment's real data: its own
+        //    conversations, rules, settings and history are what "duplicate"
+        //    means. Two exceptions:
+        //    - the always-isolated items (fixed_mode) start fresh, as on create;
+        //    - plugins/ is never taken from the source environment. Claude
+        //      Code's installed_plugins.json / known_marketplaces.json record
+        //      absolute paths into that environment's plugin cache, so a
+        //      verbatim copy would couple the two environments and break the
+        //      duplicate once the source is deleted. The linker sets it up
+        //      from the declared sharing source by its mode instead, exactly
+        //      like a newly created environment.
+        for item in linker::LINK_ITEMS {
+            if item.fixed_mode.is_some() || item.key == "cli_plugins" {
+                continue;
+            }
+            if linker::item_mode(&target_profile, item) == SharingMode::Share {
+                continue;
+            }
+            let source_path = linker::item_path(&source_profile, item);
+            if !source_path.exists() || self.provider.is_symlink(&source_path) {
+                continue;
+            }
+            let target_path = linker::item_path(&target_profile, item);
+            if source_path.is_dir() {
+                self.copy_dir_recursive(&source_path, &target_path)?;
+            } else {
+                fs::copy(&source_path, &target_path)?;
+            }
+        }
+
+        // 3. Share items link to the declared sharing source (normally the
+        //    existing Claude), never to the source environment's own link
+        //    points: those would dangle once that environment is deleted, and
+        //    the isolation check reports them as WrongTarget. The linker leaves
+        //    the real data copied above untouched (an existing real target is
+        //    never replaced for Copy / Isolate) and gives the rest its fresh
+        //    state (empty directories, nothing for files).
+        let sharing_source = self.get_profile(&target_profile.sharing.source.profile)?;
         let linker = linker::Linker::new(self.provider.as_ref());
-
-        // 1. Copy desktop-data and cli-data files that are not symlinks
-        // If the source profile is "default" or other, we clone its current physical configurations.
-        if source_desktop.exists() {
-            for entry in fs::read_dir(source_desktop)? {
-                let entry = entry?;
-                let path = entry.path();
-                let filename = entry.file_name();
-                let target_path = target_profile
-                    .isolation
-                    .desktop_user_data_dir
-                    .join(&filename);
-
-                // Skip files managed by linker (will link/copy them via apply_link in linker)
-                let name_str = filename.to_string_lossy();
-                if name_str == "claude_desktop_config.json"
-                    || name_str == "git-worktrees.json"
-                    || name_str == "ant-did"
-                    || name_str == "config.json"
-                {
-                    continue;
-                }
-
-                // Copy other caches, sessions, credentials backup
-                if !self.provider.is_symlink(&path) {
-                    if path.is_dir() {
-                        self.copy_dir_recursive(&path, &target_path)?;
-                    } else {
-                        fs::copy(&path, &target_path)?;
-                    }
-                }
-            }
-        }
-
-        if source_cli.exists() {
-            for entry in fs::read_dir(source_cli)? {
-                let entry = entry?;
-                let path = entry.path();
-                let filename = entry.file_name();
-                let target_path = target_profile.isolation.cli_config_dir.join(&filename);
-
-                let name_str = filename.to_string_lossy();
-                if name_str == "settings.json"
-                    || name_str == "CLAUDE.md"
-                    || name_str == "projects"
-                    || name_str == "plugins"
-                    || name_str == "skills"
-                    || name_str == "sessions"
-                    || name_str == "history.jsonl"
-                {
-                    continue;
-                }
-
-                if !self.provider.is_symlink(&path) {
-                    if path.is_dir() {
-                        self.copy_dir_recursive(&path, &target_path)?;
-                    } else {
-                        fs::copy(&path, &target_path)?;
-                    }
-                }
-            }
-        }
-
-        // Link/copy managed components according to target_profile's SharingConfig
-        linker.link_profile(&target_profile, &source_profile)?;
+        linker.link_profile(&target_profile, &sharing_source)?;
 
         // Save profile metadata
         config::save_profile(&target_profile, &target_toml)?;
