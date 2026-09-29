@@ -1100,6 +1100,7 @@ fn clone_copies_isolated_and_copied_items_and_relinks_shares_to_the_declared_sou
 
     let sharing = SharingConfig {
         cli_claude_md: SharingMode::Share,
+        cli_rules: SharingMode::Isolate,
         cli_plugins: SharingMode::Share,
         cli_skills: SharingMode::Copy,
         cli_settings: SharingMode::Isolate,
@@ -1122,6 +1123,7 @@ fn clone_copies_isolated_and_copied_items_and_relinks_shares_to_the_declared_sou
     std::fs::write(cli.join("settings.json"), "{\"hooks\":{}}").unwrap();
     std::fs::write(cli.join("history.jsonl"), "prompt\n").unwrap();
     std::fs::write(cli.join("skills").join("mine.md"), "own skill").unwrap();
+    std::fs::write(cli.join("rules").join("style.md"), "own rule").unwrap();
     std::fs::write(desk.join("git-worktrees.json"), "{\"wt\":1}").unwrap();
     // Data outside the linker's items travels too (sign-in and app state).
     std::fs::write(cli.join(".credentials.json"), "cli-login").unwrap();
@@ -1141,6 +1143,7 @@ fn clone_copies_isolated_and_copied_items_and_relinks_shares_to_the_declared_sou
         (ccli.join("history.jsonl"), "prompt\n"),
         (ccli.join("skills").join("mine.md"), "own skill"),
         (ccli.join("skills").join("base.md"), "shared skill"),
+        (ccli.join("rules").join("style.md"), "own rule"),
         (cdesk.join("git-worktrees.json"), "{\"wt\":1}"),
         (ccli.join(".credentials.json"), "cli-login"),
         (cdesk.join("Cookies"), "desktop-login"),
@@ -1200,6 +1203,7 @@ fn clone_of_fully_isolated_environment_keeps_its_conversations_rules_and_setting
     std::fs::write(cli.join("settings.json"), "{}").unwrap();
     std::fs::write(cli.join("history.jsonl"), "h").unwrap();
     std::fs::write(cli.join("skills").join("s.md"), "s").unwrap();
+    std::fs::write(cli.join("rules").join("r.md"), "r").unwrap();
     std::fs::write(cli.join("plugins").join("p.js"), "p").unwrap();
 
     let clone = manager.clone_profile("iso", "iso2").unwrap();
@@ -1210,6 +1214,7 @@ fn clone_of_fully_isolated_environment_keeps_its_conversations_rules_and_setting
         (c.join("settings.json"), "{}"),
         (c.join("history.jsonl"), "h"),
         (c.join("skills").join("s.md"), "s"),
+        (c.join("rules").join("r.md"), "r"),
     ] {
         assert_eq!(
             std::fs::read_to_string(&path).unwrap_or_default(),
