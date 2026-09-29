@@ -66,5 +66,5 @@ cargo test --workspace
 
 - [x] RED → GREEN
 - [x] docs / UI 文言の統一
-- [ ] スクショ再生成と LP の実寸更新
+- [x] スクショ再生成 (macOS ランナー、5056a52)。実寸は変わらず LP の更新は不要
 - [ ] CI 全緑、squash マージ
