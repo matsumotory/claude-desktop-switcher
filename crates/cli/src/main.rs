@@ -262,7 +262,7 @@ fn main() -> anyhow::Result<()> {
                         println!("  Sharing Configurations:");
                         println!("    CLI Settings: {:?}", p.sharing.cli_settings);
                         println!("    CLAUDE.md (Rules): {:?}", p.sharing.cli_claude_md);
-                        println!("    Rules directory (rules/): {:?}", p.sharing.cli_rules);
+                        println!("    Rule files (rules/): {:?}", p.sharing.cli_rules);
                         println!("    CLI Plugins: {:?}", p.sharing.cli_plugins);
                         println!("    CLI Skills: {:?}", p.sharing.cli_skills);
                         println!("    CLI Project Memory: {:?}", p.sharing.cli_project_memory);
