@@ -92,6 +92,7 @@ async fn get_profile_details(
         "sharing": {
             "cli_settings": format!("{:?}", p.sharing.cli_settings).to_lowercase(),
             "cli_claude_md": format!("{:?}", p.sharing.cli_claude_md).to_lowercase(),
+            "cli_rules": format!("{:?}", p.sharing.cli_rules).to_lowercase(),
             "cli_project_memory": format!("{:?}", p.sharing.cli_project_memory).to_lowercase(),
             "cli_plugins": format!("{:?}", p.sharing.cli_plugins).to_lowercase(),
             "cli_skills": format!("{:?}", p.sharing.cli_skills).to_lowercase(),
@@ -122,7 +123,7 @@ fn build_sharing_config(mode: &str, overrides: Option<HashMap<String, String>>) 
     //                       carried over (= SharingConfig::default()). For clients,
     //                       projects, or work-vs-personal that must not mix.
     //   "share_settings"  — 会話とメモリも分ける: reuse the common setup (CLAUDE.md,
-    //                       plugins, skills shared; settings/worktrees copied) while
+    //                       rules/, plugins, skills shared; settings/worktrees copied) while
     //                       keeping conversations and login separate.
     //   "share_workspace" — アカウントだけ分ける: also carry the conversation history,
     //                       project memory and command history across, separating
@@ -149,6 +150,7 @@ fn build_sharing_config(mode: &str, overrides: Option<HashMap<String, String>>) 
             match key.as_str() {
                 "cli_settings" => sharing.cli_settings = m,
                 "cli_claude_md" => sharing.cli_claude_md = m,
+                "cli_rules" => sharing.cli_rules = m,
                 "cli_project_memory" => sharing.cli_project_memory = m,
                 "cli_plugins" => sharing.cli_plugins = m,
                 "cli_skills" => sharing.cli_skills = m,

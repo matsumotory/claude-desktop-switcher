@@ -66,6 +66,7 @@ const EN = {
     '"Shared" keeps the contents in common with your existing Claude; "Copied" duplicates once at creation and they diverge after; "Isolated" means this environment keeps its own.',
   'ワークツリー一覧': 'Worktrees', 'Git ワークツリーと repo の対応': 'Mapping of Git worktrees to repos',
   '共通ルール': 'Global rules', 'CLAUDE.md に書いた常時ルール': 'Always-on rules in CLAUDE.md',
+  'ルールファイル': 'Rule files', 'rules/ に分けて置いた常時ルール': 'Always-on rules kept as files in rules/',
   'プラグイン': 'Plugins', '導入したプラグイン': 'Installed plugins',
   'スキル': 'Skills', 'カスタムスキル': 'Custom skills',
   'ツール権限・フック': 'Tool permissions & hooks', 'ツールの実行可否とフック': 'Whether tools may run, and hooks',
@@ -169,7 +170,8 @@ const EN = {
     'The link points somewhere unexpected, and the shared source is missing.',
   '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。':
     'The share link has been replaced by a regular file. To avoid losing your local contents, it is not repaired automatically.',
-  '共有のリンクがありません。': 'The share link is missing.',
+  '共有のリンクがありません。ターミナルで csw doctor --fix を実行すると作れます。':
+    'The share link is missing. Run csw doctor --fix in a terminal to create it.',
   '常に分離する項目がリンクになっています。': 'An always-isolated item has become a link.',
   'コピーの項目がリンクになっています。': 'An item set to copy has become a link.',
   '分離の項目がリンクになっています。': 'An isolated item has become a link.',
@@ -288,6 +290,7 @@ const SHARE_GROUPS = [
     label: 'Claude Code',
     items: [
       { key: 'cli_claude_md', name: '共通ルール', desc: 'CLAUDE.md に書いた常時ルール' },
+      { key: 'cli_rules', name: 'ルールファイル', desc: 'rules/ に分けて置いた常時ルール' },
       { key: 'cli_plugins', name: 'プラグイン', desc: '導入したプラグイン' },
       { key: 'cli_skills', name: 'スキル', desc: 'カスタムスキル' },
       { key: 'cli_settings', name: 'ツール権限・フック', desc: 'ツールの実行可否とフック' },
@@ -319,6 +322,7 @@ const PRESETS = {
   // 会話とメモリも分ける: reuse the common setup, keep conversation history + memory and the account separate.
   share_settings: {
     cli_claude_md: 'share',
+    cli_rules: 'share',
     cli_plugins: 'share',
     cli_skills: 'share',
     cli_settings: 'copy',
@@ -330,6 +334,7 @@ const PRESETS = {
   // アカウントだけ分ける: also carry conversation history + memory across, separating only the account.
   share_workspace: {
     cli_claude_md: 'share',
+    cli_rules: 'share',
     cli_plugins: 'share',
     cli_skills: 'share',
     cli_settings: 'copy',
@@ -676,7 +681,7 @@ function doctorStatus(item) {
       ? 'リンク先が想定と異なります。ターミナルで csw doctor --fix を実行すると張り直せます。'
       : 'リンク先が想定と異なり、共有元も見つかりません。',
     materialized: '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。',
-    missing_link: '共有のリンクがありません。',
+    missing_link: '共有のリンクがありません。ターミナルで csw doctor --fix を実行すると作れます。',
     unexpected_link: unexpectedLink,
   }[st] || '状態を判定できませんでした。';
   return { status: '要確認', detail, issue: true };
@@ -1916,6 +1921,7 @@ function devInvoke(cmd, args) {
         { key: 'desktop_config', mode: 'isolate', link_target: null, size_bytes: 2048, modified_epoch: t, exists: true },
         { key: 'cli_settings', mode: 'copy', link_target: null, size_bytes: 6144, modified_epoch: t, exists: true },
         { key: 'cli_claude_md', mode: 'share', link_target: '~/.claude/CLAUDE.md', size_bytes: null, modified_epoch: null, exists: true },
+        { key: 'cli_rules', mode: 'share', link_target: '~/.claude/rules', size_bytes: null, modified_epoch: null, exists: true },
         { key: 'cli_project_memory', mode: 'isolate', link_target: null, size_bytes: 48 * 1024 * 1024, modified_epoch: t, exists: true },
         { key: 'cli_plugins', mode: 'share', link_target: '~/.claude/plugins', size_bytes: null, modified_epoch: null, exists: true },
         { key: 'cli_skills', mode: 'share', link_target: '~/.claude/skills', size_bytes: null, modified_epoch: null, exists: true },
@@ -1965,7 +1971,7 @@ function devInvoke(cmd, args) {
       // the Rust inspector's serde output: lowercase SharingMode values and the
       // LINK_ITEMS order (share_settings-style environment).
       const modes = { ...PRESETS.share_settings, cli_sessions: 'isolate', desktop_app_config: 'isolate', desktop_config: 'isolate' };
-      const order = ['desktop_config', 'cli_settings', 'cli_claude_md', 'cli_project_memory', 'cli_plugins',
+      const order = ['desktop_config', 'cli_settings', 'cli_claude_md', 'cli_rules', 'cli_project_memory', 'cli_plugins',
         'cli_skills', 'cli_sessions', 'cli_history', 'desktop_worktrees', 'desktop_device_id', 'desktop_app_config'];
       const items = order.map((key) => (modes[key] === 'share'
         ? { key, mode: 'share', health: { state: 'shared_ok', target: '~/.claude/' + key }, is_issue: false }
