@@ -67,7 +67,7 @@ For other cases (such as "I want to reuse my common rules, skills, and plugins, 
    * **Case A: a completely separate project**
      Pick **"Separate everything"**. You get a pristine environment cleanly detached from your personal one.
    * **Case B: switching the account while keeping your common rules and skills**
-     Pick **"Separate conversations & memory too"** to bring your common rules (CLAUDE.md) and skills into the new environment.
+     Pick **"Separate conversations & memory too"** to bring your common rules (CLAUDE.md and rules/) and skills into the new environment.
    * **Case C: split billing for research vs development while keeping one continuous workspace**
      Pick **"Separate the account only"** to carry over conversation history and auto-memory too, so only the account is separate while your work continues uninterrupted.
 
