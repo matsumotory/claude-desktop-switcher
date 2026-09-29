@@ -130,7 +130,8 @@ pub struct SharingConfig {
     /// project next to CLAUDE.md, so the two together are the user's global
     /// rules (issue #190). Presets set it exactly like `cli_claude_md`. A
     /// profile.toml written before this field existed carries no key for it;
-    /// `config::load_profile` then makes it follow `cli_claude_md`.
+    /// `config::load_profile` then derives it from `cli_claude_md` (Share stays
+    /// Share; anything else reads as Isolate, since nothing was ever copied).
     #[serde(default)]
     pub cli_rules: SharingMode,
 

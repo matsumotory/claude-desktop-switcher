@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::error::Result;
-use crate::profile::Profile;
+use crate::profile::{Profile, SharingMode};
 
 /// Load a profile from a TOML file.
 pub fn load_profile(path: &Path) -> Result<Profile> {
@@ -10,9 +10,17 @@ pub fn load_profile(path: &Path) -> Result<Profile> {
     // A profile.toml written before `cli_rules` existed (issue #190) has no key
     // for it. Its rules directory follows CLAUDE.md: the mode descriptions
     // always counted both as the user's global rules, so an environment that
-    // shares CLAUDE.md was meant to share rules/ too. An explicit key wins.
+    // shares CLAUDE.md was meant to share rules/ too (the missing link is then
+    // reported by the isolation check and created by `csw doctor --fix`). A
+    // CLAUDE.md set to Copy does not carry over: nothing was ever copied for
+    // rules/ in such an environment, and declaring Copy would show it as
+    // "copied" when it is empty, so it reads as Isolate, its honest state.
+    // An explicit key always wins.
     if !declares_cli_rules(&content)? {
-        profile.sharing.cli_rules = profile.sharing.cli_claude_md.clone();
+        profile.sharing.cli_rules = match profile.sharing.cli_claude_md {
+            SharingMode::Share => SharingMode::Share,
+            SharingMode::Copy | SharingMode::Isolate => SharingMode::Isolate,
+        };
     }
     Ok(profile)
 }
@@ -148,8 +156,9 @@ mod tests {
     }
 
     /// A profile.toml written before `cli_rules` existed (issue #190) must
-    /// keep meaning what its mode description promised: the rules directory
-    /// follows CLAUDE.md, the other half of the user's global rules.
+    /// keep meaning what its mode description promised: a shared CLAUDE.md
+    /// means a shared rules/ too. Anything else reads as Isolate, because no
+    /// rules/ was ever copied into such an environment.
     fn profile_toml_without_cli_rules(claude_md: &str) -> String {
         format!(
             r##"[profile]
@@ -194,8 +203,10 @@ profile = "default"
         let isolated = load_toml_string("isolated", &profile_toml_without_cli_rules("isolate"));
         assert_eq!(isolated.sharing.cli_rules, SharingMode::Isolate);
 
+        // Copy is not carried over: the old build never copied rules/, so the
+        // environment must not present an empty directory as a finished copy.
         let copied = load_toml_string("copied", &profile_toml_without_cli_rules("copy"));
-        assert_eq!(copied.sharing.cli_rules, SharingMode::Copy);
+        assert_eq!(copied.sharing.cli_rules, SharingMode::Isolate);
     }
 
     #[test]

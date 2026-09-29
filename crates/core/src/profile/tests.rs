@@ -645,10 +645,11 @@ fn doctor_accepts_share_profile_without_sources() {
 
 #[test]
 fn doctor_creates_the_missing_rules_link_of_an_environment_from_before_cli_rules() {
-    // An environment created before rules/ was a link item declares Share for
-    // it (an old profile.toml without cli_rules follows cli_claude_md) but the
-    // link was never made. The inspector reports the missing link, and --fix
-    // creates it: nothing exists at the link point, so nothing can be lost.
+    // An environment created before rules/ was a link item: its profile.toml
+    // carries no cli_rules key (read through the manager, the load fallback
+    // makes it follow the shared CLAUDE.md) and the link was never made. The
+    // inspector reports the missing link, and --fix creates it: nothing
+    // exists at the link point, so nothing can be lost.
     let (provider, manager, _tmp) = setup_test_manager();
     populate_default_sources(
         &provider.claude_cli_default_dir(),
@@ -661,6 +662,26 @@ fn doctor_creates_the_missing_rules_link_of_an_environment_from_before_cli_rules
     let link = profile.isolation.cli_config_dir.join("rules");
     assert!(provider.is_symlink(&link));
     std::fs::remove_file(&link).unwrap();
+
+    // Rewrite profile.toml the way v0.24.0 wrote it: no cli_rules key at all.
+    let toml_path = provider
+        .app_data_dir()
+        .join("profiles")
+        .join("env")
+        .join("profile.toml");
+    let old_format: String = std::fs::read_to_string(&toml_path)
+        .unwrap()
+        .lines()
+        .filter(|line| !line.starts_with("cli_rules"))
+        .map(|line| format!("{line}\n"))
+        .collect();
+    assert!(!old_format.contains("cli_rules"));
+    std::fs::write(&toml_path, old_format).unwrap();
+    assert_eq!(
+        manager.get_profile("env").unwrap().sharing.cli_rules,
+        SharingMode::Share,
+        "the old profile follows its shared CLAUDE.md"
+    );
 
     let report = manager.inspect_profile_isolation("env").unwrap();
     let rules = report.items.iter().find(|i| i.key == "cli_rules").unwrap();
