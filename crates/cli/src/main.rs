@@ -51,9 +51,10 @@ enum Commands {
         /// Environment name (checks all environments if omitted)
         name: Option<String>,
 
-        /// Re-point share links that no longer resolve to their existing
-        /// expected source. Only symlinks are swapped; real files are never
-        /// touched (drifted real copies are reported, not repaired).
+        /// Repair share links whose declared source exists: re-point a link
+        /// that resolves elsewhere and create a link that is missing. Only
+        /// symlinks are swapped or created; real files are never touched
+        /// (drifted real copies are reported, not repaired).
         #[arg(long)]
         fix: bool,
     },
@@ -261,6 +262,7 @@ fn main() -> anyhow::Result<()> {
                         println!("  Sharing Configurations:");
                         println!("    CLI Settings: {:?}", p.sharing.cli_settings);
                         println!("    CLAUDE.md (Rules): {:?}", p.sharing.cli_claude_md);
+                        println!("    Rule files (rules/): {:?}", p.sharing.cli_rules);
                         println!("    CLI Plugins: {:?}", p.sharing.cli_plugins);
                         println!("    CLI Skills: {:?}", p.sharing.cli_skills);
                         println!("    CLI Project Memory: {:?}", p.sharing.cli_project_memory);
@@ -452,7 +454,7 @@ sign-in state) can be restored by moving the folder back under profiles/."
                     let fixed = manager.doctor_fix_links(env_name)?;
                     for key in &fixed {
                         println!(
-                            "{} re-pointed the share link for {}",
+                            "{} the share link for {} now points at its declared source",
                             "FIXED".green(),
                             doctor_label(key).cyan()
                         );
@@ -473,10 +475,13 @@ sign-in state) can be restored by moving the folder back under profiles/."
     Ok(())
 }
 
+/// Whether `--fix` can repair this item: a share link that resolves elsewhere
+/// while its declared source exists, or a share link that is missing outright.
 fn is_fixable(item: &csw_core::profile::inspector::ItemReport) -> bool {
+    use csw_core::profile::inspector::ItemHealth;
     matches!(
         item.health,
-        csw_core::profile::inspector::ItemHealth::WrongTarget { fixable: true, .. }
+        ItemHealth::WrongTarget { fixable: true, .. } | ItemHealth::MissingLink { .. }
     )
 }
 
@@ -485,6 +490,7 @@ fn is_fixable(item: &csw_core::profile::inspector::ItemReport) -> bool {
 fn doctor_label(key: &str) -> &'static str {
     match key {
         "cli_claude_md" => "Global rules (CLAUDE.md)",
+        "cli_rules" => "Rule files (rules/)",
         "cli_settings" => "Tool permissions & hooks (settings.json)",
         "cli_project_memory" => "Project conversations & memory (projects/)",
         "cli_plugins" => "Plugins (plugins/)",
@@ -576,7 +582,7 @@ Not auto-fixed to avoid losing the local copy.",
             }
             ItemHealth::MissingLink { expected_source } => {
                 println!(
-                    "  {} {} share link missing (expected -> {})",
+                    "  {} {} share link missing (expected -> {}) (run `csw doctor --fix` to create it)",
                     "!!".red().bold(),
                     label,
                     expected_source

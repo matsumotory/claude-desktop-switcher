@@ -130,10 +130,13 @@ impl<'a> Inspector<'a> {
         }
     }
 
-    /// Re-point share links that do not correctly resolve to an existing
-    /// expected source (`WrongTarget` with `fixable: true`). Only symlinks are
-    /// swapped; real files and directories are never touched, and operating
-    /// inside the real default Claude dirs is refused. Returns the fixed keys.
+    /// Repair share links whose declared source exists: re-point a link that
+    /// resolves elsewhere (`WrongTarget` with `fixable: true`) and create one
+    /// where nothing sits at the link point (`MissingLink`, e.g. the `rules/`
+    /// link of an environment created before rules/ was a link item). Only
+    /// symlinks are swapped or created; real files and directories are never
+    /// touched, and operating inside the real default Claude dirs is refused.
+    /// Returns the fixed keys.
     pub fn fix_relinkable(
         &self,
         profile: &Profile,
@@ -143,19 +146,20 @@ impl<'a> Inspector<'a> {
         let mut fixed = Vec::new();
 
         for item_report in &report.items {
-            if !matches!(
-                item_report.health,
-                ItemHealth::WrongTarget { fixable: true, .. }
-            ) {
-                continue;
-            }
+            let stale_link_present = match item_report.health {
+                ItemHealth::WrongTarget { fixable: true, .. } => true,
+                ItemHealth::MissingLink { .. } => false,
+                _ => continue,
+            };
             let item = LINK_ITEMS
                 .iter()
                 .find(|i| i.key == item_report.key)
                 .expect("report keys come from LINK_ITEMS");
             let path = item_path(profile, item);
             self.assert_outside_default_roots(&path)?;
-            self.provider.remove_symlink(&path)?;
+            if stale_link_present {
+                self.provider.remove_symlink(&path)?;
+            }
             self.provider
                 .create_symlink(&item_path(source_profile, item), &path)?;
             fixed.push(item_report.key);
