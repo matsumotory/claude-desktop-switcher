@@ -1,0 +1,59 @@
+name: Regenerate screenshots
+
+# Regenerates website/assets/*.png from the real WebView UI on a macOS runner and
+# pushes the result to the given PR branch. The shipped screenshots must be
+# captured on macOS (the fonts and rendering users actually see); a Linux cloud
+# session cannot reproduce them, so it asks this workflow instead. Manual trigger
+# only: it costs macOS minutes only when a PR that changes crates/desktop/ui asks
+# for it, and the Verify screenshots gate keeps requiring the regenerated files.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: PR branch to regenerate the screenshots on (never main)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: appshot-${{ inputs.branch }}
+  cancel-in-progress: true
+
+jobs:
+  appshot:
+    runs-on: macos-latest
+    env:
+      BRANCH: ${{ inputs.branch }}
+    steps:
+      - name: Refuse to push to main
+        run: |
+          if [ "$BRANCH" = "main" ]; then
+            echo "::error::screenshots are regenerated on a PR branch, never on main"
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Regenerate the 8 screenshots from the real UI
+        run: node scripts/appshot/gen-screenshots.mjs
+
+      - name: Commit and push the regenerated screenshots
+        run: |
+          if git diff --quiet -- website/assets; then
+            echo "screenshots unchanged; nothing to push"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/assets/*.png
+          git commit -m "chore(appshot): スクショを macOS ランナーで再生成する"
+          git push origin "HEAD:$BRANCH"
