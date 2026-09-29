@@ -61,10 +61,14 @@ jobs:
       - name: Cache cargo build
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
+      # Build only: no tagName. Given the tag, tauri-action finds the existing
+      # release and "updates name and body" with its own releaseBody input, which
+      # is empty here, so it wiped the changelog on v0.23.0, v0.24.0 and v0.24.1.
+      # The DMG is attached by the notarize step below, and the body is written
+      # once, last, by the release-notes job.
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -72,12 +76,11 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_PATH: ${{ runner.temp }}/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
         with:
-          tagName: ${{ needs.release-please.outputs.tag_name }}
           args: --target universal-apple-darwin
 
       # tauri-action notarizes and staples the .app, but the .dmg wrapper is only
       # signed. Notarize + staple the .dmg too so downloaded disk images mount
-      # without a Gatekeeper warning, then replace the uploaded asset.
+      # without a Gatekeeper warning, then attach it to the release.
       - name: Notarize and staple the DMG
         env:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
@@ -139,9 +142,10 @@ jobs:
             --clobber
 
       # Unexplained assets on the release page read as an accident or a leak, so
-      # every release ships a RELEASE-README.md describing each file, and the same
-      # guide is appended to the release notes. Templates live in .github/.
-      - name: Attach the release README and asset guide
+      # every release ships a RELEASE-README.md describing each file. The same
+      # guide is written into the release body by the release-notes job below.
+      # Templates live in .github/.
+      - name: Attach the release README
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
@@ -149,20 +153,16 @@ jobs:
           VERSION="${TAG_NAME#v}"
           sed "s/__VERSION__/${VERSION}/g" .github/release-readme.md > RELEASE-README.md
           gh release upload "$TAG_NAME" RELEASE-README.md --clobber
-          # release-please sets the body in the previous job, but the API can lag,
-          # so read it back until it is non-empty before this read-modify-write.
-          # Never edit an empty body: writing it back would wipe the changelog
-          # (this clobbered the notes on v0.23.0 and v0.24.0).
-          BODY=""
-          for _ in $(seq 1 15); do
-            BODY="$(gh release view "$TAG_NAME" --json body --jq .body)"
-            [ -n "$BODY" ] && break
-            sleep 4
-          done
-          if [ -z "$BODY" ]; then
-            echo "::warning::Release body is still empty; skipping the asset-guide append so the changelog is not clobbered. RELEASE-README.md is still attached."
-          elif ! printf '%s' "$BODY" | grep -q '### 添付ファイルの説明'; then
-            sed "s/__VERSION__/${VERSION}/g" .github/release-notes-assets.md > asset-guide.md
-            { printf '%s\n\n' "$BODY"; cat asset-guide.md; } > new-body.md
-            gh release edit "$TAG_NAME" --notes-file new-body.md
-          fi
+
+  # Write the release body once, after every job that touches the release, so
+  # nothing overwrites it afterwards (tauri-action's release update wiped the
+  # body on earlier releases). Runs even when a build job failed: the notes are
+  # for the user, and the failed job is retried on its own. The English changes
+  # are added afterwards by dispatching the same workflow with english_changes
+  # (see core_pr_merge_checklist).
+  release-notes:
+    needs: [release-please, build-mac-dmg, publish-csw, sbom]
+    if: ${{ !cancelled() && needs.release-please.outputs.release_created }}
+    uses: ./.github/workflows/release-notes.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
