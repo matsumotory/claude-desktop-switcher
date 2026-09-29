@@ -85,7 +85,7 @@ const EN = {
   // Buttons / actions
   '複製': 'Duplicate', '削除': 'Delete',
   'この環境の複製': 'Duplicate this environment',
-  '設定をそのままコピーして、別の名前の環境を作ります。元の環境は変わりません。': 'Copies the settings as they are to create a new environment under a different name. The original is left unchanged.',
+  'この環境の設定とデータをそのまま写して、別の名前の環境を作ります。元の環境は変わりません。': "Copies this environment's settings and data as they are into a new environment under a different name. The original is left unchanged.",
   '起動のしかた': 'How to launch',
   'この環境を起動': 'Launch this environment', '重複して起動': 'Launch alongside', '前面に表示': 'Bring to front',
   'この環境で Claude を開きます。ほかの環境の Claude が起動しているときは、先に終了してから起動してください。':
@@ -620,7 +620,7 @@ async function showDetail(name) {
 function cloneSection(name) {
   return section('この環境の複製', [
     h('div', { class: 'manage-row' },
-      h('p', { class: 'firstrun-body manage-text', text: '設定をそのままコピーして、別の名前の環境を作ります。元の環境は変わりません。' }),
+      h('p', { class: 'firstrun-body manage-text', text: 'この環境の設定とデータをそのまま写して、別の名前の環境を作ります。元の環境は変わりません。' }),
       h('button', { type: 'button', class: 'btn btn-ghost manage-action', onclick: () => showCloneRow(name) },
         icon('i-duplicate'), h('span', { text: '複製' }))),
   ]);

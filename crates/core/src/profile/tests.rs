@@ -1074,6 +1074,206 @@ fn data_map_sizes_materialized_share_item() {
     assert_eq!(claude_md.size_bytes, Some(777));
 }
 
+// --- duplicate (clone) --------------------------------------------------------
+//
+// Duplicating an environment copies its folder as it is (docs/PRIVACY.md), so
+// every item the user keeps in the environment (isolated or copied) must
+// arrive in the duplicate as real data, and every shared item must be a link
+// to the declared sharing source (the existing Claude), never to the source
+// environment's own link point.
+
+#[test]
+fn clone_copies_isolated_and_copied_items_and_relinks_shares_to_the_declared_source() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    std::fs::write(
+        provider
+            .claude_cli_default_dir()
+            .join("skills")
+            .join("base.md"),
+        "shared skill",
+    )
+    .unwrap();
+
+    let sharing = SharingConfig {
+        cli_claude_md: SharingMode::Share,
+        cli_rules: SharingMode::Isolate,
+        cli_plugins: SharingMode::Share,
+        cli_skills: SharingMode::Copy,
+        cli_settings: SharingMode::Isolate,
+        cli_project_memory: SharingMode::Isolate,
+        cli_history: SharingMode::Isolate,
+        desktop_worktrees: SharingMode::Isolate,
+        ..SharingConfig::default()
+    };
+    let orig = manager.create_profile("orig", sharing, None).unwrap();
+    let cli = &orig.isolation.cli_config_dir;
+    let desk = &orig.isolation.desktop_user_data_dir;
+
+    // Real data the user accumulated inside the isolated / copied items.
+    std::fs::create_dir_all(cli.join("projects").join("p1")).unwrap();
+    std::fs::write(
+        cli.join("projects").join("p1").join("conv.jsonl"),
+        "history",
+    )
+    .unwrap();
+    std::fs::write(cli.join("settings.json"), "{\"hooks\":{}}").unwrap();
+    std::fs::write(cli.join("history.jsonl"), "prompt\n").unwrap();
+    std::fs::write(cli.join("skills").join("mine.md"), "own skill").unwrap();
+    std::fs::write(cli.join("rules").join("style.md"), "own rule").unwrap();
+    std::fs::write(desk.join("git-worktrees.json"), "{\"wt\":1}").unwrap();
+    // Data outside the linker's items travels too (sign-in and app state).
+    std::fs::write(cli.join(".credentials.json"), "cli-login").unwrap();
+    std::fs::write(desk.join("Cookies"), "desktop-login").unwrap();
+
+    let clone = manager.clone_profile("orig", "copy").unwrap();
+    let ccli = &clone.isolation.cli_config_dir;
+    let cdesk = &clone.isolation.desktop_user_data_dir;
+
+    // Isolated and copied items arrive as real data.
+    for (path, expected) in [
+        (
+            ccli.join("projects").join("p1").join("conv.jsonl"),
+            "history",
+        ),
+        (ccli.join("settings.json"), "{\"hooks\":{}}"),
+        (ccli.join("history.jsonl"), "prompt\n"),
+        (ccli.join("skills").join("mine.md"), "own skill"),
+        (ccli.join("skills").join("base.md"), "shared skill"),
+        (ccli.join("rules").join("style.md"), "own rule"),
+        (cdesk.join("git-worktrees.json"), "{\"wt\":1}"),
+        (ccli.join(".credentials.json"), "cli-login"),
+        (cdesk.join("Cookies"), "desktop-login"),
+    ] {
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap_or_default(),
+            expected,
+            "{} must be duplicated as real data",
+            path.display()
+        );
+        assert!(
+            !provider.is_symlink(&path),
+            "{} must not be a link",
+            path.display()
+        );
+    }
+    assert!(!provider.is_symlink(&ccli.join("projects")));
+    assert!(!provider.is_symlink(&ccli.join("skills")));
+
+    // Shared items link to the declared source, not to the source environment.
+    for (item, source) in [("CLAUDE.md", "CLAUDE.md"), ("plugins", "plugins")] {
+        let link = ccli.join(item);
+        assert!(provider.is_symlink(&link), "{item} must stay shared");
+        assert_eq!(
+            std::fs::read_link(&link).unwrap(),
+            provider.claude_cli_default_dir().join(source),
+            "{item} must point at the existing Claude, not at the source environment"
+        );
+    }
+
+    // Always-isolated items start fresh: never copied from the source.
+    assert!(!cdesk.join("config.json").exists());
+    assert!(!cdesk.join("claude_desktop_config.json").exists());
+    assert!(!cdesk.join("ant-did").exists());
+    assert!(ccli.join("sessions").is_dir());
+    assert_eq!(std::fs::read_dir(ccli.join("sessions")).unwrap().count(), 0);
+
+    // The duplicate is healthy right away and its sharing config is inherited.
+    let report = manager.inspect_profile_isolation("copy").unwrap();
+    assert_eq!(report.issue_count, 0, "{:?}", report.items);
+    assert_eq!(clone.sharing.cli_skills, SharingMode::Copy);
+    assert_eq!(clone.profile.cloned_from.as_deref(), Some("orig"));
+}
+
+#[test]
+fn clone_of_fully_isolated_environment_keeps_its_conversations_rules_and_settings() {
+    // The user's own environment data must survive duplication even when
+    // nothing is shared: an empty projects/ or a missing CLAUDE.md would be
+    // silent data loss for the copy.
+    let (provider, manager, _tmp) = setup_test_manager();
+    let orig = manager
+        .create_profile("iso", SharingConfig::default(), None)
+        .unwrap();
+    let cli = &orig.isolation.cli_config_dir;
+    std::fs::write(cli.join("projects").join("conv.jsonl"), "hello").unwrap();
+    std::fs::write(cli.join("CLAUDE.md"), "my rules").unwrap();
+    std::fs::write(cli.join("settings.json"), "{}").unwrap();
+    std::fs::write(cli.join("history.jsonl"), "h").unwrap();
+    std::fs::write(cli.join("skills").join("s.md"), "s").unwrap();
+    std::fs::write(cli.join("rules").join("r.md"), "r").unwrap();
+    std::fs::write(cli.join("plugins").join("p.js"), "p").unwrap();
+
+    let clone = manager.clone_profile("iso", "iso2").unwrap();
+    let c = &clone.isolation.cli_config_dir;
+    for (path, expected) in [
+        (c.join("projects").join("conv.jsonl"), "hello"),
+        (c.join("CLAUDE.md"), "my rules"),
+        (c.join("settings.json"), "{}"),
+        (c.join("history.jsonl"), "h"),
+        (c.join("skills").join("s.md"), "s"),
+        (c.join("rules").join("r.md"), "r"),
+    ] {
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap_or_default(),
+            expected,
+            "{} must be duplicated",
+            path.display()
+        );
+        assert!(!provider.is_symlink(&path));
+    }
+    // plugins/ is the one item never taken from the source environment: its
+    // registry files carry absolute paths into that environment's cache. An
+    // isolated duplicate starts with an empty plugins/ of its own.
+    let plugins = c.join("plugins");
+    assert!(plugins.is_dir());
+    assert!(!provider.is_symlink(&plugins));
+    assert_eq!(std::fs::read_dir(&plugins).unwrap().count(), 0);
+    assert!(clone.sharing.is_fully_isolated());
+    let report = manager.inspect_profile_isolation("iso2").unwrap();
+    assert_eq!(report.issue_count, 0, "{:?}", report.items);
+}
+
+#[test]
+fn clone_sets_up_copied_plugins_from_the_existing_claude_not_the_source_environment() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    let default_plugins = provider.claude_cli_default_dir().join("plugins");
+    std::fs::create_dir_all(&default_plugins).unwrap();
+    std::fs::write(default_plugins.join("base.js"), "base").unwrap();
+
+    let sharing = SharingConfig {
+        cli_plugins: SharingMode::Copy,
+        ..SharingConfig::default()
+    };
+    let orig = manager.create_profile("orig", sharing, None).unwrap();
+    // The source environment's plugins/ diverged after creation (it is a copy).
+    std::fs::write(
+        orig.isolation
+            .cli_config_dir
+            .join("plugins")
+            .join("mine.js"),
+        "mine",
+    )
+    .unwrap();
+
+    let clone = manager.clone_profile("orig", "copy").unwrap();
+    let plugins = clone.isolation.cli_config_dir.join("plugins");
+    assert!(
+        !provider.is_symlink(&plugins),
+        "copy means a real directory"
+    );
+    assert!(
+        plugins.join("base.js").exists(),
+        "a copied plugins/ is set up again from the existing Claude"
+    );
+    assert!(
+        !plugins.join("mine.js").exists(),
+        "the source environment's plugin state is never copied (absolute paths inside)"
+    );
+}
+
 // --- trash on delete ----------------------------------------------------------
 
 #[test]

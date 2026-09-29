@@ -1,7 +1,7 @@
 ---
 title: ルールファイル rules/ を共通ルールとして引き継ぐ (issue #190)
 created: 2026-09-29
-status: in-progress
+status: completed
 pr: 192
 related_prs: [193]
 related_issues: [190]
@@ -83,4 +83,4 @@ CI: Test / Build / Lint / Deny / Security / Verify screenshots が緑。
 - [x] RED → GREEN (core 84 テスト、うち新規 8)
 - [x] desktop / cli / docs ja,en / PRIVACY ja,en に伝播
 - [x] スクショ 8 枚を macOS で再生成し LP の実寸と `?v=` を更新 (PR #193 のワークフローで再生成)
-- [ ] CI 全緑、squash マージ
+- [x] CI 全緑、squash マージ (4820497)

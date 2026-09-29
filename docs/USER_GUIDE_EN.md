@@ -76,7 +76,7 @@ For other cases (such as "I want to reuse my common rules, skills, and plugins, 
 ![Create-environment dialog](../website/assets/screen_create.png)
 
 > **Duplicating an existing environment**
-> Select an environment in the settings window and click the **"Duplicate"** button to create a new environment that inherits its sharing configuration and layout. The account sign-in is always separate, so you sign in again in the new environment; isolated components also start empty.
+> Select an environment in the settings window and click the **"Duplicate"** button to create a new environment with that environment's settings and data copied as they are. It saves rebuilding a similar setup from scratch. Among the conversation history and auto-memory, common rules, skills, tool permissions and input history, the items set to "Isolated" or "Copied" are copied into the duplicate, and the items set to "Shared" stay shared with the existing Claude. Plugins are not copied from the original environment, because their install records point at that environment's location; they are set up again from the existing Claude according to the sharing mode, and an isolated duplicate starts with no plugins, so install them again there. The account sign-in (config.json), the connector and app settings, the device ID and the session state are always separate per environment and are not copied. You may be asked to sign in when you first launch the duplicate.
 
 ---
 
