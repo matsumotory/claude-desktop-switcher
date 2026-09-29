@@ -209,6 +209,8 @@ fn share_settings_preset_shares_rules_copies_settings_isolates_conversations() {
     let p = SharingConfig::share_settings_preset();
     // Shared by symlink: the app reads these and the user is the single writer.
     assert_eq!(p.cli_claude_md, SharingMode::Share);
+    // rules/ holds the same kind of always-on rules as CLAUDE.md (issue #190).
+    assert_eq!(p.cli_rules, SharingMode::Share);
     assert_eq!(p.cli_plugins, SharingMode::Share);
     assert_eq!(p.cli_skills, SharingMode::Share);
     // Copied once: the user's own settings and worktree list, reused as a starting
@@ -228,6 +230,7 @@ fn share_workspace_preset_also_shares_conversations_but_never_auth() {
     let p = SharingConfig::share_workspace_preset();
     // Inherits everything the settings preset shares/copies.
     assert_eq!(p.cli_claude_md, SharingMode::Share);
+    assert_eq!(p.cli_rules, SharingMode::Share);
     assert_eq!(p.cli_plugins, SharingMode::Share);
     assert_eq!(p.cli_skills, SharingMode::Share);
     assert_eq!(p.cli_settings, SharingMode::Copy);
@@ -249,6 +252,7 @@ fn default_sharing_isolates_all_configurable_components() {
     for mode in [
         d.cli_settings,
         d.cli_claude_md,
+        d.cli_rules,
         d.cli_project_memory,
         d.cli_plugins,
         d.cli_skills,
@@ -429,6 +433,118 @@ fn is_fully_isolated_only_when_every_component_is_isolate() {
         ..SharingConfig::default()
     };
     assert!(!one_copy.is_fully_isolated());
+
+    // The rules directory is a carry-over like every other component.
+    let rules_shared = SharingConfig {
+        cli_rules: SharingMode::Share,
+        ..SharingConfig::default()
+    };
+    assert!(!rules_shared.is_fully_isolated());
+}
+
+// --- ~/.claude/rules/ (issue #190) ------------------------------------------
+//
+// Claude Code loads the user-level rules in ~/.claude/rules/ in every project,
+// next to ~/.claude/CLAUDE.md. The mode descriptions promise that "global
+// rules" carry over, so the linker must manage rules/ exactly like CLAUDE.md.
+
+use crate::profile::linker::{ItemDir, LINK_ITEMS};
+
+#[test]
+fn link_items_manage_the_rules_directory_next_to_claude_md() {
+    let index = |key: &str| {
+        LINK_ITEMS
+            .iter()
+            .position(|i| i.key == key)
+            .unwrap_or_else(|| panic!("{key} is not a link item"))
+    };
+    let rules = &LINK_ITEMS[index("cli_rules")];
+    assert_eq!(rules.rel_path, "rules");
+    assert!(rules.is_directory);
+    assert!(matches!(rules.dir, ItemDir::Cli));
+    assert!(
+        rules.fixed_mode.is_none(),
+        "rules/ is tunable (share / copy / isolate) like CLAUDE.md"
+    );
+    // Listed right after CLAUDE.md: the two make up the user's global rules.
+    assert_eq!(index("cli_rules"), index("cli_claude_md") + 1);
+}
+
+#[test]
+fn create_with_share_workspace_preset_links_rules_directory() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    let source_rules = provider.claude_cli_default_dir().join("rules");
+    std::fs::create_dir_all(&source_rules).unwrap();
+    std::fs::write(source_rules.join("preferences.md"), "always use pnpm").unwrap();
+
+    let profile = manager
+        .create_profile("研究用", SharingConfig::share_workspace_preset(), None)
+        .unwrap();
+    assert_eq!(profile.sharing.cli_rules, SharingMode::Share);
+
+    let rules = profile.isolation.cli_config_dir.join("rules");
+    assert!(
+        provider.is_symlink(&rules),
+        "rules/ must be shared by symlink, like CLAUDE.md"
+    );
+    assert_eq!(std::fs::read_link(&rules).unwrap(), source_rules);
+    assert_eq!(
+        std::fs::read_to_string(rules.join("preferences.md")).unwrap(),
+        "always use pnpm",
+        "the rule files must be visible through the link"
+    );
+}
+
+#[test]
+fn create_with_copy_rules_copies_the_directory_once() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    let source_rules = provider.claude_cli_default_dir().join("rules");
+    std::fs::create_dir_all(source_rules.join("frontend")).unwrap();
+    std::fs::write(source_rules.join("frontend").join("style.md"), "2 spaces").unwrap();
+
+    let sharing = SharingConfig {
+        cli_rules: SharingMode::Copy,
+        ..SharingConfig::default()
+    };
+    let profile = manager.create_profile("env", sharing, None).unwrap();
+
+    let rules = profile.isolation.cli_config_dir.join("rules");
+    assert!(rules.is_dir());
+    assert!(!provider.is_symlink(&rules), "copy means a real directory");
+    assert_eq!(
+        std::fs::read_to_string(rules.join("frontend").join("style.md")).unwrap(),
+        "2 spaces",
+        "nested rule files are copied recursively"
+    );
+}
+
+#[test]
+fn create_isolated_profile_keeps_rules_directory_empty_and_unlinked() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    let source_rules = provider.claude_cli_default_dir().join("rules");
+    std::fs::create_dir_all(&source_rules).unwrap();
+    std::fs::write(source_rules.join("preferences.md"), "private").unwrap();
+
+    let profile = manager
+        .create_profile("env", SharingConfig::default(), None)
+        .unwrap();
+
+    let rules = profile.isolation.cli_config_dir.join("rules");
+    assert!(
+        rules.is_dir(),
+        "isolate creates an empty directory of its own"
+    );
+    assert!(!provider.is_symlink(&rules));
+    assert_eq!(std::fs::read_dir(&rules).unwrap().count(), 0);
+}
+
+#[test]
+fn default_profile_declares_rules_shared() {
+    // The existing Claude is the source of every share, so its own rules/ is
+    // reported as shared, like every other component.
+    let (_, manager, _tmp) = setup_test_manager();
+    let default_profile = manager.get_profile("default").unwrap();
+    assert_eq!(default_profile.sharing.cli_rules, SharingMode::Share);
 }
 
 // The default profile ("既存の Claude") shares everything, so it is never eligible.
@@ -450,6 +566,8 @@ fn populate_default_sources(cli_default: &Path, desktop_default: &Path) {
     std::fs::write(cli_default.join("settings.json"), "{}").unwrap();
     std::fs::create_dir_all(cli_default.join("plugins")).unwrap();
     std::fs::create_dir_all(cli_default.join("skills")).unwrap();
+    std::fs::create_dir_all(cli_default.join("rules")).unwrap();
+    std::fs::write(cli_default.join("rules").join("preferences.md"), "rules").unwrap();
     std::fs::create_dir_all(cli_default.join("projects")).unwrap();
     std::fs::write(cli_default.join("history.jsonl"), "").unwrap();
     std::fs::write(desktop_default.join("git-worktrees.json"), "{}").unwrap();
@@ -470,7 +588,7 @@ fn doctor_reports_healthy_share_profile() {
 
     assert_eq!(
         report.items.len(),
-        11,
+        12,
         "every linker-managed link point is checked"
     );
     assert_eq!(
@@ -508,6 +626,59 @@ fn doctor_accepts_share_profile_without_sources() {
         "missing sources are not issues: {:?}",
         report.items
     );
+    // Nothing to link to, so --fix has nothing to create either.
+    let fixed = manager.doctor_fix_links("env").unwrap();
+    assert!(fixed.is_empty(), "{fixed:?}");
+    assert!(
+        !manager
+            .get_profile("env")
+            .unwrap()
+            .isolation
+            .cli_config_dir
+            .join("rules")
+            .symlink_metadata()
+            .map(|m| m.file_type().is_symlink())
+            .unwrap_or(false),
+        "no link is created towards an absent source"
+    );
+}
+
+#[test]
+fn doctor_creates_the_missing_rules_link_of_an_environment_from_before_cli_rules() {
+    // An environment created before rules/ was a link item declares Share for
+    // it (an old profile.toml without cli_rules follows cli_claude_md) but the
+    // link was never made. The inspector reports the missing link, and --fix
+    // creates it: nothing exists at the link point, so nothing can be lost.
+    let (provider, manager, _tmp) = setup_test_manager();
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    manager
+        .create_profile("env", SharingConfig::share_workspace_preset(), None)
+        .unwrap();
+    let profile = manager.get_profile("env").unwrap();
+    let link = profile.isolation.cli_config_dir.join("rules");
+    assert!(provider.is_symlink(&link));
+    std::fs::remove_file(&link).unwrap();
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    let rules = report.items.iter().find(|i| i.key == "cli_rules").unwrap();
+    assert!(matches!(rules.health, ItemHealth::MissingLink { .. }));
+    assert!(rules.is_issue);
+
+    let fixed = manager.doctor_fix_links("env").unwrap();
+    assert_eq!(fixed, vec!["cli_rules"]);
+    assert!(
+        provider.is_symlink(&link),
+        "--fix creates the missing share link"
+    );
+    assert_eq!(
+        std::fs::read_link(&link).unwrap(),
+        provider.claude_cli_default_dir().join("rules")
+    );
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    assert_eq!(report.issue_count, 0, "{:?}", report.items);
 }
 
 #[test]

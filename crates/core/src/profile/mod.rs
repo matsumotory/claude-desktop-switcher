@@ -126,6 +126,14 @@ pub struct SharingConfig {
     #[serde(default)]
     pub cli_claude_md: SharingMode,
 
+    /// rules/ directory: user-level rule files that Claude Code loads in every
+    /// project next to CLAUDE.md, so the two together are the user's global
+    /// rules (issue #190). Presets set it exactly like `cli_claude_md`. A
+    /// profile.toml written before this field existed carries no key for it;
+    /// `config::load_profile` then makes it follow `cli_claude_md`.
+    #[serde(default)]
+    pub cli_rules: SharingMode,
+
     /// projects/<path>/memory/ directory (MEMORY.md index + feedback_*.md etc.)
     /// Total: ~250 files across all projects.
     #[serde(default)]
@@ -178,6 +186,7 @@ impl Default for SharingConfig {
         Self {
             cli_settings: SharingMode::Isolate,
             cli_claude_md: SharingMode::Isolate,
+            cli_rules: SharingMode::Isolate,
             cli_project_memory: SharingMode::Isolate,
             cli_plugins: SharingMode::Isolate,
             cli_skills: SharingMode::Isolate,
@@ -205,15 +214,16 @@ impl SharingConfig {
     //   - the account login lives in the per-profile data dir, untouched by the linker.
 
     /// Preset for "会話とメモリも分ける" — separate accounts and conversations, but
-    /// reuse the common setup. The CLI global rules (`CLAUDE.md`), `plugins/` and
-    /// `skills/` are shared by symlink (the app only reads them and the user is
-    /// their single writer, so a bidirectional write never breaks the link). The
-    /// permission/hook `settings.json` and the worktree list are copied once at
-    /// creation. Conversation history, project memory and command history stay
-    /// isolated. Use case: split by purpose while keeping one rule set.
+    /// reuse the common setup. The CLI global rules (`CLAUDE.md` and `rules/`),
+    /// `plugins/` and `skills/` are shared by symlink (the app only reads them and
+    /// the user is their single writer, so a bidirectional write never breaks the
+    /// link). The permission/hook `settings.json` and the worktree list are copied
+    /// once at creation. Conversation history, project memory and command history
+    /// stay isolated. Use case: split by purpose while keeping one rule set.
     pub fn share_settings_preset() -> Self {
         Self {
             cli_claude_md: SharingMode::Share,
+            cli_rules: SharingMode::Share,
             cli_plugins: SharingMode::Share,
             cli_skills: SharingMode::Share,
             cli_settings: SharingMode::Copy,
@@ -254,6 +264,7 @@ impl SharingConfig {
     pub fn is_fully_isolated(&self) -> bool {
         self.cli_settings == SharingMode::Isolate
             && self.cli_claude_md == SharingMode::Isolate
+            && self.cli_rules == SharingMode::Isolate
             && self.cli_project_memory == SharingMode::Isolate
             && self.cli_plugins == SharingMode::Isolate
             && self.cli_skills == SharingMode::Isolate
@@ -351,6 +362,7 @@ impl ProfileManager {
                 sharing: SharingConfig {
                     cli_settings: SharingMode::Share,
                     cli_claude_md: SharingMode::Share,
+                    cli_rules: SharingMode::Share,
                     cli_project_memory: SharingMode::Share,
                     cli_plugins: SharingMode::Share,
                     cli_skills: SharingMode::Share,
@@ -622,6 +634,7 @@ impl ProfileManager {
                 let name_str = filename.to_string_lossy();
                 if name_str == "settings.json"
                     || name_str == "CLAUDE.md"
+                    || name_str == "rules"
                     || name_str == "projects"
                     || name_str == "plugins"
                     || name_str == "skills"

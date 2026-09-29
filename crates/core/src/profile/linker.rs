@@ -53,6 +53,15 @@ pub const LINK_ITEMS: &[LinkItem] = &[
         is_directory: false,
         fixed_mode: None,
     },
+    // rules/ — user-level rule files, loaded in every project next to CLAUDE.md
+    // (the other half of the user's global rules; issue #190).
+    LinkItem {
+        key: "cli_rules",
+        dir: ItemDir::Cli,
+        rel_path: "rules",
+        is_directory: true,
+        fixed_mode: None,
+    },
     LinkItem {
         key: "cli_project_memory",
         dir: ItemDir::Cli,
@@ -125,6 +134,7 @@ pub fn item_mode(profile: &Profile, item: &LinkItem) -> SharingMode {
     match item.key {
         "cli_settings" => profile.sharing.cli_settings.clone(),
         "cli_claude_md" => profile.sharing.cli_claude_md.clone(),
+        "cli_rules" => profile.sharing.cli_rules.clone(),
         "cli_project_memory" => profile.sharing.cli_project_memory.clone(),
         "cli_plugins" => profile.sharing.cli_plugins.clone(),
         "cli_skills" => profile.sharing.cli_skills.clone(),

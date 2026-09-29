@@ -52,6 +52,11 @@ fn setup_dummy_claude_data(desktop_path: &Path, cli_path: &Path) {
     )
     .unwrap();
 
+    // User-level rules, loaded by Claude Code in every project next to CLAUDE.md.
+    let rules_path = cli_path.join("rules");
+    fs::create_dir_all(&rules_path).unwrap();
+    fs::write(rules_path.join("preferences.md"), "# Preferences\nUse pnpm").unwrap();
+
     let sessions_path = cli_path.join("sessions");
     fs::create_dir_all(&sessions_path).unwrap();
     fs::write(
@@ -132,6 +137,7 @@ fn test_profile_sharing_and_isolation_matrix() {
     let matrix_sharing = SharingConfig {
         cli_settings: SharingMode::Isolate, // CLI settings -> Isolated (none initially)
         cli_claude_md: SharingMode::Share,  // CLAUDE.md -> Shared (symlink)
+        cli_rules: SharingMode::Share,      // rules/ -> Shared (symlink)
         cli_project_memory: SharingMode::Share, // Project memory -> Shared (symlink)
         cli_plugins: SharingMode::Isolate,  // Plugins -> Isolated (empty dir)
         cli_skills: SharingMode::Copy,      // Skills -> Copied (physical copy)
@@ -165,6 +171,15 @@ fn test_profile_sharing_and_isolation_matrix() {
     let target_claude_md = target_cli.join("CLAUDE.md");
     assert!(target_claude_md.exists());
     assert!(platform.is_symlink(&target_claude_md));
+
+    let target_rules = target_cli.join("rules");
+    assert!(platform.is_symlink(&target_rules));
+    assert!(
+        fs::read_to_string(target_rules.join("preferences.md"))
+            .unwrap()
+            .contains("Use pnpm"),
+        "the shared rule files are reachable through the link"
+    );
 
     // --- ASSERTIONS FOR COPY MODE (a legitimately copyable item) ---
 
