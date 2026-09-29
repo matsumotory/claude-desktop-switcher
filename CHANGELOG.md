@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.24.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.0...v0.24.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **core:** ルールファイル rules/ を共通ルールとして引き継ぐ ([4820497](https://github.com/matsumotory/claude-desktop-switcher/commit/482049797fa58a4e9a112b3646fbd6092b4ae82f)), closes [#190](https://github.com/matsumotory/claude-desktop-switcher/issues/190)
+* **core:** 複製が分離データを写し共有リンクは既存の Claude を指すようにする ([bbab143](https://github.com/matsumotory/claude-desktop-switcher/commit/bbab1433f4724ab67e7f1bfc76e59d641568d591))
+
 ## [0.24.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.23.0...v0.24.0) (2026-07-09)
 
 
