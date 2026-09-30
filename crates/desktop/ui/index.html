@@ -135,11 +135,11 @@
                 <p class="empty-eyebrow">はじめまして</p>
               </div>
               <h1 class="empty-title">環境を分けて、混ぜない。</h1>
-              <p class="empty-lead">既存の Claude はそのまま。そこを基準に、何を引き継ぎ何を分けるかを決めて、新しい環境を作ります。</p>
+              <p class="empty-lead">既存のClaudeはそのまま。そこを基準に、何を引き継ぎ何を分けるかを決めて、新しい環境を作ります。</p>
 
               <ol class="steps">
-                <li class="step"><span class="step-num">1</span><span class="step-text" data-en="Press New environment"><strong>環境を作る</strong> を押す</span></li>
-                <li class="step"><span class="step-num">2</span><span class="step-text" data-en="Choose how to separate for your use case">用途に合わせて <strong>分け方</strong> を選ぶ</span></li>
+                <li class="step"><span class="step-num">1</span><span class="step-text" data-en="Press New environment"><strong>環境を作る</strong>を押す</span></li>
+                <li class="step"><span class="step-num">2</span><span class="step-text" data-en="Choose how to separate for your use case">用途に合わせて<strong>分け方</strong>を選ぶ</span></li>
                 <li class="step"><span class="step-num">3</span><span class="step-text" data-en="Launch this environment">この環境を起動する</span></li>
               </ol>
 
@@ -154,26 +154,26 @@
                     <span class="firstrun-icon"><svg class="icon"><use href="#i-monitor"/></svg></span>
                     <div>
                       <p class="firstrun-head">いまの環境はそのまま残ります</p>
-                      <p class="firstrun-body">あなたが普段使っている Claudeデスクトップアプリと Claude Code の環境は「既存の Claude」として保護され、設定・履歴・ログインは変更されません。</p>
+                      <p class="firstrun-body">あなたが普段使っているClaudeデスクトップアプリとClaude Codeの環境は「既存のClaude」として保護され、設定・履歴・ログインは変更されません。</p>
                     </div>
                   </div>
                   <div class="firstrun-row">
                     <span class="firstrun-icon"><svg class="icon"><use href="#i-switch"/></svg></span>
                     <div>
                       <p class="firstrun-head">環境を切り替えて使えます</p>
-                      <p class="firstrun-body">「利用中」は、いま Claude が起動している環境です。Claude を終了すれば「利用中」は外れ、その環境はまた「この環境を起動」から開き直せます。設定を共有する環境は衝突を防ぐため一度に1つずつ開くので、別の環境を開くときは先に起動中の Claude を終了します。「すべて分ける」で作った環境は何も共有しないので、起動中の Claude を終了せず、新しいウィンドウで並べて開けます。</p>
+                      <p class="firstrun-body">「利用中」は、いまClaudeが起動している環境です。Claudeを終了すれば「利用中」は外れ、その環境はまた「この環境を起動」から開き直せます。設定を共有する環境は衝突を防ぐため一度に1つずつ開くので、別の環境を開くときは先に起動中のClaudeを終了します。「すべて分ける」で作った環境は何も共有しないので、起動中のClaudeを終了せず、新しいウィンドウで並べて開けます。</p>
                     </div>
                   </div>
                   <div class="firstrun-row">
                     <span class="firstrun-icon"><svg class="icon"><use href="#i-terminal"/></svg></span>
                     <div>
-                      <p class="firstrun-head">ターミナルの Claude Code も同じ環境で使えます</p>
-                      <p class="firstrun-body" data-en="A terminal inside the Claude Desktop App you opened from CSW is already in this environment, so you can just start with claude. Only when you use this environment in a terminal you opened yourself, such as iTerm2, run the command below. It applies to that tab only and never affects your usual environment.">CSW から開いた Claudeデスクトップアプリの中のターミナルは、最初からこの環境なので、そのまま <code>claude</code> で始められます。自分で別に開いた iTerm2 などのターミナルでこの環境を使うときは、次のコマンドを実行します。この指定はそのタブだけに効き、普段の環境には影響しません。</p>
+                      <p class="firstrun-head">ターミナルのClaude Codeも同じ環境で使えます</p>
+                      <p class="firstrun-body" data-en="A terminal inside the Claude Desktop App you opened from CSW is already in this environment, so you can just start with claude. Only when you use this environment in a terminal you opened yourself, such as iTerm2, run the command below. It applies to that tab only and never affects your usual environment.">CSWから開いたClaudeデスクトップアプリの中のターミナルは、最初からこの環境なので、そのまま<code>claude</code>で始められます。自分で別に開いたiTerm2などのターミナルでこの環境を使うときは、次のコマンドを実行します。この指定はそのタブだけに効き、普段の環境には影響しません。</p>
                       <code class="code-line" data-en="eval $(csw env &lt;env-name&gt;)">eval $(csw env &lt;環境名&gt;)</code>
                       <!-- csw is a separate release asset, not in the .dmg. Same
                            URL as the footer's update check. -->
                       <div class="csw-get">
-                        <p class="firstrun-body">csw コマンドはアプリの .dmg に含まれておらず、アプリを更新しても更新されません。GitHub のリリースページから最新の csw を入手できます。</p>
+                        <p class="firstrun-body">cswコマンドはアプリの.dmgに含まれておらず、アプリを更新しても更新されません。GitHubのリリースページから最新のcswを入手できます。</p>
                         <button type="button" class="btn btn-ghost" data-url="https://github.com/matsumotory/claude-desktop-switcher/releases">リリースページを開く</button>
                       </div>
                     </div>
@@ -217,11 +217,11 @@
 
               <div class="field">
                 <label class="field-label" for="inputNote">メモ（任意）</label>
-                <input type="text" id="inputNote" class="input" placeholder="例: 仕事用。会社の Google アカウントでサインイン" autocomplete="off" spellcheck="false" maxlength="200">
+                <input type="text" id="inputNote" class="input" placeholder="例: 仕事用。会社のGoogleアカウントでサインイン" autocomplete="off" spellcheck="false" maxlength="200">
               </div>
 
               <div class="field">
-                <span class="field-label">既存の Claude から、どう分けますか?</span>
+                <span class="field-label">既存のClaudeから、どう分けますか?</span>
                 <p class="share-basis">どのモードでも、サインインするアカウントは環境ごとに分かれます。課金や利用量はそのアカウントにひも付きます。違いは、会話・メモリ・設定をどこまで引き継ぐかです。</p>
                 <p class="note-card create-notice" id="createNotice" hidden></p>
                 <div class="mode-cards" role="radiogroup" aria-label="分け方">
@@ -262,8 +262,8 @@
                     <span class="mode-card-body">
                       <span class="mode-card-icon"><svg class="icon"><use href="#i-lock"/></svg></span>
                       <span class="mode-card-main">
-                        <span class="mode-card-head">すべて分ける <span class="tag-recommend">推奨</span></span>
-                        <span class="mode-card-desc">ルールも設定も会話履歴もメモリも、何も引き継がずにまっさらな環境を作ります。既存の Claude には一切触れないので、案件やクライアント、仕事と個人を完全に分けられます。</span>
+                        <span class="mode-card-head">すべて分ける<span class="tag-recommend">推奨</span></span>
+                        <span class="mode-card-desc">ルールも設定も会話履歴もメモリも、何も引き継がずにまっさらな環境を作ります。既存のClaudeには一切触れないので、案件やクライアント、仕事と個人を完全に分けられます。</span>
                         <span class="mode-card-preview">
                           <span class="prev"><span class="prev-k">設定・会話</span><span class="prev-v">分離</span></span>
                           <span class="prev"><span class="prev-k">アカウント</span><span class="prev-v">分離</span></span>
