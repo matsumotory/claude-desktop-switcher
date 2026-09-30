@@ -2041,8 +2041,10 @@ function devInvoke(cmd, args) {
       return Promise.resolve(null);
     case 'app_version': {
       // The real version lives in tauri.conf.json, which the browser mock cannot
-      // read. Screenshot capture injects ?appver= (scripts/appshot); without it
-      // the footer version is hidden rather than showing a stale hardcoded one.
+      // read. A manual ?appver= shows one; without it the footer version is hidden
+      // rather than showing a stale hardcoded one. Screenshot capture
+      // (scripts/appshot) leaves it out: screenshots are taken before
+      // release-please bumps the version, so any injected value would be stale.
       const appver = new URLSearchParams(location.search).get('appver');
       return appver ? Promise.resolve(appver) : Promise.reject(new Error('no appver'));
     }
