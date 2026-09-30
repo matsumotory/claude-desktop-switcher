@@ -55,6 +55,10 @@ const EN = {
   '「利用中」は、いま Claude が起動している環境です。Claude を終了すれば「利用中」は外れ、その環境はまた「この環境を起動」から開き直せます。設定を共有する環境は衝突を防ぐため一度に1つずつ開くので、別の環境を開くときは先に起動中の Claude を終了します。「すべて分ける」で作った環境は何も共有しないので、起動中の Claude を終了せず、新しいウィンドウで並べて開けます。':
     '"In use" marks the environment Claude is currently running for. Quit Claude and it clears, so you can reopen that environment from "Launch this environment". Environments that share settings open one at a time to avoid conflicts, so quit the running Claude before opening another. An environment set to "separate everything" shares nothing, so you can open it in a new window alongside a running Claude, without quitting.',
   'ターミナルの Claude Code も同じ環境で使えます': 'Claude Code in the terminal uses the same environment',
+  // Where to get csw: shown wherever the GUI names a csw command.
+  'csw コマンドはアプリの .dmg に含まれておらず、アプリを更新しても更新されません。GitHub のリリースページから最新の csw を入手できます。':
+    "The csw command is not included in the app's .dmg and is not updated with the app. You can get the latest csw from the GitHub releases page.",
+  'リリースページを開く': 'Open releases page',
   // Detail: taglines, sections, sharing
   'あなた自身の環境': 'Your own setup',
   '利用中の環境': 'Environment in use',
@@ -85,7 +89,8 @@ const EN = {
   // Buttons / actions
   '複製': 'Duplicate', '削除': 'Delete',
   'この環境の複製': 'Duplicate this environment',
-  'この環境の設定とデータをそのまま写して、別の名前の環境を作ります。元の環境は変わりません。': "Copies this environment's settings and data as they are into a new environment under a different name. The original is left unchanged.",
+  'この環境の設定とデータをそのまま写して、別の名前の環境を作ります。Claudeデスクトップアプリのサインインの情報もそのまま写すので、複製した環境は元の環境と同じサインインの状態を持ちます。別のアカウントで使う環境は「環境を作る」から作ってください。':
+    "Copies this environment's settings and data as they are into a new environment under a different name. The Claude Desktop App sign-in is copied too, so the duplicate carries the same sign-in state as the original. For a different account, create the environment with \"New environment\" instead.",
   '起動のしかた': 'How to launch',
   'この環境を起動': 'Launch this environment', '重複して起動': 'Launch alongside', '前面に表示': 'Bring to front',
   'この環境で Claude を開きます。ほかの環境の Claude が起動しているときは、先に終了してから起動してください。':
@@ -128,7 +133,7 @@ const EN = {
   'ディスクイメージを取り出しました': 'Disk image ejected',
   '取り出せませんでした。ディスクイメージを使用中のウィンドウを閉じてから、もう一度お試しください。': 'Could not eject. Close any window using the disk image, then try again.',
   'パスをコピー': 'Copy path', 'コマンドをコピー': 'Copy command',
-  '複製先の名前。例: 仕事用-控え': 'Name for the copy. e.g. Work-backup',
+  '複製先の名前。例: 仕事用-控え': 'Name for the duplicate. e.g. Work-backup',
   '名前を入力してください。': 'Enter a name.',
   '"default" は使えません。いまの環境を指す予約名です。': '"default" is reserved for the current environment and cannot be used.',
   '名前は64文字までにしてください。': 'Use at most 64 characters.',
@@ -170,8 +175,8 @@ const EN = {
     'The link points somewhere unexpected, and the shared source is missing.',
   '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。':
     'The share link has been replaced by a regular file. To avoid losing your local contents, it is not repaired automatically.',
-  '共有のリンクの位置に実体のフォルダがあります。フォルダが空なら、ターミナルで csw doctor --fix を実行するとリンクに置き換えられます。中身があるときは、手元の内容を失わないよう、自動では直しません。':
-    'A regular folder sits where the share link belongs. If the folder is empty, run csw doctor --fix in a terminal to replace it with the link. If it has contents, it is not repaired automatically, to avoid losing your local contents.',
+  '共有のリンクの位置に実体のフォルダがあります。フォルダが空なら、ターミナルで csw doctor --fix を実行するとリンクに置き換えられます。この置き換えには csw 0.24.2 以降が必要です。中身があるときは、手元の内容を失わないよう、自動では直しません。':
+    'A regular folder sits where the share link belongs. If the folder is empty, run csw doctor --fix in a terminal to replace it with the link. This replacement needs csw 0.24.2 or later. If it has contents, it is not repaired automatically, to avoid losing your local contents.',
   '共有のリンクがありません。ターミナルで csw doctor --fix を実行すると作れます。':
     'The share link is missing. Run csw doctor --fix in a terminal to create it.',
   '常に分離する項目がリンクになっています。': 'An always-isolated item has become a link.',
@@ -598,7 +603,7 @@ async function showDetail(name) {
     // State first (what this environment inherits), then collapsed detail, then
     // a one-line switch hint by the action. The "利用中"/multi-window concept lives
     // in onboarding, not repeated as an always-on block here.
-    nodes.push(sharingDisclosure(d.sharing));
+    nodes.push(sharingDisclosure(d.sharing, !!d.cloned_from));
     nodes.push(pathsSection(d, false));
     nodes.push(doctorSection(name));
     nodes.push(terminalSection(name));
@@ -619,10 +624,13 @@ async function showDetail(name) {
 // in a flat bordered card (minimalist-ui: clear hierarchy, no orphan button) with a
 // one-line explanation of what it does, so it never reads as a mystery button. It
 // stays out of the footer so the footer's slots are reserved for launching.
+// The Claude Desktop App sign-in lives inside the environment folder and is
+// copied as is, so the card says so before the user duplicates and points a
+// different account to the create button (its label, 環境を作る).
 function cloneSection(name) {
   return section('この環境の複製', [
     h('div', { class: 'manage-row' },
-      h('p', { class: 'firstrun-body manage-text', text: 'この環境の設定とデータをそのまま写して、別の名前の環境を作ります。元の環境は変わりません。' }),
+      h('p', { class: 'firstrun-body manage-text', text: 'この環境の設定とデータをそのまま写して、別の名前の環境を作ります。Claudeデスクトップアプリのサインインの情報もそのまま写すので、複製した環境は元の環境と同じサインインの状態を持ちます。別のアカウントで使う環境は「環境を作る」から作ってください。' }),
       h('button', { type: 'button', class: 'btn btn-ghost manage-action', onclick: () => showCloneRow(name) },
         icon('i-duplicate'), h('span', { text: '複製' }))),
   ]);
@@ -683,14 +691,22 @@ function doctorStatus(item) {
       ? 'リンク先が想定と異なります。ターミナルで csw doctor --fix を実行すると張り直せます。'
       : 'リンク先が想定と異なり、共有元も見つかりません。',
     // csw doctor --fix replaces a folder only if it is empty (rmdir); the check
-    // never lists it, so it cannot say which case applies here.
+    // never lists it, so it cannot say which case applies here. The empty-folder
+    // replacement exists only in csw 0.24.2 and later, and csw is updated
+    // separately from the app, so the message names the version.
     materialized: item.health.is_directory
-      ? '共有のリンクの位置に実体のフォルダがあります。フォルダが空なら、ターミナルで csw doctor --fix を実行するとリンクに置き換えられます。中身があるときは、手元の内容を失わないよう、自動では直しません。'
+      ? '共有のリンクの位置に実体のフォルダがあります。フォルダが空なら、ターミナルで csw doctor --fix を実行するとリンクに置き換えられます。この置き換えには csw 0.24.2 以降が必要です。中身があるときは、手元の内容を失わないよう、自動では直しません。'
       : '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。',
     missing_link: '共有のリンクがありません。ターミナルで csw doctor --fix を実行すると作れます。',
     unexpected_link: unexpectedLink,
   }[st] || '状態を判定できませんでした。';
-  return { status: '要確認', detail, issue: true };
+  // The three repairs csw doctor --fix performs (inspector.rs): re-point a
+  // fixable wrong link, replace an empty folder, create a missing link. The
+  // report adds where to get csw when any of them applies.
+  const usesCsw = (st === 'wrong_target' && !!item.health.fixable)
+    || (st === 'materialized' && !!item.health.is_directory)
+    || st === 'missing_link';
+  return { status: '要確認', detail, issue: true, usesCsw };
 }
 
 function renderDoctorReport(report) {
@@ -708,15 +724,20 @@ function renderDoctorReport(report) {
     text: summary,
   }));
   const list = h('div', { class: 'doctor-list' });
+  let usesCsw = false;
   for (const item of report.items) {
     const label = DOCTOR_LABELS[item.key] || item.key;
     const s = doctorStatus(item);
+    if (s.usesCsw) usesCsw = true;
     list.appendChild(h('div', { class: 'doctor-item' },
       h('span', { class: 'doctor-item-label', text: label }),
       h('span', { class: s.issue ? 'doctor-item-state doctor-item-issue' : 'doctor-item-state', text: s.status })));
     if (s.detail) list.appendChild(h('p', { class: 'doctor-item-detail', text: s.detail }));
   }
   wrap.appendChild(list);
+  // The GUI never repairs, so a csw doctor --fix hint is the only repair path:
+  // say once, under the results, where the csw command comes from.
+  if (usesCsw) wrap.appendChild(cswGetRow());
   return wrap;
 }
 
@@ -1004,6 +1025,17 @@ function copyButton(value, title) {
   }, icon('i-copy'));
 }
 
+// Where to get csw. The .dmg ships the menu-bar app only; csw is a separate
+// release asset, so every place that shows a csw command (the first-run card
+// in index.html, the terminal section, the isolation check) says so and offers
+// the releases page. Same markup as the static first-run copy.
+function cswGetRow() {
+  return h('div', { class: 'csw-get' },
+    h('p', { class: 'firstrun-body', text: 'csw コマンドはアプリの .dmg に含まれておらず、アプリを更新しても更新されません。GitHub のリリースページから最新の csw を入手できます。' }),
+    h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => openExternal(RELEASES_URL) },
+      'リリースページを開く'));
+}
+
 function terminalSection(name) {
   const cmd = `eval $(csw env ${name})`;
   // Collapsed by default: most users drive everything from the GUI; the CLI
@@ -1015,6 +1047,7 @@ function terminalSection(name) {
     h('div', { class: 'path-row' },
       h('div', { class: 'path-meta' }, h('code', { class: 'path-code', text: cmd })),
       copyButton(cmd, 'コマンドをコピー')),
+    cswGetRow(),
   ];
   return section('', [disclosure('ターミナルで Claude Code を使う', null, inner)]);
 }
@@ -1044,7 +1077,7 @@ function disclosure(label, sub, innerNodes, onOpen) {
   return wrap;
 }
 
-function sharingDisclosure(sharing) {
+function sharingDisclosure(sharing, cloned) {
   const shareCount = ALL_KEYS.filter((k) => sharing[k] === 'share').length;
   const copyCount = ALL_KEYS.filter((k) => sharing[k] === 'copy').length;
   const isoCount = ALL_KEYS.length - shareCount - copyCount;
@@ -1063,8 +1096,15 @@ function sharingDisclosure(sharing) {
   }
   inner.push(h('div', { class: 'share-group' }, sharingReadRow(DEVICE_ID, sharing[DEVICE_ID.key])));
 
-  return section('この環境が引き継いでいるもの',
-    [disclosure(summary, T(' ／ アカウントは常に分離', ' · Account always separate'), inner)]);
+  // A duplicate got the Claude Desktop App sign-in (desktop-data, Cookies
+  // included) from its source, so "account always separate" would be untrue
+  // there. The label states where that sign-in came from, which stays true
+  // even after either side signs out or in again; the terminal Claude Code
+  // sign-in is per environment in the Keychain and is not part of it.
+  const sub = cloned
+    ? T(' ／ デスクトップのサインインは複製元から写したもの', ' · Desktop sign-in duplicated from the original')
+    : T(' ／ アカウントは常に分離', ' · Account always separate');
+  return section('この環境が引き継いでいるもの', [disclosure(summary, sub, inner)]);
 }
 
 function sharingReadRow(item, mode) {
@@ -1289,7 +1329,8 @@ async function doClone(source, target) {
     selectedName = target;
     await refreshProfiles();
     withTransition(() => showDetail(target));
-    showToast(T(`「${target}」を複製しました。元の環境はそのままです。`, `Duplicated "${target}". The original is unchanged.`));
+    // Name both sides: which environment was duplicated, under which new name.
+    showToast(T(`「${source}」を「${target}」として複製しました。`, `Duplicated "${source}" as "${target}".`));
   } catch (e) {
     showToast('複製できませんでした。同じ名前がすでにあるか確認してください。', true);
   }
@@ -1752,9 +1793,13 @@ const DISCLAIMER = [
 ];
 
 // Fixed GitHub URLs for the privacy document (ja/en). Listed, like the footer
-// links, in docs/PRIVACY.md as the complete set of URLs open_url may receive.
+// links (data-url, and data-url-en for the English UI), in docs/PRIVACY.md as
+// the complete set of URLs open_url may receive.
 const PRIVACY_URL_JA = 'https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY.md';
 const PRIVACY_URL_EN = 'https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY_EN.md';
+// The releases page, where csw is published. The same URL as the footer's
+// update check (index.html), so it adds nothing to that list.
+const RELEASES_URL = 'https://github.com/matsumotory/claude-desktop-switcher/releases';
 
 // Hand a fixed https GitHub URL to the OS (Rust open_url) so it opens in the
 // default browser. CSW makes no network requests itself.
@@ -1795,8 +1840,10 @@ function showAbout() {
 }
 
 function wireFooter() {
-  document.querySelectorAll('.footer-link[data-url]').forEach((b) =>
-    b.addEventListener('click', () => openExternal(b.dataset.url)));
+  // Static link buttons: the footer links and the first-run card's releases
+  // button. data-url-en, when present, is the English page for the English UI.
+  document.querySelectorAll('button[data-url]').forEach((b) =>
+    b.addEventListener('click', () => openExternal(T(b.dataset.url, b.dataset.urlEn || b.dataset.url))));
   el.btnAbout.addEventListener('click', showAbout);
   // Version from tauri.conf.json (release-please keeps it current). Hide on failure.
   invoke('app_version')

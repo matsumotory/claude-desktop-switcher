@@ -75,9 +75,10 @@
       </div>
 
       <!-- Quiet footer. External links open in the default browser via the Rust
-           open_url command; CSW itself never makes network requests. -->
+           open_url command; CSW itself never makes network requests. A button
+           with data-url-en opens that URL instead when the UI is in English. -->
       <nav class="sidebar-footer" aria-label="ヘルプ">
-        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md">
+        <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md" data-url-en="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE_EN.md">
           <svg class="icon"><use href="#i-book-open"/></svg><span>ユーザーガイド</span>
         </button>
         <button type="button" class="footer-link" data-url="https://github.com/matsumotory/claude-desktop-switcher/issues">
@@ -168,7 +169,13 @@
                     <div>
                       <p class="firstrun-head">ターミナルの Claude Code も同じ環境で使えます</p>
                       <p class="firstrun-body" data-en="A terminal inside the Claude Desktop App you opened from CSW is already in this environment, so you can just start with claude. Only when you use this environment in a terminal you opened yourself, such as iTerm2, run the command below. It applies to that tab only and never affects your usual environment.">CSW から開いた Claudeデスクトップアプリの中のターミナルは、最初からこの環境なので、そのまま <code>claude</code> で始められます。自分で別に開いた iTerm2 などのターミナルでこの環境を使うときは、次のコマンドを実行します。この指定はそのタブだけに効き、普段の環境には影響しません。</p>
-                      <code class="code-line" data-en="eval $(csw env &lt;environment&gt;)">eval $(csw env &lt;環境名&gt;)</code>
+                      <code class="code-line" data-en="eval $(csw env &lt;env-name&gt;)">eval $(csw env &lt;環境名&gt;)</code>
+                      <!-- csw is a separate release asset, not in the .dmg. Same
+                           URL as the footer's update check. -->
+                      <div class="csw-get">
+                        <p class="firstrun-body">csw コマンドはアプリの .dmg に含まれておらず、アプリを更新しても更新されません。GitHub のリリースページから最新の csw を入手できます。</p>
+                        <button type="button" class="btn btn-ghost" data-url="https://github.com/matsumotory/claude-desktop-switcher/releases">リリースページを開く</button>
+                      </div>
                     </div>
                   </div>
                 </div>
