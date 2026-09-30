@@ -3,7 +3,7 @@ name = "csw-cli"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "CLI for Claude Context Switcher"
+description = "CLI for Claude Desktop Switcher"
 
 [[bin]]
 name = "csw"

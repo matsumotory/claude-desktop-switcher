@@ -3,7 +3,7 @@ name = "csw-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Core library for Claude Context Switcher"
+description = "Core library for Claude Desktop Switcher"
 
 [features]
 test-utils = []
