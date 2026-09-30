@@ -818,18 +818,18 @@ function relTime(rfc3339) {
   return fmtDate(rfc3339);
 }
 
-// The sign-in signpost: a one-time card shown while an environment has been
-// launched exactly once, which is precisely when the freshly opened Claude is
-// empty and asks for a sign-in. Environments from before the first-launch
-// stamp existed (no created_at) never show it, so nobody who is already
-// signed in gets told to sign in. Sign-in completion is deliberately not
+// The sign-in signpost: a one-time card shown while a newly created
+// environment has been launched exactly once, which is precisely when the
+// freshly opened Claude is empty and asks for a sign-in. When it applies is
+// decided in core (ProfileManager::signin_signpost_due): environments from
+// before the creation stamp existed and duplicates (they open signed in to
+// the source's account) never show it. Sign-in completion is deliberately not
 // detected: that would require reading file contents (docs/PRIVACY.md), so
 // the card simply stays until dismissed or until the second launch.
 // All lines are built with T(): they embed the user's note, and runtime-
 // concatenated text never matches the EN dictionary.
 function signpostSection(d) {
-  if (d.is_default || !d.created_at || !d.first_launched_at) return null;
-  if (d.first_launched_at !== d.last_launched_at) return null;
+  if (!d.signin_signpost_due) return null;
   // Keyed by name + creation stamp: deleting an environment and recreating it
   // under the same name is a new environment whose first launch needs the
   // card again, so an old dismissal must not suppress it.
@@ -1875,6 +1875,7 @@ function devInvoke(cmd, args) {
     cli_path: `~/.context-switcher-claude/profiles/${name}/cli-data`,
     sharing,
     note: '', created_at: null, cloned_from: null, last_launched_at: null,
+    signin_signpost_due: false,
     ...extra,
   });
   const sample = {
@@ -1887,7 +1888,7 @@ function devInvoke(cmd, args) {
     [NM.research]: (() => {
       const t = ago(24 * 3);
       return prof(NM.research, 'graduation-cap', false, { ...PRESETS.share_workspace },
-        { note: NOTE.research, created_at: t, first_launched_at: t, last_launched_at: t });
+        { note: NOTE.research, created_at: t, first_launched_at: t, last_launched_at: t, signin_signpost_due: true });
     })(),
     [NM.testing]: prof(NM.testing, 'flask', true, { ...PRESETS.isolate },
       { created_at: ago(2), cloned_from: NM.work }),
