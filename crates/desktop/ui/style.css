@@ -573,6 +573,19 @@ code, .code-line { font-family: var(--font-mono); }
   color: var(--ink);
   word-break: break-all;
 }
+/* Where to get csw: a muted note with a ghost button under it. No card of its
+   own, because it sits inside cards and panels (first-run card, terminal
+   panel, check results). Stacked rather than side by side, so the note keeps
+   the full column width in narrow text columns and in longer English copy. */
+.csw-get {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+}
+.csw-get > p { margin: 0; }
+.doctor-report .csw-get { margin-top: 0; }
 
 /* -------------------------------------------------------------- Detail view */
 .detail-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }

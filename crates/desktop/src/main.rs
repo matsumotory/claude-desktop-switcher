@@ -600,8 +600,14 @@ fn tray_profile_label(profile_name: &str, running: bool, ja: bool) -> String {
     } else {
         profile_name
     };
+    // The running state follows the name after a colon, never as a bracketed
+    // supplement: a "名詞（補足）" label is ruled out by csw_product_canon §8.
     if running {
-        format!("● {} ({})", display, if ja { "利用中" } else { "In use" })
+        if ja {
+            format!("● {}：利用中", display)
+        } else {
+            format!("● {}: In use", display)
+        }
     } else {
         format!("○ {}", display)
     }
@@ -1007,7 +1013,7 @@ mod tests {
     fn default_profile_label_is_localized() {
         assert_eq!(
             tray_profile_label("default", true, true),
-            "● 既存の Claude (利用中)"
+            "● 既存の Claude：利用中"
         );
         assert_eq!(
             tray_profile_label("default", false, true),
@@ -1015,7 +1021,7 @@ mod tests {
         );
         assert_eq!(
             tray_profile_label("default", true, false),
-            "● Existing Claude (In use)"
+            "● Existing Claude: In use"
         );
         assert_eq!(
             tray_profile_label("default", false, false),
@@ -1027,8 +1033,8 @@ mod tests {
     fn user_environment_names_are_never_translated() {
         assert_eq!(tray_profile_label("work", false, true), "○ work");
         assert_eq!(tray_profile_label("work", false, false), "○ work");
-        assert_eq!(tray_profile_label("仕事", true, false), "● 仕事 (In use)");
-        assert_eq!(tray_profile_label("仕事", true, true), "● 仕事 (利用中)");
+        assert_eq!(tray_profile_label("仕事", true, false), "● 仕事: In use");
+        assert_eq!(tray_profile_label("仕事", true, true), "● 仕事：利用中");
     }
 
     #[test]

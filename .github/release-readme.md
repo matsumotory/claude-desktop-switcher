@@ -5,7 +5,7 @@
 ## 日本語
 
 - `Claude-Desktop-Switcher___VERSION___universal.dmg`: デスクトップアプリ本体です。Apple Silicon と Intel のどちらの Mac でも動きます。Developer ID で署名し、Apple の公証を受けています。
-- `csw`: ターミナルで使う csw コマンド単体です。アプリだけを使う場合はダウンロード不要です。
+- `csw`: ターミナルで使う csw コマンド単体です。アプリだけを使う場合は、分離の検査が案内するリンクの修復を除いて不要です。
 - `csw-desktop_aarch64-apple-darwin.cdx.json` / `csw-desktop_x86_64-apple-darwin.cdx.json`: デスクトップアプリの部品表（SBOM）です。アプリに含まれる全ライブラリの名前とバージョンを、標準の CycloneDX 形式で列挙しています。
 - `csw-cli_aarch64-apple-darwin.cdx.json` / `csw-cli_x86_64-apple-darwin.cdx.json`: csw コマンドの部品表です。
 - `RELEASE-README.md`: このファイルです。
@@ -15,7 +15,7 @@
 ## English
 
 - `Claude-Desktop-Switcher___VERSION___universal.dmg`: the desktop app. Runs on both Apple Silicon and Intel Macs. Signed with a Developer ID and notarized by Apple.
-- `csw`: the standalone command-line tool. Not needed if you only use the app.
+- `csw`: the standalone command-line tool. Not needed if you only use the app, except to repair links that the isolation check reports.
 - `csw-desktop_aarch64-apple-darwin.cdx.json` / `csw-desktop_x86_64-apple-darwin.cdx.json`: software bills of materials (SBOM) for the desktop app, listing every library and version inside the build in the standard CycloneDX format.
 - `csw-cli_aarch64-apple-darwin.cdx.json` / `csw-cli_x86_64-apple-darwin.cdx.json`: the same for the csw command-line tool.
 - `RELEASE-README.md`: this file.
