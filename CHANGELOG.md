@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.24.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.1...v0.24.2) (2026-09-30)
+
+
+### Bug Fixes
+
+* **cli:** csw --version がリリースの版を出すようにする ([#198](https://github.com/matsumotory/claude-desktop-switcher/issues/198)) ([81f6f5b](https://github.com/matsumotory/claude-desktop-switcher/commit/81f6f5b7c87f6ae8bda56d9598858e38d18314ea))
+* **core:** csw env の出力を export 行だけにして eval $(csw env) を直す ([#203](https://github.com/matsumotory/claude-desktop-switcher/issues/203)) ([043b36e](https://github.com/matsumotory/claude-desktop-switcher/commit/043b36e02e58cea1198835a32a59bd45230afe78))
+* **core:** doctor --fix が空のディレクトリを共有リンクに置き換える ([#200](https://github.com/matsumotory/claude-desktop-switcher/issues/200)) ([b86e4f7](https://github.com/matsumotory/claude-desktop-switcher/commit/b86e4f7d232e7d9796d1dcd704e0af37d84ef6ad))
+* **desktop:** csw の入手先と複製のサインインを GUI で案内する ([#204](https://github.com/matsumotory/claude-desktop-switcher/issues/204)) ([5a15e60](https://github.com/matsumotory/claude-desktop-switcher/commit/5a15e60e0cde00d171a26d82ceabfec9d994abe5))
+* **desktop:** 複製で作った環境に初回サインインの案内カードを出さない ([#202](https://github.com/matsumotory/claude-desktop-switcher/issues/202)) ([07a3f24](https://github.com/matsumotory/claude-desktop-switcher/commit/07a3f24d75064ce0913596efd8a064285418dfd9))
+
 ## [0.24.1](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.0...v0.24.1) (2026-09-29)
 
 
