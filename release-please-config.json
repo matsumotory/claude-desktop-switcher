@@ -12,6 +12,11 @@
           "type": "toml",
           "path": "Cargo.toml",
           "jsonpath": "$.workspace.package.version"
+        },
+        {
+          "type": "toml",
+          "path": "Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value == 'csw-core' || @.name.value == 'csw-cli' || @.name.value == 'csw-desktop')].version"
         }
       ]
     }
