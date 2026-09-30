@@ -789,7 +789,12 @@ fn doctor_detects_materialized_drift_and_never_fixes_it() {
         .iter()
         .find(|i| i.key == "cli_claude_md")
         .unwrap();
-    assert!(matches!(claude_md.health, ItemHealth::Materialized));
+    assert!(matches!(
+        claude_md.health,
+        ItemHealth::Materialized {
+            is_directory: false
+        }
+    ));
     assert!(claude_md.is_issue);
 
     // --fix must not touch real files: data-loss risk.
@@ -799,6 +804,149 @@ fn doctor_detects_materialized_drift_and_never_fixes_it() {
         std::fs::read_to_string(&link).unwrap(),
         "materialized local copy",
         "the real file must survive --fix untouched"
+    );
+}
+
+/// A share environment created while the existing Claude had no `rules/` yet,
+/// after which the user created `~/.claude/rules/`. With no source to link to,
+/// the linker left an empty real directory at the link point. Returns the
+/// environment's `rules` path.
+fn share_env_created_before_rules_source(
+    provider: &MockPlatformProvider,
+    manager: &ProfileManager,
+) -> std::path::PathBuf {
+    populate_default_sources(
+        &provider.claude_cli_default_dir(),
+        &provider.claude_desktop_default_dir(),
+    );
+    let source_rules = provider.claude_cli_default_dir().join("rules");
+    std::fs::remove_dir_all(&source_rules).unwrap();
+    manager
+        .create_profile("env", SharingConfig::share_settings_preset(), None)
+        .unwrap();
+    let rules = manager
+        .get_profile("env")
+        .unwrap()
+        .isolation
+        .cli_config_dir
+        .join("rules");
+    assert!(
+        rules.is_dir() && !provider.is_symlink(&rules),
+        "the linker leaves an empty directory when there is no source yet"
+    );
+    std::fs::create_dir_all(&source_rules).unwrap();
+    std::fs::write(source_rules.join("preferences.md"), "rules").unwrap();
+    rules
+}
+
+#[test]
+fn doctor_fix_replaces_an_empty_directory_left_before_the_source_existed() {
+    // The inspector sees a real directory where the share link belongs while
+    // the source exists. --fix removes the directory with rmdir, which fails on
+    // any entry, so only an empty directory goes away, and links it instead.
+    let (provider, manager, _tmp) = setup_test_manager();
+    let rules = share_env_created_before_rules_source(&provider, &manager);
+
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    let item = report.items.iter().find(|i| i.key == "cli_rules").unwrap();
+    assert!(
+        matches!(item.health, ItemHealth::Materialized { is_directory: true }),
+        "{:?}",
+        item.health
+    );
+    assert_eq!(report.issue_count, 1, "{:?}", report.items);
+
+    let fixed = manager.doctor_fix_links("env").unwrap();
+    assert_eq!(fixed, vec!["cli_rules"]);
+    assert!(
+        provider.is_symlink(&rules),
+        "the empty directory is replaced with the share link"
+    );
+    assert_eq!(
+        std::fs::read_link(&rules).unwrap(),
+        provider.claude_cli_default_dir().join("rules")
+    );
+    let report = manager.inspect_profile_isolation("env").unwrap();
+    assert_eq!(report.issue_count, 0, "{:?}", report.items);
+}
+
+#[test]
+fn doctor_fix_leaves_a_directory_with_contents_untouched() {
+    // rmdir fails on any entry, a file or even an empty subdirectory, so --fix
+    // leaves such a directory and its contents as they are, and the inspector
+    // keeps reporting it.
+    for entry_is_dir in [false, true] {
+        let (provider, manager, _tmp) = setup_test_manager();
+        let rules = share_env_created_before_rules_source(&provider, &manager);
+        let entry = rules.join("local");
+        if entry_is_dir {
+            std::fs::create_dir(&entry).unwrap();
+        } else {
+            std::fs::write(&entry, "local rule").unwrap();
+        }
+
+        let fixed = manager.doctor_fix_links("env").unwrap();
+        assert!(fixed.is_empty(), "{fixed:?}");
+        assert!(!provider.is_symlink(&rules));
+        if entry_is_dir {
+            assert!(entry.is_dir(), "the subdirectory must survive --fix");
+        } else {
+            assert_eq!(
+                std::fs::read_to_string(&entry).unwrap(),
+                "local rule",
+                "the file must survive --fix untouched"
+            );
+        }
+        let report = manager.inspect_profile_isolation("env").unwrap();
+        let item = report.items.iter().find(|i| i.key == "cli_rules").unwrap();
+        assert!(
+            matches!(item.health, ItemHealth::Materialized { is_directory: true }),
+            "{:?}",
+            item.health
+        );
+        assert!(item.is_issue);
+    }
+}
+
+#[test]
+fn doctor_report_tells_the_gui_whether_a_materialized_item_is_a_folder() {
+    // The GUI (crates/desktop/ui/main.js doctorStatus) reads health.state and
+    // health.is_directory to say that `csw doctor --fix` can replace an empty
+    // folder, but never a file.
+    assert_eq!(
+        serde_json::to_value(ItemHealth::Materialized { is_directory: true }).unwrap(),
+        serde_json::json!({ "state": "materialized", "is_directory": true })
+    );
+    assert_eq!(
+        serde_json::to_value(ItemHealth::Materialized {
+            is_directory: false
+        })
+        .unwrap(),
+        serde_json::json!({ "state": "materialized", "is_directory": false })
+    );
+}
+
+#[test]
+fn doctor_fix_restores_the_empty_directory_when_the_link_cannot_be_created() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    let rules = share_env_created_before_rules_source(&provider, &manager);
+    let profile = manager.get_profile("env").unwrap();
+    let source_profile = manager.get_profile("default").unwrap();
+
+    // Same directories, but creating a symlink fails.
+    let failing = MockPlatformProvider::new(
+        provider.claude_desktop_default_dir(),
+        provider.claude_cli_default_dir(),
+        provider.app_data_dir(),
+    )
+    .with_symlink_failure(true);
+    let result = crate::profile::inspector::Inspector::new(&failing)
+        .fix_relinkable(&profile, &source_profile);
+
+    assert!(result.is_err(), "a failed symlink must surface an error");
+    assert!(
+        rules.is_dir() && !provider.is_symlink(&rules),
+        "the empty directory is put back, not left missing"
     );
 }
 

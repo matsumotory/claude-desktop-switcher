@@ -52,9 +52,10 @@ enum Commands {
         name: Option<String>,
 
         /// Repair share links whose declared source exists: re-point a link
-        /// that resolves elsewhere and create a link that is missing. Only
-        /// symlinks are swapped or created; real files are never touched
-        /// (drifted real copies are reported, not repaired).
+        /// that resolves elsewhere, create a link that is missing, and replace
+        /// an empty folder at the link point with the link. Only symlinks and
+        /// empty folders are touched; real files and folders with contents are
+        /// reported, not repaired.
         #[arg(long)]
         fix: bool,
     },
@@ -475,13 +476,16 @@ sign-in state) can be restored by moving the folder back under profiles/."
     Ok(())
 }
 
-/// Whether `--fix` can repair this item: a share link that resolves elsewhere
-/// while its declared source exists, or a share link that is missing outright.
+/// Whether `--fix` may repair this item: a share link that resolves elsewhere
+/// while its declared source exists, a share link that is missing outright, or
+/// a real folder at the link point (replaced only if it turns out to be empty).
 fn is_fixable(item: &csw_core::profile::inspector::ItemReport) -> bool {
     use csw_core::profile::inspector::ItemHealth;
     matches!(
         item.health,
-        ItemHealth::WrongTarget { fixable: true, .. } | ItemHealth::MissingLink { .. }
+        ItemHealth::WrongTarget { fixable: true, .. }
+            | ItemHealth::MissingLink { .. }
+            | ItemHealth::Materialized { is_directory: true }
     )
 }
 
@@ -572,13 +576,23 @@ have been caught mid-flight; if issues appear, quit Claude and re-check.",
                     }
                 );
             }
-            ItemHealth::Materialized => {
-                println!(
-                    "  {} {} expected a shared link but found a real copy (drifted). \
+            ItemHealth::Materialized { is_directory } => {
+                if *is_directory {
+                    println!(
+                        "  {} {} expected a shared link but found a real folder. \
+`csw doctor --fix` replaces it with the link only if it is empty; \
+a folder with contents is not auto-fixed to avoid losing the local copy.",
+                        "!!".red().bold(),
+                        label
+                    );
+                } else {
+                    println!(
+                        "  {} {} expected a shared link but found a real copy (drifted). \
 Not auto-fixed to avoid losing the local copy.",
-                    "!!".red().bold(),
-                    label
-                );
+                        "!!".red().bold(),
+                        label
+                    );
+                }
             }
             ItemHealth::MissingLink { expected_source } => {
                 println!(

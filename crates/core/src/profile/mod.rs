@@ -506,7 +506,9 @@ impl ProfileManager {
     }
 
     /// Re-point share links that no longer resolve to their existing expected
-    /// source (csw doctor --fix). Only symlinks are swapped; never real data.
+    /// source, and create missing ones (csw doctor --fix). An empty directory
+    /// at a link point is replaced with the link; other real data is never
+    /// touched (see `Inspector::fix_relinkable`).
     pub fn doctor_fix_links(&self, name: &str) -> Result<Vec<&'static str>> {
         if name == "default" {
             return Err(CswError::Other(

@@ -35,10 +35,15 @@ pub enum ItemHealth {
         actual_target: String,
         fixable: bool,
     },
-    /// Share: a real file/dir sits where a symlink should be. The link
-    /// drifted into a real copy (e.g. an app rewrote it via temp+rename).
-    /// Never auto-fixed: replacing the real file could lose data.
-    Materialized,
+    /// Share: a real file/dir sits where a symlink should be, while the shared
+    /// source exists. The link drifted into a real copy (e.g. an app rewrote it
+    /// via temp+rename), or the linker left an empty directory because the
+    /// source did not exist yet when the environment was created.
+    /// `is_directory` comes from a stat; the directory is never listed, so the
+    /// check cannot tell whether it is empty. `--fix` replaces a directory only
+    /// when it is empty (rmdir fails on any entry) and never touches a file:
+    /// replacing real contents could lose data.
+    Materialized { is_directory: bool },
     /// Share: nothing at the link point although the shared source exists.
     MissingLink { expected_source: String },
     /// Share declared, but the shared source does not exist in the source
@@ -81,6 +86,14 @@ pub struct ProfileReport {
     /// the app's own temp+rename writes, so callers should suggest quitting
     /// Claude and re-checking before acting on issues.
     pub running: bool,
+}
+
+/// What sits at a link point that `fix_relinkable` is about to link.
+#[derive(Clone, Copy, PartialEq)]
+enum Occupant {
+    Nothing,
+    StaleLink,
+    Directory,
 }
 
 /// Read-only comparison of declared sharing modes against the disk state.
@@ -131,12 +144,18 @@ impl<'a> Inspector<'a> {
     }
 
     /// Repair share links whose declared source exists: re-point a link that
-    /// resolves elsewhere (`WrongTarget` with `fixable: true`) and create one
+    /// resolves elsewhere (`WrongTarget` with `fixable: true`), create one
     /// where nothing sits at the link point (`MissingLink`, e.g. the `rules/`
-    /// link of an environment created before rules/ was a link item). Only
-    /// symlinks are swapped or created; real files and directories are never
-    /// touched, and operating inside the real default Claude dirs is refused.
-    /// Returns the fixed keys.
+    /// link of an environment created before rules/ was a link item), and
+    /// replace an empty directory with one (a `Materialized` directory, e.g.
+    /// the one the linker made because the source did not exist yet).
+    ///
+    /// The directory is removed with rmdir, which fails on any entry, so a
+    /// directory with contents is never read, listed or removed; it is skipped
+    /// and stays reported as materialized. If the link then cannot be created,
+    /// the empty directory is put back. Real files are never touched, and
+    /// operating inside the real default Claude dirs is refused. Returns the
+    /// fixed keys.
     pub fn fix_relinkable(
         &self,
         profile: &Profile,
@@ -146,9 +165,10 @@ impl<'a> Inspector<'a> {
         let mut fixed = Vec::new();
 
         for item_report in &report.items {
-            let stale_link_present = match item_report.health {
-                ItemHealth::WrongTarget { fixable: true, .. } => true,
-                ItemHealth::MissingLink { .. } => false,
+            let occupant = match item_report.health {
+                ItemHealth::WrongTarget { fixable: true, .. } => Occupant::StaleLink,
+                ItemHealth::MissingLink { .. } => Occupant::Nothing,
+                ItemHealth::Materialized { is_directory: true } => Occupant::Directory,
                 _ => continue,
             };
             let item = LINK_ITEMS
@@ -157,11 +177,25 @@ impl<'a> Inspector<'a> {
                 .expect("report keys come from LINK_ITEMS");
             let path = item_path(profile, item);
             self.assert_outside_default_roots(&path)?;
-            if stale_link_present {
-                self.provider.remove_symlink(&path)?;
+            match occupant {
+                Occupant::Nothing => {}
+                Occupant::StaleLink => self.provider.remove_symlink(&path)?,
+                Occupant::Directory => {
+                    if fs::remove_dir(&path).is_err() {
+                        // Not empty (or not removable): leave it as reported.
+                        continue;
+                    }
+                }
             }
-            self.provider
-                .create_symlink(&item_path(source_profile, item), &path)?;
+            if let Err(e) = self
+                .provider
+                .create_symlink(&item_path(source_profile, item), &path)
+            {
+                if occupant == Occupant::Directory {
+                    let _ = fs::create_dir(&path);
+                }
+                return Err(e);
+            }
             fixed.push(item_report.key);
         }
 
@@ -199,7 +233,9 @@ impl<'a> Inspector<'a> {
                     }
                 } else if path.exists() {
                     if expected_source.exists() {
-                        ItemHealth::Materialized
+                        ItemHealth::Materialized {
+                            is_directory: path.is_dir(),
+                        }
                     } else {
                         ItemHealth::SourceAbsent
                     }
