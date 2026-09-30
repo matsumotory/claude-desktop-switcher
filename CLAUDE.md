@@ -97,7 +97,7 @@ LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launc
 - **Branch Strategy Enforcement**: いかなる場合も `main` へ直接 push しない。軽微なドキュメント・テスト・ホットフィックスでも例外なし。専用トピックブランチ (`feat/*`, `fix/*`, `docs/*`) で作業し、CI が全て通ってから PR でのみマージする。
 - **Anti-Slop Design**: `high-end-visual-design` / `design-taste-frontend` スキルを厳守。デフォルトの「AI テンプレ」見た目は禁止。
 - **Anti-Slop Images**: 雑な「AI フローチャート」、無意味な文字の偽ダッシュボード、光るオーブ図を生成しない。フィーチャーグラフィックは超ミニマル・構造的に正確・角丸の不揃いなし。図が要るなら、生成フローチャート風スロップより、シンプルな抽象幾何やクリーンな UI クロップを優先。
-- **Anti-Slop Typography (Japanese)**: 注記・免責・補足に `※`（米印）や `*`（アスタリスク）を使わない。これは旧来の企業 Web のアンチパターンで、プレミアム感を即座に損なう。従属情報は視覚階層（フォントサイズ・色・不透明度・レイアウト）で表す。あわせて、ユーザー可視コピー（LP / docs / UI / 画像内文字）に em-dash（`—` / `——`）を使わない。多用は「AI が書いた」印象の兆候になる。挿入句は読点「、」・コロン「：」・括弧「（）」・文の分割で表し、英語も em-dash でなくカンマ・コロン・括弧を使う。出荷前に `—`・`※`・`＊` を grep して残存ゼロを確認する。詳細は `csw_product_canon` §8。
+- **Anti-Slop Typography (Japanese)**: 注記・免責・補足に `※`（米印）や `*`（アスタリスク）を使わない。これは旧来の企業 Web のアンチパターンで、プレミアム感を即座に損なう。従属情報は視覚階層（フォントサイズ・色・不透明度・レイアウト）で表す。あわせて、ユーザー可視コピー（LP / docs / UI / 画像内文字）に em-dash（`—` / `——`）を使わない。多用は「AI が書いた」印象の兆候になる。挿入句は読点「、」・コロン「：」・括弧「（）」・文の分割で表し、英語も em-dash でなくカンマ・コロン・括弧を使う。出荷前に `—`・`※`・`＊` を grep して残存ゼロを確認する。詳細は `csw_product_canon` §8。和文と英数字・コードのあいだにも空白を入れない(「既存のClaude」「v0.24.2以降」。2026-09-30 matsumotory指摘「空白はアンチパターン」)。規則と例外は`japanese-typography-qa`§5、機械の検査は`.github/scripts/ja_spacing.py`(CIのLintで実行)。
 - **User-Centric Copywriting**: 生の技術用語（例: 'Application Support', 'Keychain'）を説明なしにマーケコピーへ出さない。技術機構を明確なユーザー利益に翻訳する（例: 'チャット履歴とログインを分離'）。
 - **External Documentation Links**: LP の「ドキュメントを読む」CTA は常に外部の GitHub リポ/docs（例: `https://github.com/matsumotory/claude-desktop-switcher`）を指す。内部アンカー（`#guide`）を使わない。
 - **Respect for Software Ecosystem**: 既存の OSS/CLI ツールに対し、貶めたり「不可能」と断じる表現を使わない。差異は事実に基づき、敬意を持って、加点的に述べる。

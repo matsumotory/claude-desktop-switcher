@@ -13,6 +13,11 @@ on:
         description: PR branch to regenerate the screenshots on (never main)
         required: true
         type: string
+      og:
+        description: Also regenerate the OG cards (og.png, ja_og.png) from scripts/ogshot
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -45,6 +50,10 @@ jobs:
 
       - name: Regenerate the 8 screenshots from the real UI
         run: node scripts/appshot/gen-screenshots.mjs
+
+      - name: Regenerate the OG cards
+        if: ${{ inputs.og }}
+        run: node scripts/ogshot/gen-og.mjs
 
       - name: Commit and push the regenerated screenshots
         run: |

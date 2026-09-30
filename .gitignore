@@ -67,4 +67,4 @@ keychain_backup.json
 *.dmg
 *.pkg
 *.app.zip
-
+__pycache__/

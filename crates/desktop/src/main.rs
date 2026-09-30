@@ -593,7 +593,7 @@ fn tray_profile_label(profile_name: &str, running: bool, ja: bool) -> String {
     // user-given environment name is user data and is never translated.
     let display = if profile_name == "default" {
         if ja {
-            "既存の Claude"
+            "既存のClaude"
         } else {
             "Existing Claude"
         }
@@ -1013,12 +1013,9 @@ mod tests {
     fn default_profile_label_is_localized() {
         assert_eq!(
             tray_profile_label("default", true, true),
-            "● 既存の Claude：利用中"
+            "● 既存のClaude：利用中"
         );
-        assert_eq!(
-            tray_profile_label("default", false, true),
-            "○ 既存の Claude"
-        );
+        assert_eq!(tray_profile_label("default", false, true), "○ 既存のClaude");
         assert_eq!(
             tray_profile_label("default", true, false),
             "● Existing Claude: In use"

@@ -38,7 +38,7 @@ const LOCALES = [
     file: 'ja_og.png',
     lang: 'ja',
     headline: 'Claudeデスクトップアプリを<br>用途ごとに分ける。',
-    sub: 'チャット・Projects・Claude Cowork・Artifacts・Claude Design を<span class="nb">アカウント別に分離できます。</span>必要なら <span class="nb">Claude Code とも連動できます。</span>',
+    sub: 'チャット・Projects・Claude Cowork・Artifacts・Claude Designを<span class="nb">アカウント別に分離できます。</span>必要なら<span class="nb">Claude Codeとも連動できます。</span>',
     chips: ['アカウントだけ', '会話とメモリも', 'すべて'],
     url: 'matsumotory.github.io/claude-desktop-switcher/ja',
     headSize: 56,
@@ -132,6 +132,10 @@ async function main() {
   for (const loc of LOCALES) {
     await cmd('Page.navigate', { url: `http://127.0.0.1:${PORT}/og-${loc.lang}.html` });
     await sleep(1600); // webfont + layout
+    // Fail instead of committing a card rendered with a fallback font: the
+    // run is unattended (appshot.yml og input) and pushes what it captures.
+    const fonts = await cmd('Runtime.evaluate', { expression: "document.fonts.ready.then(() => document.fonts.check('600 20px Outfit'))", awaitPromise: true, returnByValue: true });
+    if (!fonts.result || fonts.result.value !== true) throw new Error('Outfit webfont did not load; refusing to capture ' + loc.file);
     const s = await cmd('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     fs.writeFileSync(path.join(ASSETS, loc.file), Buffer.from(s.data, 'base64'));
     done.push(loc.file);
