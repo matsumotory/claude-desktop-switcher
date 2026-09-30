@@ -566,7 +566,7 @@ dependencies = [
 
 [[package]]
 name = "csw-cli"
-version = "0.24.1"
+version = "0.24.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -577,7 +577,7 @@ dependencies = [
 
 [[package]]
 name = "csw-core"
-version = "0.24.1"
+version = "0.24.2"
 dependencies = [
  "anyhow",
  "csw-core",
@@ -594,7 +594,7 @@ dependencies = [
 
 [[package]]
 name = "csw-desktop"
-version = "0.24.1"
+version = "0.24.2"
 dependencies = [
  "anyhow",
  "csw-core",
