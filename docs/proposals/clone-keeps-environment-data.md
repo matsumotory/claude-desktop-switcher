@@ -67,4 +67,4 @@ cargo test --workspace
 - [x] docs / UI 文言の統一
 - [x] スクショ再生成 (macOS ランナー、5056a52)。実寸は変わらず LP の更新は不要
 - [x] CI 全緑、squash マージ
-- [x] 複製先のサインインを macOS で確かめた (2026-09-30)。サインイン済みの完全分離の環境を複製すると、複製先の Claudeデスクトップアプリは同じアカウントでサインインした状態で開いた。ターミナルの Claude Code は `claude auth status` が Not logged in を返し、ログインを求めた。docs をこの挙動の記述に改めた
+- [x] 複製先のサインインを macOS で確かめた (2026-09-30)。サインイン済みの完全分離の環境を複製すると、複製先の Claudeデスクトップアプリは同じアカウントでサインインした状態で開いた。ターミナルの Claude Code は `claude auth status` が Not logged in を返し、ログインを求めた。複製先の Claudeデスクトップアプリでログアウトすると、複製元もログアウトされた。docs をこの挙動の記述に改めた
