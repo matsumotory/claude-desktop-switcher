@@ -7,7 +7,7 @@ This document is kept in sync with the implementation. Whenever the implementati
 ## The four promises
 
 1. **No internet communication.** CSW sends no usage data and performs no auto-update requests.
-2. **No access to passwords or sign-in data.** CSW never reads the macOS Keychain, sign-in tokens, or browser cookies.
+2. **No reading of passwords or sign-in data.** CSW never touches the macOS Keychain that stores your passwords, and never opens the contents of sign-in tokens or browser cookies. When you duplicate an environment, sign-in files that the duplicate copies, such as the Claude Desktop App's cookies, are copied as they are, like any other file, without being opened. See "About duplicating an environment" below for details.
 3. **No access to other apps' data.** CSW never reads or writes your existing Claude data on its own. It touches only the items you explicitly choose to share or copy when creating an environment.
 4. **Zero impact by default.** CSW rewrites no shell configuration, no OS-level environment variables, and nothing in your existing Claude. Launch Claude without CSW and it behaves exactly as before.
 
@@ -15,9 +15,10 @@ This document is kept in sync with the implementation. Whenever the implementati
 
 CSW does not connect to the internet and has no built-in facility to do so.
 
-The single exception is the links at the bottom of the window (User guide, Report an issue, Check for updates) and the "See how to verify" button in the About screen. Pressing one hands a predetermined GitHub URL to macOS, which opens it in your default browser. The browser communicates; CSW itself does not. The URLs are fixed to the following five, and the implementation additionally rejects any URL that is not `https`.
+The single exception is the links at the bottom of the window (User guide, Report an issue, Check for updates), the "See how to verify" button in the About screen, and the "Open releases page" button that shows where to get the csw command. Pressing one hands a predetermined GitHub URL to macOS, which opens it in your default browser. The browser communicates; CSW itself does not. "User guide" and "See how to verify" open the Japanese or English version of their document, matching the display language. "Open releases page" appears in the first-run guide, the terminal section of the detail screen and the isolation check results, and opens the same releases page as "Check for updates". The URLs are fixed to the following six, and the implementation additionally rejects any URL that is not `https`.
 
 - `https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE.md`
+- `https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/USER_GUIDE_EN.md`
 - `https://github.com/matsumotory/claude-desktop-switcher/issues`
 - `https://github.com/matsumotory/claude-desktop-switcher/releases`
 - `https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY.md`
@@ -38,21 +39,24 @@ CSW writes files only inside its own folder, `~/.context-switcher-claude/`. The 
 | `~/.context-switcher-claude/profiles/<name>/desktop-data/` | That environment's data for the Claude Desktop App |
 | `~/.context-switcher-claude/profiles/<name>/cli-data/` | That environment's data for Claude Code |
 
-In addition, the settings window stores its own display preferences (the accent color and the first-run flag) in the app's own screen data location managed by macOS. This holds only CSW's appearance settings, never your data or Claude's data.
+In addition, the settings window stores three records for its display in the app's own screen data location managed by macOS: the accent color you chose, whether the first-run guide was shown, and whether you closed the sign-in card that the detail screen shows after an environment's first launch. The sign-in card record is kept per environment, so it includes the environment's name and creation time to tell environments apart. This location holds only these records, never the contents of an environment's folder or Claude's data.
 
 ## Where CSW reads
 
 - CSW reads and writes its own folder listed above. When the detail screen shows the data breakdown, it reads only file names and their sizes and dates inside this folder, never file contents. The targets of shared links are never included in the totals.
 - CSW touches the existing Claude folders, `~/Library/Application Support/Claude` and `~/.claude`, in exactly three cases:
-  1. **Existence checks**: it checks whether a folder or file exists, without reading its contents.
+  1. **Existence and emptiness checks**: it checks whether a folder or file exists. When you open the create screen, it also checks whether each of the two existing Claude folders is empty; that check stops at the first entry it finds and does not use the entry's name. File contents are never read.
   2. **Creating and re-pointing shared links**: for items you set to Shared when creating or duplicating an environment, it creates symbolic links inside the new environment that point to the existing Claude's originals. The isolation check's repair command, `csw doctor --fix`, likewise only re-points share links that no longer point at their declared source, or creates a share link that is missing while its source exists. Only the link is swapped or created; real files are never touched. The only exception is that an empty folder is removed. If the existing Claude had no source folder yet when you created the environment, CSW creates an empty folder on the environment's side. Once the source exists, `csw doctor --fix` removes this empty folder and then creates the share link. Removing a folder fails if it contains anything, so CSW can remove only empty folders without reading what is inside. The links and the empty folders it removes are all in the environment's folder; nothing is written on the existing Claude's side.
   3. **Copying**: for items you set to Copy when creating or duplicating an environment, it reads those files and copies them into the new environment. Only the items you chose are read, and the existing Claude's side is never modified.
 - To tell which environment a running Claude is using, CSW reads the list of running processes and their launch arguments. It reads nothing else about those processes and no communication contents.
 - The identifier of the frontmost application is read only when you press "Check the current environment" in the menu bar icon's menu, to answer which environment the Claude in front is using. Only the process identifier and its launch arguments are read; screen contents and window titles are never read. CSW never polls for it.
+- To check whether a CSW installer disk image is still mounted, CSW reads the list of mounted disk images with `hdiutil` when it starts and when you press "Eject". Only each disk image's file path and mount points are read. CSW picks out its own disk images by name and ignores all others, and it never reads the contents of any disk image.
 
 ## About duplicating an environment
 
-Duplicate, in the environment's detail screen, copies the contents of the selected environment's folder, as they are, into a new environment folder on your Mac. The only things it leaves out are the always-isolated items (the account sign-in info in config.json, the connector and app settings, the device ID and the session state) and the plugins, whose install records point at the original environment's location. Shared items are linked again to the existing Claude. Even then, all CSW does is copy the files verbatim; it never interprets their contents and never sends them anywhere. The existing Claude cannot be duplicated.
+Duplicate, in the environment's detail screen, copies the contents of the selected environment's folder, as they are, into a new environment folder on your Mac. The only things it leaves out are the always-isolated items (the account sign-in info in config.json, the connector and app settings, the device ID and the session state), the plugins, whose install records point at the original environment's location, and state.toml, where CSW records launch times. Symbolic links are not copied as they are, and shared items are linked again to the existing Claude. Even then, all CSW does is copy the files verbatim; it never interprets their contents and never sends them anywhere. The existing Claude cannot be duplicated.
+
+The Claude Desktop App also keeps its sign-in state in cookies inside the environment's folder. Those cookies are copied as they are, like any other file, so the duplicate's Claude Desktop App opens signed in to the same account as the original. The original and the duplicate carry the same sign-in state, so logging out in either one also logs out the other. For an environment that uses a different account, use "New environment" instead of duplicating. Claude Code in the terminal, on the other hand, stores its sign-in in the macOS Keychain, outside the environment's folder, separately for each environment. CSW does not touch the Keychain, so this sign-in is not copied. Log in again the first time you use Claude Code in a terminal for the duplicate. The one exception: only when Claude Code cannot write to the Keychain does it place a `.credentials.json` file in the environment's folder. That file is copied like any other file, so in that case the duplicate's Claude Code uses the same credentials as the original.
 
 ## OS commands CSW runs
 
@@ -68,7 +72,7 @@ CSW runs only the following four standard macOS commands. All of them are local 
 ## What CSW never touches
 
 - The macOS Keychain that stores your passwords. There is simply no code that reads or writes it.
-- Sign-in tokens and cookies of your browser or Claude. The Claude Desktop App's sign-in data lives inside that environment's data folder, and CSW never opens and interprets those files' contents. When duplicating an environment they are copied verbatim, nothing more. Claude Code stores its sign-in in the macOS Keychain. CSW does not touch the Keychain, so it neither reads that sign-in nor copies it when duplicating. Only when Claude Code cannot write to the Keychain does it place a `.credentials.json` file in the environment's folder, and duplicating copies that file verbatim like any other file.
+- Sign-in tokens and cookies of your browser or Claude. The Claude Desktop App's sign-in state lives inside that environment's data folder, and CSW never opens and interprets those files' contents. When duplicating an environment they are copied verbatim, nothing more. Claude Code stores its sign-in in the macOS Keychain. CSW does not touch the Keychain, so it neither reads that sign-in nor copies it when duplicating. Only when Claude Code cannot write to the Keychain does it place a `.credentials.json` file in the environment's folder, and duplicating copies that file verbatim like any other file.
 - Any other app's data beyond the cases listed under "Where CSW reads".
 - The network. Nothing is sent and nothing is received.
 
