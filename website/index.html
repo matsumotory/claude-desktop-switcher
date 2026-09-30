@@ -145,7 +145,7 @@
                         <span class="usecase-num">01</span>
                         <h3 class="usecase-title">Separate the whole suite per project/client</h3>
                         <p class="usecase-text">When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts.</p>
-                        <p class="usecase-solution">Pick "Separate everything" and nothing carries over: each environment gets its own data directory and stays fully independent, so one client's work never leaks into another across the desktop suite.</p>
+                        <p class="usecase-solution">Pick "Separate everything" and nothing carries over: each environment gets its own data directory, signs in with its own account, and stays fully independent, so one client's work never leaks into another across the desktop suite.</p>
                     </div>
                 </div>
                 <div class="feature-cell dark-accent fade-in delay-2">
@@ -160,8 +160,8 @@
                     <div class="cell-content">
                         <span class="usecase-num">03</span>
                         <h3 class="usecase-title">Split by purpose while reusing your setup</h3>
-                        <p class="usecase-text">You want separate accounts by purpose, but want to reuse your common rules and settings.</p>
-                        <p class="usecase-solution">Pick "Separate conversations &amp; memory too" to carry over your common rules, skills, plugins, and tool permissions, while keeping conversation history and auto-memory to this environment. The account stays separate either way.</p>
+                        <p class="usecase-text">You want separate accounts by purpose, but want to reuse your global rules and settings.</p>
+                        <p class="usecase-solution">Pick "Separate conversations and memory too" to carry over your global rules, skills, plugins, and tool permissions, while keeping conversation history and auto-memory to this environment. The account stays separate either way.</p>
                     </div>
                 </div>
                 <div class="feature-cell fade-in delay-2">
@@ -237,6 +237,7 @@
                     <div class="code-snippet">
                         <code>eval $(csw env &lt;env-name&gt;)</code>
                     </div>
+                    <p class="guide-note">The <code>csw</code> command is not in the .dmg: download it from the <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest" target="_blank" rel="noopener">latest release</a> on GitHub, make it executable, and move it onto your PATH, for example <code>/usr/local/bin</code>.</p>
                 </div>
             </div>
         </section>
@@ -249,8 +250,8 @@
             </div>
             <div class="faq-grid">
                 <div class="faq-item">
-                    <p class="faq-q">Carry over or keep separate: relative to what?</p>
-                    <p class="faq-a">Always relative to Existing Claude, the setup you already use. For each item, you choose whether to carry over the same thing as your existing Claude, or keep a new one just for this environment. The account is always separate.</p>
+                    <p class="faq-q">"Shared" or "Isolated": relative to what?</p>
+                    <p class="faq-a">Always relative to Existing Claude, the setup you already use. Using the same thing as your existing Claude is called "Shared", and keeping a new one just for this environment is called "Isolated". You choose one or the other for each item. Whatever you choose, the account is always separate for each environment.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">What is "Existing Claude"?</p>
@@ -265,20 +266,20 @@
                     <p class="faq-a">No. If you only want to keep using the same setup, just launch Claude as usual and "Existing Claude" is used directly. CSW helps when you want independent environments for other accounts or projects.</p>
                 </div>
                 <div class="faq-item">
-                    <p class="faq-q">Will a new environment break my original Claude?</p>
-                    <p class="faq-a">No. Each environment lives in its own dedicated directory, physically separate from the original. Deleting an environment never affects your original setup.</p>
+                    <p class="faq-q">Will a new environment break your existing Claude?</p>
+                    <p class="faq-a">No. Each environment lives in its own dedicated directory, physically separate from your existing Claude. Deleting an environment never affects your existing Claude.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Do I have to sign in again on every switch?</p>
-                    <p class="faq-a">No. Each environment keeps its account sign-in inside its own directory. Sign in once and it persists across switches. Items set to stay separate are not carried over and start empty in the new environment.</p>
+                    <p class="faq-a">No. Each environment keeps its own sign-in. The Claude Desktop App keeps it inside that environment's folder. Claude Code keeps it in the macOS keychain where passwords are kept, as a separate item for each environment. Sign in once and it persists across switches. Items set to stay separate are not carried over and start empty in the new environment.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Does switching the desktop app also switch the terminal?</p>
-                    <p class="faq-a">A terminal inside the app you launched from CSW is already in the same environment, so no command is needed. A terminal you open separately stays in your usual environment, so pass the target environment name and run <code>eval $(csw env &lt;env-name&gt;)</code> to sync it. It applies to that tab only and never affects your usual environment.</p>
+                    <p class="faq-a">A terminal inside the app you launched from CSW is already in the same environment, so no command is needed. A terminal you open separately stays in your usual environment, so pass the target environment name and run <code>eval $(csw env &lt;env-name&gt;)</code> to sync it. It applies to that tab only and never affects your usual environment. The <code>csw</code> command is not in the .dmg: download it from the <a href="https://github.com/matsumotory/claude-desktop-switcher/releases/latest" target="_blank" rel="noopener">latest release</a> on GitHub, make it executable, and move it onto your PATH, for example <code>/usr/local/bin</code>.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Can I open more than one environment at the same time?</p>
-                    <p class="faq-a">Environments set to "separate everything" can be opened side by side in a new window, without quitting a running Claude: they share nothing, so concurrent instances cannot clash over the same file. The detail view shows a dedicated "Launch alongside" button for them. Environments created with "separate conversations & memory too" or "separate the account only" share settings, so they open one at a time, because a running instance can write back to a shared file and clash with a concurrent launch; quit the running Claude before launching one of those.</p>
+                    <p class="faq-a">Environments set to "separate everything" can be opened side by side in a new window, without quitting a running Claude: they share nothing, so concurrent instances cannot clash over the same file. The detail view shows a dedicated "Launch alongside" button for them. Environments created with "separate conversations and memory too" or "separate the account only" share settings, so they open one at a time, because a running instance can write back to a shared file and clash with a concurrent launch; quit the running Claude before launching one of those.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Reopening every environment after a Claude update is tedious.</p>
@@ -294,7 +295,7 @@
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">Are my sign-in and conversations handled safely?</p>
-                    <p class="faq-a">This app makes no internet connection and does not record or send how you use it. You sign in through the official app; this app does not read your password or sign-in, and it never touches the macOS keychain where passwords are kept. All it does is switch which folder the official app uses. Your sign-in, the per-account app settings, the device identifier, and the working state while it runs are always kept separate for each environment, with no option to share them, so they never get mixed even by mistake. What you can share across environments is limited to things unrelated to sign-in, such as your common rules, skills, plugins, and conversation history. Each environment's data is stored on your Mac, the same as the normal Claude, and this app does not make it any less safe. The full lists of what it reads, writes, and never touches, along with the steps to verify on your own Mac that it makes no network requests, are published in the <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY_EN.md" target="_blank" rel="noopener">Privacy and Transparency</a> document. You can also run the isolation check from the environment's detail screen at any time to confirm that sharing and isolation still hold.</p>
+                    <p class="faq-a">This app makes no internet connection and does not record or send how you use it. You sign in through the official app; this app does not read your password or sign-in, and it never touches the macOS keychain where passwords are kept. All it does is switch which folder the official app uses. Your sign-in, the per-account app settings, the device identifier, and the working state while it runs are always kept separate for each environment, with no option to share them, so they never get mixed even by mistake. What you can share across environments is limited to things unrelated to sign-in, such as your global rules, skills, plugins, and conversation history. Duplicating an environment is the exception: the duplicate's Claude Desktop App carries the same sign-in state as the original, so it opens signed in to the same account, and logging out in either one also logs out the other. For a different account, use "New environment" instead of duplicating. Each environment's data is stored on your Mac, the same as the normal Claude, and this app does not make it any less safe. The full lists of what it reads, writes, and never touches, along with the steps to verify on your own Mac that it makes no network requests, are published in the <a href="https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY_EN.md" target="_blank" rel="noopener">Privacy and Transparency</a> document. You can also run the isolation check from the environment's detail screen at any time to confirm that sharing and isolation still hold.</p>
                 </div>
                 <div class="faq-item">
                     <p class="faq-q">What if the official Claude adds account switching?</p>
