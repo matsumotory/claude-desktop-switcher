@@ -16,7 +16,7 @@
 
 *Read this in other languages: [日本語 (Japanese)](#日本語-japanese)*
 
-Claude Desktop Switcher is a macOS menu bar utility for separating the whole Claude Desktop App suite (chat, Projects, Claude Cowork, Artifacts, Claude Design, and Claude Code integration) by account and use case on a single Mac. (Switching CLI profiles alone is already well served by existing tools like direnv and claude-swap; CSW's focus is keeping your whole desktop workspace separate, with the CLI linked when you want it.) The Desktop App has no native multi-account switching, so CSW lets you switch environments without signing out each time. You can customize the isolation level per use case, and it also links the Claude Code (CLI) environment to your GUI selection. It works for non-engineers who never touch a terminal, as well as developers who want CLI integration.
+Claude Desktop Switcher is a macOS menu bar utility for separating the whole Claude Desktop App suite (chat, Projects, Claude Cowork, Artifacts, Claude Design, and Claude Code integration) by account and use case on a single Mac. Switching CLI profiles alone is already well served by existing tools like direnv and claude-swap. CSW's focus is keeping your whole desktop workspace separate, with the CLI linked when you want it. The Desktop App has no native multi-account switching, so CSW lets you switch environments without signing out each time. You can customize the isolation level per use case, and it also links the Claude Code (CLI) environment to your GUI selection. It works for non-engineers who never touch a terminal, as well as developers who want CLI integration.
 
 <p align="center">
   <img src="website/assets/hero.png" width="560" alt="Claude Desktop Switcher Settings UI">
@@ -27,13 +27,13 @@ Claude Desktop Switcher is a macOS menu bar utility for separating the whole Cla
 How should you partition your environments on a single PC? You can flexibly adjust the isolation level to suit your workflow.
 
 - **01. Separate the whole suite per project/client**
-  When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts. Selecting "Separate everything" allocates a separate data directory for each environment (each keeping its own login), structurally preventing information from leaking across the desktop suite.
+  When running multiple clients or projects in parallel, you want to avoid mixing chat history, Projects memory, Cowork working folders, and Artifacts. Selecting "Separate everything" allocates a separate data directory for each environment and keeps each login separate, structurally preventing information from leaking across the desktop suite.
 
 - **02. Separate work and personal on one Mac (no terminal needed)**
   Keep your business and personal accounts apart without touching the terminal. Just pick an environment and the Claude Desktop App switches without signing in again. It is complete in the GUI.
 
-- **03. Separate by use case while sharing common rules**
-  When you want separate accounts but want to reuse common rules and settings. Pick "Separate conversations & memory too" to keep specific files (such as `CLAUDE.md`) shared across environments while keeping history and logins separate.
+- **03. Separate by use case while sharing global rules**
+  When you want separate accounts but want to reuse global rules and settings. Pick "Separate conversations and memory too" to keep specific files (such as `CLAUDE.md`) shared across environments while keeping history and logins separate.
 
 - **04. Link the CLI to your GUI separation (for developers)**
   Link the environment you chose in the GUI to the CLI's `CLAUDE_CONFIG_DIR`. Run `eval $(csw env <env-name>)` (replace `<env-name>` with your environment's name) in a separate terminal to use the CLI in the same isolated environment. This adds GUI consistency on top of what existing CLI-only switchers already solve.
@@ -68,7 +68,7 @@ A terminal you open on your own stays in your usual environment. To use a specif
 eval $(csw env <env-name>)
 ```
 
-**Get the `csw` CLI.** The `.dmg` ships the menu-bar app only. Download the signed, notarized `csw` binary from the [latest release](https://github.com/matsumotory/claude-desktop-switcher/releases/latest), make it executable, and move it onto your `PATH` (`chmod +x csw && mv csw /usr/local/bin/`). With a Rust toolchain you can instead run `cargo install --path crates/cli`. The GUI works without this step.
+**Get the `csw` CLI.** The `.dmg` ships the menu-bar app only. Download the signed, notarized `csw` binary from the [latest release](https://github.com/matsumotory/claude-desktop-switcher/releases/latest), make it executable, and move it onto your `PATH` (`chmod +x csw && mv csw /usr/local/bin/`). With a Rust toolchain you can instead run `cargo install --path crates/cli`. Updating the app does not update `csw`; run `csw --version` to see which version you have. The GUI works without this step, except for repairing links with `csw doctor --fix`.
 
 ## Build from Source (.dmg)
 
@@ -126,7 +126,7 @@ MIT
   <a href="docs/PRIVACY.md">プライバシーと透明性</a>
 </p>
 
-Claudeデスクトップアプリのスイート全体（チャット・Projects・Claude Cowork・Artifacts・Claude Design・Claude Code 連携）を、アカウント／用途ごとに安全に分けて 1 つの Mac で使い分けるためのメニューバーアプリです。（CLI のプロファイル切り替えだけなら direnv や claude-swap など既存ツールが既によく解決しています。CSW の主眼は、デスクトップの作業全体を分け、必要なら CLI も同じ環境に連動させることです。）デスクトップアプリはネイティブの複数アカウント切替を備えていないため、再ログインなしで環境を切り替えられます。用途に合わせて分離度を細かくカスタマイズでき、GUI 側の環境分離に Claude Code（CLI）も連動させられます。ターミナルを使わない方から、CLI 連携まで一貫させたい開発者まで対応します。
+チャット・Projects・Claude Cowork・Artifacts・Claude Design・Claude Code 連携を含む Claudeデスクトップアプリのスイート全体を、アカウント／用途ごとに安全に分けて 1 つの Mac で使い分けるためのメニューバーアプリです。CLI のプロファイル切り替えは、direnv や claude-swap など既存ツールが既によく解決しています。CSW が担うのは、デスクトップの作業全体を分け、必要なら CLI も同じ環境に連動させることです。デスクトップアプリはネイティブの複数アカウント切替を備えていないため、再ログインなしで環境を切り替えられます。用途に合わせて分離度を細かくカスタマイズでき、GUI 側の環境分離に Claude Code（CLI）も連動させられます。ターミナルを使わない方から、CLI 連携まで一貫させたい開発者まで対応します。
 
 <p align="center">
   <img src="website/assets/ja_hero.png" width="560" alt="Claude Desktop Switcher 設定 UI">
@@ -137,7 +137,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 1つのPCの中で環境をどう分けるか。あなたのワークスタイルに合わせて柔軟に分離度を調整できます。
 
 - **01. 案件・クライアントごとにスイート丸ごと分ける**
-  複数のクライアント案件やプロジェクトを並行する際、チャット履歴・Projects のメモリ・Cowork の作業フォルダ・Artifacts が混ざる懸念を避けたい場合に。「すべて分ける」を選ぶと、環境ごとに独立したデータディレクトリ（各々が自分のログインを保持）が割り当てられ、別案件の文脈へ漏れる事故を構造的に防ぎます。
+  複数のクライアント案件やプロジェクトを並行する際、チャット履歴・Projects のメモリ・Cowork の作業フォルダ・Artifacts が混ざる懸念を避けたい場合に。「すべて分ける」を選ぶと、環境ごとに独立したデータディレクトリが割り当てられ、ログインも環境ごとに分かれるため、別案件の文脈へ漏れる事故を構造的に防ぎます。
 
 - **02. 仕事用と個人用を 1 台で分ける（非エンジニア向け）**
   業務アカウントと個人アカウントを混ぜたくないが、ターミナル操作はしたくない場合に。環境を選ぶだけで、再ログインなしに別アカウントのデスクトップアプリへ切り替わります。GUI だけで完結します。
@@ -178,7 +178,7 @@ Claudeデスクトップアプリのスイート全体（チャット・Projects
 eval $(csw env <環境名>)
 ```
 
-**`csw` コマンドを入手します。** `.dmg` にはメニューバーアプリのみが含まれます。署名・公証済みの `csw` バイナリを[最新リリース](https://github.com/matsumotory/claude-desktop-switcher/releases/latest)からダウンロードし、実行権を付けて `PATH` の通った場所に置いてください（`chmod +x csw && mv csw /usr/local/bin/`）。Rust の開発環境があれば `cargo install --path crates/cli` でも導入できます。GUI だけで使う場合は不要です。
+**`csw` コマンドを入手します。** `.dmg` にはメニューバーアプリのみが含まれます。署名・公証済みの `csw` バイナリを[最新リリース](https://github.com/matsumotory/claude-desktop-switcher/releases/latest)からダウンロードし、実行権を付けて `PATH` の通った場所に置いてください（`chmod +x csw && mv csw /usr/local/bin/`）。Rust の開発環境があれば `cargo install --path crates/cli` でも導入できます。アプリを更新しても `csw` は更新されません。入れている版は `csw --version` で確かめられます。GUI だけで使う場合は、`csw doctor --fix` でのリンクの修復を除いて不要です。
 
 ### 配布用ビルド（DMGファイルの作成）
 

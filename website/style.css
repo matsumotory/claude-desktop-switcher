@@ -406,7 +406,8 @@ html[lang="ja"] .subtext {
    ブラウザ既定の青紫リンクは使わない（design-taste-frontend: THE LILA RULE /
    COLOR CONSISTENCY LOCK）。読み手が拾えるよう下線はやや濃いめにする。 */
 .faq-a a,
-.terms-item a {
+.terms-item a,
+.guide-card a {
     color: var(--text-primary);
     text-decoration: underline;
     text-decoration-color: rgba(255, 255, 255, 0.32);
@@ -415,7 +416,8 @@ html[lang="ja"] .subtext {
 }
 
 .faq-a a:hover,
-.terms-item a:hover {
+.terms-item a:hover,
+.guide-card a:hover {
     color: var(--accent);
     text-decoration-color: var(--accent);
 }
@@ -773,6 +775,18 @@ html[lang="ja"] .usecases-header h2 {
     color: var(--text-secondary);
     line-height: 1.6;
     font-size: 1.125rem; /* Increased */
+}
+
+/* Install note under the command example: subordinate info, shown at the
+   caption tier rather than with a note marker (CLAUDE.md §5). */
+.guide-card .guide-note {
+    margin-top: 16px;
+    font-size: 0.9375rem; /* caption tier, 15px */
+    line-height: 1.7;
+}
+html[lang="ja"] .guide-card .guide-note {
+    line-height: 1.8; /* JP body (japanese-typography-qa §3) */
+    overflow-wrap: anywhere; /* paths never overflow the card */
 }
 
 /* FAQ */
