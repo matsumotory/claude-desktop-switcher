@@ -1784,12 +1784,54 @@ fn clone_does_not_carry_launch_state() {
         .unwrap();
     manager.record_last_launch("mother").unwrap();
 
-    // A duplicate starts unsigned-in, so its first launch must count as a
-    // first launch again: the launch state does not travel with the copy.
+    // The launch state belongs to each environment and does not travel with
+    // the copy: the duplicate's "last launched" starts empty.
     let cloned = manager.clone_profile("mother", "child").unwrap();
     assert_eq!(cloned.profile.name, "child");
     assert_eq!(manager.first_launched_at("child").unwrap(), None);
     assert_eq!(manager.last_launched_at("child").unwrap(), None);
+}
+
+#[test]
+fn signin_signpost_is_due_only_at_the_first_launch() {
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("newcomer", SharingConfig::default(), None)
+        .unwrap();
+    assert!(
+        !manager.signin_signpost_due("newcomer").unwrap(),
+        "not before the first launch"
+    );
+
+    manager.record_last_launch("newcomer").unwrap();
+    assert!(
+        manager.signin_signpost_due("newcomer").unwrap(),
+        "due right after the first launch"
+    );
+
+    std::thread::sleep(std::time::Duration::from_millis(30));
+    manager.record_last_launch("newcomer").unwrap();
+    assert!(
+        !manager.signin_signpost_due("newcomer").unwrap(),
+        "gone from the second launch on"
+    );
+    assert!(!manager.signin_signpost_due("default").unwrap());
+}
+
+#[test]
+fn signin_signpost_is_not_due_for_a_duplicate() {
+    // A duplicate starts with the source's data, including the desktop app's
+    // sign-in cookies, so its first launch opens signed in to the source's
+    // account. The card's "an empty Claude asks you to sign in" would be false.
+    let (_, manager, _tmp) = setup_test_manager();
+    manager
+        .create_profile("source-env", SharingConfig::default(), None)
+        .unwrap();
+    manager.record_last_launch("source-env").unwrap();
+    manager.clone_profile("source-env", "dup-env").unwrap();
+
+    manager.record_last_launch("dup-env").unwrap();
+    assert!(!manager.signin_signpost_due("dup-env").unwrap());
 }
 
 #[test]

@@ -82,6 +82,9 @@ async fn get_profile_details(
         "cloned_from": p.profile.cloned_from,
         "first_launched_at": state.profile_manager.first_launched_at(&name).unwrap_or(None),
         "last_launched_at": state.profile_manager.last_launched_at(&name).unwrap_or(None),
+        // The first-launch sign-in signpost is decided in core (tested there);
+        // the UI only adds the per-viewer "閉じる" dismissal on top.
+        "signin_signpost_due": state.profile_manager.signin_signpost_due(&name).unwrap_or(false),
         "desktop_path": p.isolation.desktop_user_data_dir,
         "cli_path": p.isolation.cli_config_dir,
         // Only fully-isolated (すべて分ける) non-default environments may be opened

@@ -491,6 +491,27 @@ impl ProfileManager {
         Ok(state::load_state(&profiles_dir.join(name))?.first_launched_at)
     }
 
+    /// Whether the first-launch sign-in signpost applies (SPECIFICATION.md §5.A
+    /// 初回サインインの道しるべ): a non-default environment that carries its
+    /// creation stamp and has been launched exactly once, which is when a
+    /// newly created Claude opens empty and asks for a sign-in. Environments
+    /// from before the creation stamp existed never qualify, so nobody who is
+    /// already signed in gets told to sign in. A duplicate never qualifies: it
+    /// starts with the source's data, including the desktop app's sign-in
+    /// cookies, so it opens signed in to the source's account rather than
+    /// empty. Reads only CSW's own stamps.
+    pub fn signin_signpost_due(&self, name: &str) -> Result<bool> {
+        if name == "default" {
+            return Ok(false);
+        }
+        let profile = self.get_profile(name)?;
+        if profile.profile.created_at.is_none() || profile.profile.cloned_from.is_some() {
+            return Ok(false);
+        }
+        let first = self.first_launched_at(name)?;
+        Ok(first.is_some() && first == self.last_launched_at(name)?)
+    }
+
     /// Read-only isolation check of one profile's link points (csw doctor).
     /// The default profile has no links, so inspecting it is rejected.
     pub fn inspect_profile_isolation(&self, name: &str) -> Result<inspector::ProfileReport> {
