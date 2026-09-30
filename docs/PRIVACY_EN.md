@@ -68,7 +68,7 @@ CSW runs only the following four standard macOS commands. All of them are local 
 ## What CSW never touches
 
 - The macOS Keychain that stores your passwords. There is simply no code that reads or writes it.
-- Sign-in tokens and cookies of your browser or Claude. Each environment's sign-in data lives inside that environment's data folder, and CSW never opens and interprets those files' contents. When duplicating an environment they are copied verbatim, nothing more.
+- Sign-in tokens and cookies of your browser or Claude. The Claude Desktop App's sign-in data lives inside that environment's data folder, and CSW never opens and interprets those files' contents. When duplicating an environment they are copied verbatim, nothing more. Claude Code stores its sign-in in the macOS Keychain. CSW does not touch the Keychain, so it neither reads that sign-in nor copies it when duplicating. Only when Claude Code cannot write to the Keychain does it place a `.credentials.json` file in the environment's folder, and duplicating copies that file verbatim like any other file.
 - Any other app's data beyond the cases listed under "Where CSW reads".
 - The network. Nothing is sent and nothing is received.
 
