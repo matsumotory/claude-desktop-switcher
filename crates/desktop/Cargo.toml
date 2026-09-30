@@ -3,7 +3,7 @@ name = "csw-desktop"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Desktop Menu Bar Application for Claude Context Switcher"
+description = "Desktop menu bar application for Claude Desktop Switcher"
 
 [dependencies]
 csw-core = { path = "../core" }

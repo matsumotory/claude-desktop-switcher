@@ -7,7 +7,9 @@ use std::sync::Arc;
 
 #[derive(Parser)]
 #[command(name = "csw")]
-#[command(about = "Claude Desktop Switcher: synchronize Desktop & CLI environments")]
+#[command(
+    about = "Claude Desktop Switcher: separate environments for the Claude Desktop App and Claude Code"
+)]
 #[command(version)]
 struct Cli {
     #[command(subcommand)]
@@ -19,29 +21,43 @@ enum Commands {
     /// Initialize Claude Desktop Switcher (create ~/.context-switcher-claude/)
     Init,
 
-    /// Manage profiles
+    /// Manage environments
     Profile {
         #[command(subcommand)]
         action: ProfileAction,
     },
 
-    /// Switch to a profile (launch Desktop + set CLI env)
+    /// Switch to an environment and launch the Claude Desktop App in it.
+    ///
+    /// Records it as the active environment, which `csw status` shows and
+    /// `csw env` uses when no name is given. The existing Claude (`default`) is
+    /// recorded but not launched. It does not change the environment of the
+    /// current terminal tab; run `eval $(csw env <name>)` for that.
     Switch {
-        /// Profile name to switch to
+        /// Environment name to switch to
         name: String,
 
-        /// Do not launch Claude Desktop after switching
+        /// Do not launch the Claude Desktop App after switching
         #[arg(long)]
         no_launch: bool,
     },
 
-    /// Output shell environment variables for a profile
+    /// Print the shell command that points Claude Code at an environment.
+    ///
+    /// Run `eval $(csw env <name>)` to use that environment in the current
+    /// terminal tab. It applies to that tab only.
     Env {
-        /// Profile name (defaults to active profile if omitted)
+        /// Environment name (defaults to the active environment if omitted)
         name: Option<String>,
     },
 
-    /// Show current status (active profile, running processes)
+    /// Show current status (active environment, running Claude Desktop App processes).
+    ///
+    /// The active environment is the one last launched from the app (a launch
+    /// button in its window, or an environment picked from the menu bar icon's
+    /// menu) or chosen with `csw switch`. "Launch alongside" does not change
+    /// it. It is not necessarily the environment of the current terminal tab.
+    /// To check a tab, run `echo $CLAUDE_CONFIG_DIR`.
     Status,
 
     /// Check that each environment's isolation and share links are intact.
@@ -63,12 +79,13 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum ProfileAction {
-    /// Create a new profile
+    /// Create a new environment
     Create {
-        /// Profile name
+        /// Environment name
         name: String,
-        /// Sharing mode: "isolate" (default; すべて分ける), "share_settings"
-        /// (会話とメモリも分ける), or "share_workspace" (アカウントだけ分ける).
+        /// Sharing mode: "isolate" (default; Separate everything),
+        /// "share_settings" (Separate conversations and memory too), or
+        /// "share_workspace" (Separate the account only).
         /// "share" is a deprecated alias for "share_settings".
         #[arg(
             long,
@@ -76,29 +93,29 @@ enum ProfileAction {
             value_parser = ["isolate", "share_settings", "share_workspace", "share"]
         )]
         mode: String,
-        /// Free-form note stored with the profile (single line, 200 characters
-        /// max). For example, what the environment is for and which account
-        /// signs in.
+        /// Free-form note stored with the environment (single line, 200
+        /// characters max). For example, what the environment is for and which
+        /// account signs in.
         #[arg(long)]
         note: Option<String>,
     },
-    /// List all profiles
+    /// List all environments
     List,
-    /// Set or clear the free-form note of a profile
+    /// Set or clear the free-form note of an environment
     Note {
-        /// Profile name
+        /// Environment name
         name: String,
         /// Note text (single line, 200 characters max). Pass "" to clear.
         text: String,
     },
-    /// Show profile details
+    /// Show environment details
     Show {
-        /// Profile name
+        /// Environment name
         name: String,
     },
-    /// Delete a profile (moves its folder to the Trash; restorable until the Trash is emptied)
+    /// Delete an environment (moves its folder to the Trash; restorable until the Trash is emptied)
     Delete {
-        /// Profile name
+        /// Environment name
         name: String,
 
         /// Delete permanently instead of moving to the Trash (not restorable)
@@ -119,17 +136,17 @@ fn main() -> anyhow::Result<()> {
             let manager = ProfileManager::new(provider.clone())?;
             println!("{} Base configuration created.", "OK".green());
             println!(
-                "{} Profiles directory: {:?}",
+                "{} Environments directory: {:?}",
                 "OK".green(),
                 provider.app_data_dir().join("profiles")
             );
             println!(
-                "{} Active profile is: {}",
+                "{} Active environment: {}",
                 "OK".green(),
                 manager.active_profile_name().cyan()
             );
             println!(
-                "\nRun '{}' to see available profiles.",
+                "\nRun '{}' to see available environments.",
                 "csw profile list".yellow()
             );
         }
@@ -138,7 +155,7 @@ fn main() -> anyhow::Result<()> {
             match action {
                 ProfileAction::Create { name, mode, note } => {
                     println!(
-                        "Creating profile '{}' with preset '{}'...",
+                        "Creating environment '{}' with sharing mode '{}'...",
                         name.cyan(),
                         mode.bold()
                     );
@@ -162,17 +179,13 @@ fn main() -> anyhow::Result<()> {
                                 // note is a warning, not a failure.
                                 if let Err(e) = manager.set_profile_note(&name, n) {
                                     eprintln!(
-                                        "{} The profile was created, but the note was not saved: {}",
+                                        "{} The environment was created, but the note was not saved: {}",
                                         "Warning:".yellow(),
                                         e
                                     );
                                 }
                             }
-                            println!(
-                                "{} Profile '{}' created successfully!",
-                                "OK".green(),
-                                name.cyan()
-                            );
+                            println!("{} Environment '{}' created.", "OK".green(), name.cyan());
                             println!(
                                 "  Desktop Data: {:?}",
                                 provider
@@ -191,7 +204,7 @@ fn main() -> anyhow::Result<()> {
                             );
                         }
                         Err(e) => {
-                            eprintln!("{} Failed to create profile: {}", "Error:".red(), e);
+                            eprintln!("{} Failed to create environment: {}", "Error:".red(), e);
                             std::process::exit(1);
                         }
                     }
@@ -199,7 +212,7 @@ fn main() -> anyhow::Result<()> {
                 ProfileAction::List => {
                     let profiles = manager.list_profiles()?;
                     let active = manager.active_profile_name();
-                    println!("{}", "Available profiles:".bold());
+                    println!("{}", "Available environments:".bold());
                     for name in profiles {
                         if name == active {
                             println!(
@@ -242,7 +255,7 @@ fn main() -> anyhow::Result<()> {
                 }
                 ProfileAction::Show { name } => match manager.get_profile(&name) {
                     Ok(p) => {
-                        println!("{}: {}", "Profile".bold(), p.profile.name.cyan());
+                        println!("{}: {}", "Environment".bold(), p.profile.name.cyan());
                         println!("  Icon: {}", p.profile.icon);
                         println!("  Color: {}", p.profile.color);
                         println!("  Is Default: {}", p.profile.is_default);
@@ -275,7 +288,7 @@ fn main() -> anyhow::Result<()> {
                     }
                     Err(e) => {
                         eprintln!(
-                            "{} Failed to find profile '{}': {}",
+                            "{} Failed to find environment '{}': {}",
                             "Error:".red(),
                             name,
                             e
@@ -285,24 +298,24 @@ fn main() -> anyhow::Result<()> {
                 },
                 ProfileAction::Delete { name, purge } => {
                     if purge {
-                        println!("Permanently deleting profile '{}'...", name.cyan());
+                        println!("Permanently deleting environment '{}'...", name.cyan());
                         match manager.purge_profile(&name) {
                             Ok(_) => println!(
-                                "{} Profile '{}' permanently deleted (not restorable).",
+                                "{} Environment '{}' permanently deleted (not restorable).",
                                 "OK".green(),
                                 name.cyan()
                             ),
                             Err(e) => {
-                                eprintln!("{} Failed to delete profile: {}", "Error:".red(), e);
+                                eprintln!("{} Failed to delete environment: {}", "Error:".red(), e);
                                 std::process::exit(1);
                             }
                         }
                     } else {
-                        println!("Moving profile '{}' to the Trash...", name.cyan());
+                        println!("Moving environment '{}' to the Trash...", name.cyan());
                         match manager.delete_profile(&name) {
                             Ok(_) => {
                                 println!(
-                                    "{} Profile '{}' moved to the Trash.",
+                                    "{} Environment '{}' moved to the Trash.",
                                     "OK".green(),
                                     name.cyan()
                                 );
@@ -317,7 +330,7 @@ sign-in state) can be restored by moving the folder back under profiles/."
                             // wrong and, for the default, dangerous.
                             Err(csw_core::error::CswError::TrashMoveFailed(e)) => {
                                 eprintln!(
-                                    "{} Could not move the profile to the Trash: {}",
+                                    "{} Could not move the environment to the Trash: {}",
                                     "Error:".red(),
                                     e
                                 );
@@ -328,7 +341,7 @@ sign-in state) can be restored by moving the folder back under profiles/."
                                 std::process::exit(1);
                             }
                             Err(e) => {
-                                eprintln!("{} Failed to delete profile: {}", "Error:".red(), e);
+                                eprintln!("{} Failed to delete environment: {}", "Error:".red(), e);
                                 std::process::exit(1);
                             }
                         }
@@ -340,7 +353,7 @@ sign-in state) can be restored by moving the folder back under profiles/."
             let manager = Arc::new(ProfileManager::new(provider.clone())?);
             let switcher = ContextSwitcher::new(provider.clone(), manager.clone());
 
-            println!("Switching to profile '{}'...", name.cyan());
+            println!("Switching to environment '{}'...", name.cyan());
             match switcher.switch_to(&name) {
                 Ok(_) => {
                     println!("{} Switched successfully.", "OK".green());
@@ -348,22 +361,25 @@ sign-in state) can be restored by moving the folder back under profiles/."
                     let profile = manager.get_profile(&name)?;
 
                     // Shell environment tip
-                    println!("\n{}", "To update your terminal context, run:".bold());
+                    println!(
+                        "\n{}",
+                        "To use this environment in a terminal you opened yourself, run:".bold()
+                    );
                     println!("  {}", format!("eval $(csw env {})", name).yellow());
 
                     // Launch Desktop if requested and not default/disabled
                     if !no_launch && name != "default" {
-                        println!("\nLaunching Claude Desktop for '{}'...", name.cyan());
+                        println!("\nLaunching the Claude Desktop App in '{}'...", name.cyan());
                         if let Err(e) =
                             csw_core::switcher::desktop::launch_desktop(&profile, provider.as_ref())
                         {
                             eprintln!(
-                                "{} Failed to launch Claude Desktop: {}",
+                                "{} Failed to launch the Claude Desktop App: {}",
                                 "Warning:".yellow(),
                                 e
                             );
                         } else {
-                            println!("{} Claude Desktop launched.", "OK".green());
+                            println!("{} Claude Desktop App launched.", "OK".green());
                         }
                     }
                 }
@@ -405,7 +421,11 @@ sign-in state) can be restored by moving the folder back under profiles/."
             let active_name = manager.active_profile_name();
             let profile = manager.get_profile(&active_name)?;
 
-            println!("{}: {}", "Active Profile".bold(), active_name.cyan().bold());
+            println!(
+                "{}: {}",
+                "Active environment".bold(),
+                active_name.cyan().bold()
+            );
             println!("  CLI Config Dir: {:?}", profile.isolation.cli_config_dir);
             println!(
                 "  Desktop User Data Dir: {:?}",
@@ -418,17 +438,17 @@ sign-in state) can be restored by moving the folder back under profiles/."
                     if running {
                         let pids = provider.claude_desktop_pids().unwrap_or_default();
                         println!(
-                            "  Claude Desktop: {} (PIDs: {:?})",
+                            "  Claude Desktop App: {} (PIDs: {:?})",
                             "RUNNING".green().bold(),
                             pids
                         );
                     } else {
-                        println!("  Claude Desktop: {}", "STOPPED".yellow());
+                        println!("  Claude Desktop App: {}", "STOPPED".yellow());
                     }
                 }
                 Err(e) => {
                     println!(
-                        "  Claude Desktop: {} (error checking status: {})",
+                        "  Claude Desktop App: {} (error checking status: {})",
                         "UNKNOWN".red(),
                         e
                     );
