@@ -378,8 +378,18 @@ sign-in state) can be restored by moving the folder back under profiles/."
             let profile_name = name.unwrap_or_else(|| manager.active_profile_name());
             match manager.get_profile(&profile_name) {
                 Ok(profile) => {
+                    // Stdout carries only the export line: `eval $(csw env <name>)`
+                    // is unquoted, so any extra stdout line would break it. A hint
+                    // for a bare run in a terminal goes to stderr, and only when
+                    // stdout is a terminal (never inside `$(...)`).
                     let script = csw_core::switcher::shell::generate_env_script(&profile);
                     print!("{}", script);
+                    if std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+                        eprintln!(
+                            "To use this environment in this terminal tab, run: eval $(csw env {})",
+                            profile_name
+                        );
+                    }
                 }
                 Err(e) => {
                     eprintln!(
