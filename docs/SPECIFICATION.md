@@ -111,7 +111,7 @@ CSW はアカウント／セッションの分離を、環境ごとに独立し�
 CSW が読むパス・書くパス・実行する OS コマンド・決して触れないものの完全な列挙と、ユーザー自身の検証手順（通信の確認・署名の確認・リンクの確認）は [docs/PRIVACY.md](PRIVACY.md)（英語版 [docs/PRIVACY_EN.md](PRIVACY_EN.md)）を正典とする。この文書は実装と同期させ、乖離は整合性監査（`docs_impl_consistency_audit`）で検出する。
 
 - 「通信しない」は依存グラフのレベルでも機械的に強制する。`deny.toml` が HTTP / WebSocket クライアント crate を禁止として登録し、CI（`.github/workflows/deny.yml`）が全 PR で `cargo deny check bans` を実行する。検査対象は配布物のターゲット（aarch64 / x86_64-apple-darwin）に絞る。Tauri が Windows / Linux 向けに宣言する reqwest / hyper が `Cargo.lock` に載るためである。この事実は PRIVACY 文書にも先回りして明記している。
-- 各リリースには配布物の部品表（CycloneDX 形式の SBOM、対象は macOS 両ターゲットの csw-desktop / csw-cli）を添付する（`release.yml` の sbom ジョブ）。
+- 各リリースには配布物の部品表（CycloneDX 形式の SBOM、対象は macOS 両ターゲットの csw-desktop / csw-cli）を添付する（`release.yml` の sbom ジョブ）。各クレートは workspace の版（`Cargo.toml` の `workspace.package.version`）を引き継ぐので、SBOM に記録される csw-desktop / csw-cli の版もリリースの版と一致する。
 - 設定ウィンドウの「このアプリについて」に、何を読み書きするかの要約と「確かめ方を見る」（PRIVACY 文書を既定ブラウザで開く）を表示する。LP の FAQ・USER_GUIDE からも同文書へ誘導する。
 
 ### 設計判断: 分離はディレクトリ隔離のみで行う
@@ -173,6 +173,7 @@ macOS はアプリの Dock アイコンと表示名をアプリバンドル単�
   - **外部ターミナル**: ユーザーが新規に開いた iTerm2 等は継承しないため、`eval $(csw env <環境名>)` のように環境名を渡して対象セッションの `CLAUDE_CONFIG_DIR` を上書きする。
 - `csw status`: 現在のアクティブな環境と、Claudeデスクトップアプリの起動状態（起動中ならその PID）を表示。
 - `csw doctor [<環境名>] [--fix]`: 環境の分離と共有リンクの健全性を検査する。環境名を省略すると、リンクを持たない既存のClaudeを除くすべての環境を検査する。問題が見つかれば終了コード1を返す。`--fix`は「共有元が実在するのにリンク先が想定と異なる項目」のリンクを張り直す。「共有元が実在するのに何も無い項目」と「共有元が実在するのに空のディレクトリがある項目」には、リンクを作る。空のディレクトリを取り除く操作のほかは、実体のファイルやディレクトリに決して触れない。インストールを診断するClaude Code本体の`claude doctor`とは別物で、CSWが作った環境の分離状態を検査する。
+- `csw --version`: CSW のリリースの版を `csw X.Y.Z` の形で出力する。版は GitHub Release のタグ `vX.Y.Z` と `.release-please-manifest.json` の値と同じで、デスクトップアプリの版表示（`app_version`）とも一致する。
 
 ## 6. ゼロインパクト保証 (Non-invasive Guarantee)
 本アプリは、OS のグローバル環境変数（`.zshrc` 等）を直接書き換えません。

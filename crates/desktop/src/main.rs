@@ -730,7 +730,8 @@ fn update_tray_menu(app: &AppHandle) -> Result<(), String> {
 }
 
 /// The app version from tauri.conf.json (kept in sync by release-please), shown in
-/// the sidebar footer. Not the crate version, which stays at 0.1.0.
+/// the sidebar footer. release-please bumps the workspace version in the same commit,
+/// so this matches the crate version and `csw --version`.
 #[tauri::command]
 fn app_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
