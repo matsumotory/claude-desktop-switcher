@@ -170,6 +170,8 @@ const EN = {
     'The link points somewhere unexpected, and the shared source is missing.',
   '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。':
     'The share link has been replaced by a regular file. To avoid losing your local contents, it is not repaired automatically.',
+  '共有のリンクの位置に実体のフォルダがあります。フォルダが空なら、ターミナルで csw doctor --fix を実行するとリンクに置き換えられます。中身があるときは、手元の内容を失わないよう、自動では直しません。':
+    'A regular folder sits where the share link belongs. If the folder is empty, run csw doctor --fix in a terminal to replace it with the link. If it has contents, it is not repaired automatically, to avoid losing your local contents.',
   '共有のリンクがありません。ターミナルで csw doctor --fix を実行すると作れます。':
     'The share link is missing. Run csw doctor --fix in a terminal to create it.',
   '常に分離する項目がリンクになっています。': 'An always-isolated item has become a link.',
@@ -680,7 +682,11 @@ function doctorStatus(item) {
     wrong_target: item.health.fixable
       ? 'リンク先が想定と異なります。ターミナルで csw doctor --fix を実行すると張り直せます。'
       : 'リンク先が想定と異なり、共有元も見つかりません。',
-    materialized: '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。',
+    // csw doctor --fix replaces a folder only if it is empty (rmdir); the check
+    // never lists it, so it cannot say which case applies here.
+    materialized: item.health.is_directory
+      ? '共有のリンクの位置に実体のフォルダがあります。フォルダが空なら、ターミナルで csw doctor --fix を実行するとリンクに置き換えられます。中身があるときは、手元の内容を失わないよう、自動では直しません。'
+      : '共有のリンクが実体のファイルに置き換わっています。手元の内容を失わないよう、自動では直しません。',
     missing_link: '共有のリンクがありません。ターミナルで csw doctor --fix を実行すると作れます。',
     unexpected_link: unexpectedLink,
   }[st] || '状態を判定できませんでした。';
