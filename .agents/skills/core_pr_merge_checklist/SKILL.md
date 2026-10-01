@@ -123,7 +123,8 @@ PR の diff を端から端まで確認
 3. マージ後の diff を再レビューし、**想定外の大量削除 / コンフリクト解決ミスが無いか**確認する
 4. `git push`
 5. CI が全ジョブ green になるまで待つ (`gh pr checks <num>` を監視。green を待たずにマージしない)
-6. `gh pr merge --squash`
+6. `gh pr merge <PR番号> --squash --subject "<type>(<scope>): <要約>" --body "<装飾なしの本文>"`
+   - **`fix:` と `feat:` の PR は、件名と本文を必ず指定する。** 指定しないと PR の本文がそのままコミットメッセージになる。本文のバッククォートや引用符があると、release-please がそのコミットを読み落とし、CHANGELOG とリリース PR から抜けることがある (詳しくは末尾の「squash マージのメッセージが release-please のパースを壊す」)。装飾のある説明は GitHub の PR の本文にだけ置く
    - **`--admin` / `--no-verify` は使わない** (保護・検証をバイパスしない)
    - **`--delete-branch` は付けない**
 7. マージ後、primary checkout で `git pull origin main` してローカル main を同期する
