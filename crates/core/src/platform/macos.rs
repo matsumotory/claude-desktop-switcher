@@ -118,7 +118,11 @@ impl PlatformProvider for MacOsProvider {
     }
 
     fn claude_desktop_pids(&self) -> Result<Vec<u32>> {
+        // `-a` keeps pgrep's own ancestors in the match list. Run in a terminal
+        // inside Claude, csw descends from that Claude, which must still count
+        // as running (`csw switch` refuses while it runs).
         let output = Command::new("pgrep")
+            .arg("-a")
             .arg("-f")
             .arg("Claude.app/Contents/MacOS/Claude")
             .output()?;
@@ -389,5 +393,46 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    /// A Claude that hosts the terminal running csw (the Claude CSW opened, or
+    /// a Claude Code session in the desktop app) is an ancestor of csw, and
+    /// still counts as running (SPECIFICATION.md「利用中」の判定). Otherwise
+    /// `csw switch` would not refuse while that Claude runs. macOS `pgrep`
+    /// leaves out its own ancestors unless given `-a`.
+    ///
+    /// The test runs itself again with argv[0] set to a Claude main-process
+    /// path, so the re-run is the parent of the `pgrep` it starts. Only argv[0]
+    /// changes; no file is created at that path.
+    #[test]
+    fn claude_desktop_pids_include_an_ancestor_claude() {
+        const PROBE: &str = "CSW_TEST_ANCESTOR_CLAUDE_PROBE";
+        if std::env::var_os(PROBE).is_some() {
+            let pids = MacOsProvider::new().claude_desktop_pids().unwrap();
+            let own = std::process::id();
+            assert!(pids.contains(&own), "pids {pids:?} miss the ancestor {own}");
+            return;
+        }
+        use std::os::unix::process::CommandExt;
+        let output = Command::new(std::env::current_exe().unwrap())
+            .arg0("/nonexistent/csw-test/Claude.app/Contents/MacOS/Claude")
+            .args([
+                "--exact",
+                "platform::macos::tests::claude_desktop_pids_include_an_ancestor_claude",
+                "--test-threads=1",
+            ])
+            .env(PROBE, "1")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "the re-run named like a Claude main process must find itself: {}",
+            String::from_utf8_lossy(&output.stdout)
+        );
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("1 passed"),
+            "the re-run must run the probe: {}",
+            String::from_utf8_lossy(&output.stdout)
+        );
     }
 }
