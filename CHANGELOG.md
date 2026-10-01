@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.24.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.2...v0.24.3) (2026-10-01)
+
+
+### Bug Fixes
+
+* **core:** Claudeの中のターミナルで実行したcswがそのClaudeを起動中と判定する ([#211](https://github.com/matsumotory/claude-desktop-switcher/issues/211)) ([b456e96](https://github.com/matsumotory/claude-desktop-switcher/commit/b456e96851b3e0251ec16997f95ee34f73ef90f4))
+* **desktop:** 和文と英数字のあいだの空白をなくす ([#208](https://github.com/matsumotory/claude-desktop-switcher/issues/208)) ([9d3e3bd](https://github.com/matsumotory/claude-desktop-switcher/commit/9d3e3bdcb0fa925b67828b203aaf1523ddb18926))
+* **desktop:** 既存のClaudeと並べた環境を終了しただけで乗り移りの案内を出さない ([#210](https://github.com/matsumotory/claude-desktop-switcher/issues/210)) ([deb6c8f](https://github.com/matsumotory/claude-desktop-switcher/commit/deb6c8f473301476608e7580eea2b55d07f1c64f))
+
 ## [0.24.2](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.1...v0.24.2) (2026-09-30)
 
 
