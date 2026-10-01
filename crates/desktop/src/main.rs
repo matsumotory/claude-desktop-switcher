@@ -850,15 +850,17 @@ fn main() {
             // The same loop watches for the update-takeover transition: an
             // environment's Claude vanishes and, within a short window, a Claude
             // launched outside CSW (no --user-data-dir: the Dock, or Squirrel's
-            // post-update relaunch) appears. That relaunched Claude runs on the
-            // default data directory, so the user silently lands in the existing
-            // Claude; record the transition for the settings window to explain.
+            // post-update relaunch) appears as a new process. That relaunched
+            // Claude runs on the default data directory, so the user silently
+            // lands in the existing Claude; record the transition for the
+            // settings window to explain.
             let watch_handle = app.handle().clone();
             std::thread::spawn(move || {
-                const TAKEOVER_WINDOW_SECS: u64 = 12;
+                let mut takeover_watch = csw_core::switcher::takeover::TakeoverWatch::new(
+                    std::time::Duration::from_secs(12),
+                );
                 let mut prev_names: Vec<String> = Vec::new();
                 let mut prev_unmanaged = false;
-                let mut recently_gone: Vec<(String, std::time::Instant)> = Vec::new();
                 // High-water union of environments seen running together since
                 // the last all-quit; persisted as the reopen set when everything
                 // has quit, so the settings window can offer to reopen them.
@@ -868,8 +870,14 @@ fn main() {
                     let state = watch_handle.state::<AppState>();
                     // One process snapshot per tick: unmanaged and names must
                     // come from the same view of the world.
-                    let args = state.provider.running_desktop_args().unwrap_or_default();
-                    let unmanaged = csw_core::switcher::unmanaged_default_running(&args);
+                    let processes = state
+                        .provider
+                        .running_desktop_processes()
+                        .unwrap_or_default();
+                    let args: Vec<String> =
+                        processes.iter().map(|(_, line)| line.clone()).collect();
+                    let unmanaged_pids = csw_core::switcher::takeover::unmanaged_pids(&processes);
+                    let unmanaged = !unmanaged_pids.is_empty();
                     let names = running_profile_names_from(&state, &args);
                     let now = std::time::Instant::now();
 
@@ -892,32 +900,16 @@ fn main() {
                         }
                     }
 
-                    let mut newly_gone = false;
-                    for name in &prev_names {
-                        if name != "default" && !names.contains(name) {
-                            recently_gone.push((name.clone(), now));
-                            newly_gone = true;
-                        }
-                    }
-                    recently_gone.retain(|(_, at)| {
-                        now.duration_since(*at).as_secs() <= TAKEOVER_WINDOW_SECS
-                    });
-
+                    takeover_watch.observe(now, &names, &unmanaged_pids);
                     {
                         let mut takeover = state.takeover_from.lock().unwrap();
-                        // Trigger on the outside-CSW Claude appearing, or on an
-                        // environment vanishing while one already runs (an update
-                        // can restart everything while a Dock-launched Claude was
-                        // running the whole time). Pick the newest vanished
-                        // environment that is still gone, and consume the entry so
-                        // a dismissed notice is not re-raised by the same event.
-                        if unmanaged
-                            && (!prev_unmanaged || newly_gone)
-                            && takeover.is_none()
-                            && let Some(pos) =
-                                recently_gone.iter().rposition(|(n, _)| !names.contains(n))
+                        // Only a new outside-CSW process counts as the relaunch
+                        // (see TakeoverWatch): an existing Claude that keeps
+                        // running does not, so quitting an environment beside it
+                        // raises nothing.
+                        if takeover.is_none()
+                            && let Some(from) = takeover_watch.take_takeover()
                         {
-                            let (from, _) = recently_gone.remove(pos);
                             *takeover = Some(from);
                         }
                         // The situation resolves itself when the outside-CSW
