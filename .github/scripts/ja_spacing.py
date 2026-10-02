@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Keep Japanese text free of spaces between Japanese and Latin characters.
+"""Keep Japanese text free of typed spacing: no space between Japanese and
+Latin text, and a full-width colon with no space around it.
 
 CSW's Japanese copy puts no space between Japanese characters and Latin
-letters, digits or inline code (和欧間の空白を入れない). Spacing is the
-renderer's job, not the text's (japanese-typography-qa §5). This script finds
-such spaces (--check, run in CI Lint) and removes them (--fix) in the
-user-facing files listed in TARGETS.
+letters, digits or inline code (和欧間の空白を入れない), and writes the colon
+as the full-width "：" with no space on either side ("最終起動：3時間前").
+Spacing is the renderer's job, not the text's (japanese-typography-qa §5); the
+full-width colon carries its own space in the glyph. This script finds both
+(--check, run in CI Lint) and fixes them (--fix) in the user-facing files
+listed in TARGETS.
 
 A space is removed only when a Japanese character sits on one side and a
 Latin letter, a digit, inline code or an inline HTML tag on the other. Kept:
@@ -15,9 +18,18 @@ Latin letter, a digit, inline code or an inline HTML tag on the other. Kept:
 - Markdown syntax: a heading's leading number ("## 8.1 見出し"), list markers
   and task checkboxes ("- [ ] 項目");
 - a half-width "(" after Japanese ("日本語 (Japanese)", an English gloss);
-- inline code, <code> elements, fenced code blocks, HTML comments, and
+- inline code, <code> elements, fenced code blocks (``` and ~~~), HTML
+  comments, <script> and <style> elements, and
   comments in JavaScript and Rust (English prose that quotes Japanese);
 - any line that contains the marker "ja-spacing: ignore".
+
+Colons: a half-width ":" with Japanese on either side becomes "：", and so
+does the colon after a Markdown list label ("- **CLI**: …", "- `csw`: …") on
+a line that contains Japanese. Spaces around "：" are removed. Kept half-width:
+code, URLs, link destinations, HTML href/src/style values, Markdown footnote
+and link reference definitions, YAML keys, times and ratios ("12:30"), and
+English phrases ("Tauri command: `x`", "press: 「この環境を起動」"). A bold
+label that ends with its colon ("**注意:** 本文") becomes "**注意**：本文".
 
 Markdown bold around a bracketed label is normalized so it needs no spaces:
 "**「複製」** ボタン" becomes "「**複製**」ボタン". Bold whose inner text ends
@@ -77,6 +89,7 @@ INLINE = r"(?:code|a|strong|em|b|span|kbd)"
 SPACE_BEFORE_TAG = re.compile(rf"({JA})[ \t]+(<{INLINE}\b)")
 SPACE_AFTER_TAG = re.compile(rf"(</{INLINE}>)[ \t]+({JA})")
 
+FENCES = ("```", "~~~")
 HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
 HTML_CODE = re.compile(r"<code\b[^>]*>.*?</code>", re.S)
 INLINE_CODE = re.compile(r"`[^`\n]+`")
@@ -97,8 +110,46 @@ SPACE_AFTER_BRACKET_BOLD = re.compile(rf"(?<=\*\*」)[ \t]+(?={JA})")
 BOLD_THEN_JA = re.compile(rf"(?<=[A-Za-z0-9])(\*\*|\*)[ \t]+(?={JA})")
 JA_THEN_BOLD = re.compile(rf"(?<={JA})[ \t]+(\*\*|\*)(?=[A-Za-z0-9])")
 
+# Colons (japanese-typography-qa §5). A half-width colon after Japanese (or
+# after a closing bold marker or half-width ")" that follows Japanese), or
+# before Japanese, becomes the full-width one. "::" and ":/" (paths, schemes)
+# never match, and an English phrase that quotes a Japanese label
+# ("press: 「この環境を起動」") keeps its colon.
+COLON_AFTER_JA = re.compile(rf"(?<={JA})(\*\*|\*|\))?:(?![:/])[ \t]*")
+COLON_BEFORE_JA = re.compile(rf"(?<![:/])((?:\*\*|\*)?):[ \t]*(?=(?:\*\*|\*)?(?!「){JA})")
+# A bold label that ends with its colon ("**注意:** 本文") cannot close the
+# bold without a space after "：", so the colon moves outside: "**注意**：本文".
+BOLD_COLON = re.compile(rf"\*\*([^*\n]*?{JA})[:：]\*\*[ \t]*")
+SPACE_AROUND_COLON = re.compile(r"(?<=\S)[ \t]+(?=：)|(?<=：)[ \t]+(?=\S)")
+# A list label in a Japanese line: "**CLI**: iTerm2など", "`csw`: cswコマンド",
+# "`a` (`b`): …", "**フロー (`x`)**:" at the end of the line, "MDN: `x`、…".
+PROTECTED = "\ue000.\ue000"
+MD_LABEL = re.compile(
+    rf"^((?:\*\*[^*\n]+\*\*|{PROTECTED}(?:[ \t]*/[ \t]*{PROTECTED})*"
+    rf"|[A-Za-z][A-Za-z0-9._-]*(?: [A-Za-z0-9._-]+){{0,2}})"
+    rf"(?:[ \t]*\([^)\n]*\))?):(?:[ \t]+|$)"
+)
+# A URL ends at whitespace, quotes, brackets, a protected span, or CJK and
+# full-width punctuation ("（https://…）の"); Japanese path segments stay in.
+URL = re.compile(r"(?:https?|mailto):[^\s<>\"'`)\]\ue000-\uf8ff\u3000-\u303f\uff01-\uff0f\uff1a-\uff20]+")
+# A Markdown link destination ("[text](#見出し:1)") and HTML attributes that
+# hold URLs or CSS are data, not prose.
+LINK_DEST = re.compile(r"(?<=\]\()[^)\s]+")
+ATTR = re.compile(r'\b(?:href|src|style)="[^"]*"')
+YAML_KEY = re.compile(r"^[ \t]*[\w-]+:")
+REF_DEF = re.compile(r"^\[\^?[^\]\n]+\]:")
+NEUTRAL = "\ue001"
+HTML_RAW = re.compile(r"<(script|style)\b.*?</\1>", re.S)
+
+
+def _colons(text: str) -> str:
+    text = COLON_AFTER_JA.sub(r"\1：", text)
+    text = COLON_BEFORE_JA.sub(r"\1：", text)
+    return SPACE_AROUND_COLON.sub("", text)
+
 
 def _squeeze(text: str) -> str:
+    text = _colons(text)
     text = SPACE_AFTER_JA.sub("", text)
     text = SPACE_AFTER_PATH.sub("", text)
     return SPACE_BEFORE_JA.sub("", text)
@@ -109,24 +160,44 @@ def _tags(text: str) -> str:
     return SPACE_AFTER_TAG.sub(r"\1\2", text)
 
 
-def _protect(text: str, pattern: re.Pattern, saved: list[str]) -> str:
-    """Swap each match for a placeholder that counts as a Latin boundary."""
+def _protect(text: str, pattern: re.Pattern, saved: list[str], mark: str = "\ue000") -> str:
+    """Swap each match for a placeholder. The default mark counts as a Latin
+    boundary; NEUTRAL (used for URLs) counts as neither Latin nor Japanese, so
+    a space that delimits a bare URL stays."""
 
     def keep(m: re.Match) -> str:
         saved.append(m.group(0))
-        return "" + chr(0xE100 + len(saved) - 1) + ""
+        return mark + chr(0xE100 + len(saved) - 1) + mark
 
     return pattern.sub(keep, text)
 
 
 def _restore(text: str, saved: list[str]) -> str:
-    return re.sub(r"(.)", lambda m: saved[ord(m.group(1)) - 0xE100], text)
+    while re.search("[\ue000\ue001]", text):
+        text = _restore_once(text, saved)
+    return text
+
+
+def _restore_once(text: str, saved: list[str]) -> str:
+    return re.sub(r"[\ue000\ue001](.)[\ue000\ue001]", lambda m: saved[ord(m.group(1)) - 0xE100], text)
 
 
 def fix_markdown(text: str) -> str:
     out, fenced = [], False
-    for line in text.split("\n"):
-        if line.lstrip().startswith("```"):
+    lines = text.split("\n")
+    # YAML front matter: the key ("description:") is syntax; the value is
+    # prose and follows the same rules.
+    if lines and lines[0] == "---" and "---" in lines[1:]:
+        end = lines.index("---", 1)
+        out.append(lines[0])
+        for line in lines[1:end]:
+            saved: list[str] = []
+            body = _protect(line, YAML_KEY, saved, NEUTRAL)
+            out.append(_restore(_squeeze(_tags(body)), saved))
+        out.append(lines[end])
+        lines = lines[end + 1:]
+    for line in lines:
+        if line.lstrip().startswith(FENCES):
             fenced = not fenced
             out.append(line)
             continue
@@ -136,8 +207,15 @@ def fix_markdown(text: str) -> str:
         head = MD_PREFIX.match(line)
         prefix = head.group(0) if head else ""
         saved: list[str] = []
-        body = _protect(line[len(prefix):], HTML_COMMENT, saved)
+        body = _protect(line[len(prefix):], REF_DEF, saved, NEUTRAL)
+        body = _protect(body, HTML_COMMENT, saved)
         body = _protect(body, INLINE_CODE, saved)
+        body = _protect(body, LINK_DEST, saved, NEUTRAL)
+        body = _protect(body, URL, saved, NEUTRAL)
+        # Japanese prose, not just a quoted Japanese label in an English line.
+        if re.search(JA, re.sub(r"「[^」\n]*」", "", body)):
+            body = MD_LABEL.sub(r"\1：", body)
+        body = BOLD_COLON.sub(r"**\1**：", body)
         body = BOLD_BRACKET.sub(r"「**\1**」", body)
         body = SPACE_BEFORE_BRACKET_BOLD.sub("", body)
         body = SPACE_AFTER_BRACKET_BOLD.sub("", body)
@@ -150,7 +228,10 @@ def fix_markdown(text: str) -> str:
 def fix_html(text: str) -> str:
     saved: list[str] = []
     body = _protect(text, HTML_COMMENT, saved)
+    body = _protect(body, HTML_RAW, saved)
     body = _protect(body, HTML_CODE, saved)
+    body = _protect(body, ATTR, saved, NEUTRAL)
+    body = _protect(body, URL, saved, NEUTRAL)
     return _restore(_squeeze(_tags(body)), saved)
 
 
@@ -166,7 +247,11 @@ def _squeeze_literal(text: str) -> str:
     # String literals can carry HTML (the OG card template), and a literal is
     # often joined with an element or a value at runtime, so a space at either
     # end next to Japanese is a join space and goes too.
-    text = _squeeze(_tags(text))
+    saved: list[str] = []
+    body = _protect(text, HTML_RAW, saved, NEUTRAL)
+    body = _protect(body, ATTR, saved, NEUTRAL)
+    body = _protect(body, URL, saved, NEUTRAL)
+    text = _restore(_squeeze(_tags(body)), saved)
     text = LITERAL_START.sub("", text)
     return LITERAL_END.sub("", text)
 
@@ -245,9 +330,9 @@ def soft_breaks(path: str, text: str) -> list[int]:
     hits, lines, fenced = [], text.split("\n"), False
     for k in range(len(lines) - 1):
         a, b = lines[k], lines[k + 1]
-        if a.lstrip().startswith("```"):
+        if a.lstrip().startswith(FENCES):
             fenced = not fenced
-        if a.lstrip().startswith("```") or fenced or IGNORE_MARKER in a:
+        if a.lstrip().startswith(FENCES) or fenced or IGNORE_MARKER in a:
             continue
         # Both lines must be paragraph text (not a heading, list, table,
         # quote, fence or HTML), and the first must not end with a hard break.
@@ -290,7 +375,7 @@ def main(argv: list[str]) -> int:
         for k, (a, b) in enumerate(zip(before.split("\n"), after.split("\n")), 1):
             if a != b:
                 bad += 1
-                print(f"{rel}:{k}: space between Japanese and Latin text: {a.strip()[:120]}")
+                print(f"{rel}:{k}: space between Japanese and Latin text, or a half-width colon: {a.strip()[:120]}")
     if bad:
         print(f"\n{bad} problem(s). Run: python3 .github/scripts/ja_spacing.py --fix "
               "(line breaks inside a paragraph are joined by hand)")

@@ -51,7 +51,7 @@ description: LP(website/) と人間向けドキュメント(docs/・README) と�
 
 7. **禁止表現・トーン(Banned patterns)**
    - ユーザー可視テキストに ※ / ＊ / 絵文字 / em-dash(—)を使っていない。
-   - 和文と英数字・コードのあいだに空白が無い(`python3 .github/scripts/ja_spacing.py --check`、残してよい空白は`japanese-typography-qa`§5)。
+   - 和文と英数字・コードのあいだに空白が無く、和文のコロンは全角「：」で前後に空白が無い(`python3 .github/scripts/ja_spacing.py --check`、残してよい空白と半角の`:`は`japanese-typography-qa`§5)。
    - 生の技術用語(Application Support / Keychain 等)を、利点に翻訳せず露出していない(CLAUDE.md の User-Centric Copywriting)。誇張形容詞("perfect/seamless/smart")なし。
    - 日本語タイポは [[japanese-typography-qa]] のチェックリストにも適合(見出しスケール逆転・折り返し崩れがない)。
 

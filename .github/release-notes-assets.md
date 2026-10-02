@@ -1,9 +1,9 @@
 ### 添付ファイルの説明
 
-- `Claude-Desktop-Switcher___VERSION___universal.dmg`: デスクトップアプリ本体です。Apple SiliconとIntelのどちらのMacでも動きます。
-- `csw`: ターミナルで使うcswコマンド単体です。アプリだけを使う場合は、分離の検査が案内するリンクの修復を除いて不要です。
-- `csw-desktop_*.cdx.json` / `csw-cli_*.cdx.json`: 部品表（SBOM）です。アプリとcswに含まれる全ライブラリの名前とバージョンを、標準のCycloneDX形式で列挙しています。配布物の中身を誰でも確かめられるように毎リリースに添付しており、読み方は[docs/PRIVACY.md](https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY.md)にあります。
-- `RELEASE-README.md`: この説明のファイル版です。英語の説明も含みます。
+- `Claude-Desktop-Switcher___VERSION___universal.dmg`：デスクトップアプリ本体です。Apple SiliconとIntelのどちらのMacでも動きます。
+- `csw`：ターミナルで使うcswコマンド単体です。アプリだけを使う場合は、分離の検査が案内するリンクの修復を除いて不要です。
+- `csw-desktop_*.cdx.json` / `csw-cli_*.cdx.json`：部品表（SBOM）です。アプリとcswに含まれる全ライブラリの名前とバージョンを、標準のCycloneDX形式で列挙しています。配布物の中身を誰でも確かめられるように毎リリースに添付しており、読み方は[docs/PRIVACY.md](https://github.com/matsumotory/claude-desktop-switcher/blob/main/docs/PRIVACY.md)にあります。
+- `RELEASE-README.md`：この説明のファイル版です。英語の説明も含みます。
 
 ### About the attached files
 

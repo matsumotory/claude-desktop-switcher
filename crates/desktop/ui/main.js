@@ -133,7 +133,7 @@ const EN = {
   'ディスクイメージを取り出しました': 'Disk image ejected',
   '取り出せませんでした。ディスクイメージを使用中のウィンドウを閉じてから、もう一度お試しください。': 'Could not eject. Close any window using the disk image, then try again.',
   'パスをコピー': 'Copy path', 'コマンドをコピー': 'Copy command',
-  '複製先の名前。例: 仕事用-控え': 'Name for the duplicate. e.g. Work-backup',
+  '複製先の名前。例：仕事用-控え': 'Name for the duplicate. e.g. Work-backup',
   '名前を入力してください。': 'Enter a name.',
   '"default"は使えません。いまの環境を指す予約名です。': '"default" is reserved for the current environment and cannot be used.',
   '名前は64文字までにしてください。': 'Use at most 64 characters.',
@@ -202,10 +202,10 @@ const EN = {
   'アイデア': 'Idea', '資料': 'Docs', '会話': 'Chat',
   // Static create-view strings and chrome aria-labels.
   '環境一覧': 'Environments', 'テーマカラー': 'Accent color', 'ヘルプ': 'Help', 'アイコンを選ぶ': 'Choose an icon', '分け方': 'How to separate',
-  '名前': 'Name', '例: 仕事用、検証用': 'e.g. Work, Testing', 'アイコン（任意）': 'Icon (optional)',
+  '名前': 'Name', '例：仕事用、検証用': 'e.g. Work, Testing', 'アイコン（任意）': 'Icon (optional)',
   'メモ（任意）': 'Note (optional)', 'この環境のメモ': 'Note for this environment',
   '編集': 'Edit', '保存': 'Save', 'メモを書く': 'Add a note',
-  '例: 仕事用。会社のGoogleアカウントでサインイン': 'e.g. Work. Signs in with the company Google account',
+  '例：仕事用。会社のGoogleアカウントでサインイン': 'e.g. Work. Signs in with the company Google account',
   '既存のClaudeから、どう分けますか?': 'How do you want to separate this from your existing Claude?',
   'どのモードでも、サインインするアカウントは環境ごとに分かれます。課金や利用量はそのアカウントにひも付きます。違いは、会話・メモリ・設定をどこまで引き継ぐかです。':
     'In every mode the signed-in account is separate per environment, and billing and usage follow that account. What differs is how much of your conversations, memory, and settings carry over.',
@@ -533,7 +533,7 @@ function renderSidebar() {
     if (!isDefault && p.last_launched_at) {
       subs.push(h('span', {
         class: 'profile-meta',
-        text: T(`最終起動: ${relTime(p.last_launched_at)}`, `Last launched ${relTime(p.last_launched_at)}`),
+        text: T(`最終起動：${relTime(p.last_launched_at)}`, `Last launched ${relTime(p.last_launched_at)}`),
       }));
     }
     return h('li', {
@@ -901,11 +901,11 @@ function noteSection(d) {
   const box = h('div', { class: 'note-box' });
 
   const facts = [];
-  if (d.created_at) facts.push(T(`作成: ${fmtDate(d.created_at)}`, `Created ${fmtDate(d.created_at)}`));
-  if (d.cloned_from) facts.push(T(`複製元: ${d.cloned_from}`, `Duplicated from ${d.cloned_from}`));
+  if (d.created_at) facts.push(T(`作成：${fmtDate(d.created_at)}`, `Created ${fmtDate(d.created_at)}`));
+  if (d.cloned_from) facts.push(T(`複製元：${d.cloned_from}`, `Duplicated from ${d.cloned_from}`));
   facts.push(d.last_launched_at
-    ? T(`最終起動: ${relTime(d.last_launched_at)}`, `Last launched ${relTime(d.last_launched_at)}`)
-    : T('最終起動: まだありません', 'Never launched'));
+    ? T(`最終起動：${relTime(d.last_launched_at)}`, `Last launched ${relTime(d.last_launched_at)}`)
+    : T('最終起動：まだありません', 'Never launched'));
   const factsRow = h('div', { class: 'detail-facts' }, ...facts.map((f) => h('span', { text: f })));
 
   const renderRead = () => {
@@ -937,7 +937,7 @@ function noteSection(d) {
     };
     const input = h('input', {
       type: 'text', class: 'input', value: d.note || '', maxlength: '200',
-      placeholder: '例: 仕事用。会社のGoogleアカウントでサインイン',
+      placeholder: '例：仕事用。会社のGoogleアカウントでサインイン',
       autocomplete: 'off', spellcheck: 'false', style: 'flex:1',
       // IME guard: Enter while composing Japanese must confirm the conversion,
       // not submit (e.isComposing, plus keyCode 229 for older WebKit).
@@ -1205,7 +1205,7 @@ function showPurgeRow(name) {
 function showCloneRow(name) {
   el.detailFooter.className = 'view-footer';
   const input = h('input', {
-    type: 'text', class: 'input', placeholder: '複製先の名前。例: 仕事用-控え',
+    type: 'text', class: 'input', placeholder: '複製先の名前。例：仕事用-控え',
     autocomplete: 'off', spellcheck: 'false', style: 'flex:1',
     onkeydown: (e) => { if (e.key === 'Enter') doClone(name, input.value.trim()); },
   });
