@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Keep Japanese text free of spaces between Japanese and Latin characters.
+"""Keep Japanese text free of typed spacing: no space between Japanese and
+Latin text, and a full-width colon with no space around it.
 
 CSW's Japanese copy puts no space between Japanese characters and Latin
-letters, digits or inline code (和欧間の空白を入れない). Spacing is the
-renderer's job, not the text's (japanese-typography-qa §5). This script finds
-such spaces (--check, run in CI Lint) and removes them (--fix) in the
-user-facing files listed in TARGETS.
+letters, digits or inline code (和欧間の空白を入れない), and writes the colon
+as the full-width "：" with no space on either side ("最終起動：3時間前").
+Spacing is the renderer's job, not the text's (japanese-typography-qa §5); the
+full-width colon carries its own space in the glyph. This script finds both
+(--check, run in CI Lint) and fixes them (--fix) in the user-facing files
+listed in TARGETS.
 
 A space is removed only when a Japanese character sits on one side and a
 Latin letter, a digit, inline code or an inline HTML tag on the other. Kept:
@@ -18,6 +21,12 @@ Latin letter, a digit, inline code or an inline HTML tag on the other. Kept:
 - inline code, <code> elements, fenced code blocks, HTML comments, and
   comments in JavaScript and Rust (English prose that quotes Japanese);
 - any line that contains the marker "ja-spacing: ignore".
+
+Colons: a half-width ":" with Japanese on either side becomes "：", and so
+does the colon after a Markdown list label ("- **CLI**: …", "- `csw`: …") on
+a line that contains Japanese. Spaces around "：" are removed. Kept half-width:
+code, URLs, Markdown footnote and link reference definitions, YAML front
+matter, times and ratios ("12:30"), and English phrases ("Tauri command: `x`").
 
 Markdown bold around a bracketed label is normalized so it needs no spaces:
 "**「複製」** ボタン" becomes "「**複製**」ボタン". Bold whose inner text ends
@@ -97,8 +106,33 @@ SPACE_AFTER_BRACKET_BOLD = re.compile(rf"(?<=\*\*」)[ \t]+(?={JA})")
 BOLD_THEN_JA = re.compile(rf"(?<=[A-Za-z0-9])(\*\*|\*)[ \t]+(?={JA})")
 JA_THEN_BOLD = re.compile(rf"(?<={JA})[ \t]+(\*\*|\*)(?=[A-Za-z0-9])")
 
+# Colons (japanese-typography-qa §5). A half-width colon after Japanese, or
+# before Japanese, becomes the full-width one; a closing or opening bold
+# marker between them is kept. "::" and ":/" (paths, schemes) never match.
+COLON_AFTER_JA = re.compile(rf"(?<={JA})(\*\*|\*)?:(?![:/])[ \t]*")
+COLON_BEFORE_JA = re.compile(rf"(?<![:/])((?:\*\*|\*)?):[ \t]*(?=(?:\*\*|\*)?{JA})")
+SPACE_AROUND_COLON = re.compile(r"(?<=\S)[ \t]+(?=：)|(?<=：)[ \t]+(?=\S)")
+# A list label in a Japanese line: "**CLI**: iTerm2など", "`csw`: cswコマンド",
+# "`a` (`b`): …", "**フロー (`x`)**:" at the end of the line.
+PROTECTED = "\ue000.\ue000"
+MD_LABEL = re.compile(
+    rf"^((?:\*\*[^*\n]+\*\*|{PROTECTED}(?:[ \t]*/[ \t]*{PROTECTED})*)"
+    rf"(?:[ \t]*\([^)\n]*\))?):(?:[ \t]+|$)"
+)
+URL = re.compile(r"(?:https?|mailto):[^\s<>\"'`)\]]+")
+REF_DEF = re.compile(r"^\[\^?[^\]\n]+\]:")
+NEUTRAL = "\ue001"
+HTML_RAW = re.compile(r"<(script|style)\b.*?</\1>", re.S)
+
+
+def _colons(text: str) -> str:
+    text = COLON_AFTER_JA.sub(r"\1：", text)
+    text = COLON_BEFORE_JA.sub(r"\1：", text)
+    return SPACE_AROUND_COLON.sub("", text)
+
 
 def _squeeze(text: str) -> str:
+    text = _colons(text)
     text = SPACE_AFTER_JA.sub("", text)
     text = SPACE_AFTER_PATH.sub("", text)
     return SPACE_BEFORE_JA.sub("", text)
@@ -109,23 +143,30 @@ def _tags(text: str) -> str:
     return SPACE_AFTER_TAG.sub(r"\1\2", text)
 
 
-def _protect(text: str, pattern: re.Pattern, saved: list[str]) -> str:
-    """Swap each match for a placeholder that counts as a Latin boundary."""
+def _protect(text: str, pattern: re.Pattern, saved: list[str], mark: str = "\ue000") -> str:
+    """Swap each match for a placeholder. The default mark counts as a Latin
+    boundary; NEUTRAL (used for URLs) counts as neither Latin nor Japanese, so
+    a space that delimits a bare URL stays."""
 
     def keep(m: re.Match) -> str:
         saved.append(m.group(0))
-        return "" + chr(0xE100 + len(saved) - 1) + ""
+        return mark + chr(0xE100 + len(saved) - 1) + mark
 
     return pattern.sub(keep, text)
 
 
 def _restore(text: str, saved: list[str]) -> str:
-    return re.sub(r"(.)", lambda m: saved[ord(m.group(1)) - 0xE100], text)
+    return re.sub(r"[\ue000\ue001](.)[\ue000\ue001]", lambda m: saved[ord(m.group(1)) - 0xE100], text)
 
 
 def fix_markdown(text: str) -> str:
     out, fenced = [], False
-    for line in text.split("\n"):
+    lines = text.split("\n")
+    # YAML front matter ("description: …") is data, not prose.
+    if lines and lines[0] == "---" and "---" in lines[1:]:
+        end = lines.index("---", 1) + 1
+        out, lines = lines[:end], lines[end:]
+    for line in lines:
         if line.lstrip().startswith("```"):
             fenced = not fenced
             out.append(line)
@@ -136,8 +177,12 @@ def fix_markdown(text: str) -> str:
         head = MD_PREFIX.match(line)
         prefix = head.group(0) if head else ""
         saved: list[str] = []
-        body = _protect(line[len(prefix):], HTML_COMMENT, saved)
+        body = _protect(line[len(prefix):], REF_DEF, saved, NEUTRAL)
+        body = _protect(body, HTML_COMMENT, saved)
         body = _protect(body, INLINE_CODE, saved)
+        body = _protect(body, URL, saved, NEUTRAL)
+        if re.search(JA, body):
+            body = MD_LABEL.sub(r"\1：", body)
         body = BOLD_BRACKET.sub(r"「**\1**」", body)
         body = SPACE_BEFORE_BRACKET_BOLD.sub("", body)
         body = SPACE_AFTER_BRACKET_BOLD.sub("", body)
@@ -150,7 +195,9 @@ def fix_markdown(text: str) -> str:
 def fix_html(text: str) -> str:
     saved: list[str] = []
     body = _protect(text, HTML_COMMENT, saved)
+    body = _protect(body, HTML_RAW, saved)
     body = _protect(body, HTML_CODE, saved)
+    body = _protect(body, URL, saved, NEUTRAL)
     return _restore(_squeeze(_tags(body)), saved)
 
 
@@ -166,7 +213,8 @@ def _squeeze_literal(text: str) -> str:
     # String literals can carry HTML (the OG card template), and a literal is
     # often joined with an element or a value at runtime, so a space at either
     # end next to Japanese is a join space and goes too.
-    text = _squeeze(_tags(text))
+    saved: list[str] = []
+    text = _restore(_squeeze(_tags(_protect(text, URL, saved, NEUTRAL))), saved)
     text = LITERAL_START.sub("", text)
     return LITERAL_END.sub("", text)
 
@@ -290,7 +338,7 @@ def main(argv: list[str]) -> int:
         for k, (a, b) in enumerate(zip(before.split("\n"), after.split("\n")), 1):
             if a != b:
                 bad += 1
-                print(f"{rel}:{k}: space between Japanese and Latin text: {a.strip()[:120]}")
+                print(f"{rel}:{k}: space between Japanese and Latin text, or a half-width colon: {a.strip()[:120]}")
     if bad:
         print(f"\n{bad} problem(s). Run: python3 .github/scripts/ja_spacing.py --fix "
               "(line breaks inside a paragraph are joined by hand)")

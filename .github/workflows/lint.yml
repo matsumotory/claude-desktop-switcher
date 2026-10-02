@@ -29,9 +29,14 @@ jobs:
       - name: Clippy (deny warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      # Japanese copy puts no space between Japanese and Latin text or code
+      # Japanese copy puts no space between Japanese and Latin text or code,
+      # and writes the colon as a full-width "：" with no space around it
       # (japanese-typography-qa §5). Runs even when an earlier step failed, so
-      # one push reports both the Rust lint and the spacing.
-      - name: Check spacing between Japanese and Latin text
+      # one push reports both the Rust lint and the Japanese text checks.
+      - name: Test the Japanese text checker
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/test_ja_spacing.py
+
+      - name: Check spacing and colons in Japanese text
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/ja_spacing.py --check

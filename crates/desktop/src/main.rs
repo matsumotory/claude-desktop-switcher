@@ -1022,7 +1022,8 @@ mod tests {
     fn user_environment_names_are_never_translated() {
         assert_eq!(tray_profile_label("work", false, true), "○ work");
         assert_eq!(tray_profile_label("work", false, false), "○ work");
-        assert_eq!(tray_profile_label("仕事", true, false), "● 仕事: In use");
+        // An English label: its colon stays half-width (ja_spacing.py skips the line).
+        assert_eq!(tray_profile_label("仕事", true, false), "● 仕事: In use"); // ja-spacing: ignore
         assert_eq!(tray_profile_label("仕事", true, true), "● 仕事：利用中");
     }
 
