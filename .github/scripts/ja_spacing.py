@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Keep Japanese text free of typed spacing: no space between Japanese and
-Latin text, and a full-width colon with no space around it.
+Latin text, and a full-width colon, question mark and exclamation mark with
+no space around them.
 
 CSW's Japanese copy puts no space between Japanese characters and Latin
-letters, digits or inline code (和欧間の空白を入れない), and writes the colon
-as the full-width "：" with no space on either side ("最終起動：3時間前").
+letters, digits or inline code (和欧間の空白を入れない), and writes the colon,
+question mark and exclamation mark as the full-width "：", "？" and "！" with
+no space on either side ("最終起動：3時間前", "どう分けますか？3つの…").
 Spacing is the renderer's job, not the text's (japanese-typography-qa §5); the
-full-width colon carries its own space in the glyph. This script finds both
+full-width marks carry their own space in the glyph. This script finds these
 (--check, run in CI Lint) and fixes them (--fix) in the user-facing files
 listed in TARGETS.
 
@@ -30,6 +32,14 @@ code, URLs, link destinations, HTML href/src/style values, Markdown footnote
 and link reference definitions, YAML keys, times and ratios ("12:30"), and
 English phrases ("Tauri command: `x`", "press: 「この環境を起動」"). A bold
 label that ends with its colon ("**注意:** 本文") becomes "**注意**：本文".
+
+Question and exclamation marks: a half-width "?" or "!" after Japanese
+becomes "？" or "！", and so does a "?" between Latin text and Japanese.
+Kept half-width: code, URLs, a "!" after Latin text (Rust macros such as
+"format!"), a mark before a query key ("?lang=ja"), CSS "!important", "!=",
+a Markdown image ("![図](a.png)"), and English sentences, including a
+Markdown line whose only Japanese is a quoted label ("Did you press
+「この環境を起動」?"). Spaces around "？" and "！" are removed.
 
 Markdown bold around a bracketed label is normalized so it needs no spaces:
 "**「複製」** ボタン" becomes "「**複製**」ボタン". Bold whose inner text ends
@@ -142,14 +152,38 @@ NEUTRAL = "\ue001"
 HTML_RAW = re.compile(r"<(script|style)\b.*?</\1>", re.S)
 
 
+# Question and exclamation marks (japanese-typography-qa §5). A half-width
+# "?" or "!" after Japanese (or after a closing bold marker or ")" that
+# follows Japanese) becomes full-width, and so does a "?" between Latin text
+# and Japanese ("Claude Code? 次は"). A "!" after Latin text stays: it cannot
+# be told apart from a Rust macro name ("format!"). Also kept: a mark followed
+# by a query key ("?lang=ja", "?v=0.24.5"), "important" (CSS "!important"),
+# "=" ("!=") or "[" (a Markdown image "![図](a.png)"). Spaces around "？" and
+# "！" are removed.
+MARK_AFTER_JA = re.compile(
+    rf"(?<={JA})(\*\*|\*|\))?([?!]+)(?![?!=\[]|important(?![A-Za-z0-9_])|[A-Za-z_][A-Za-z0-9_-]*=)")
+QUESTION_BEFORE_JA = re.compile(
+    rf"(?<=[A-Za-z0-9])((?:\*\*|\*)?)\?[ \t]*(?=(?:\*\*|\*)?(?!「){JA})")
+SPACE_AROUND_MARK = re.compile(r"(?<=\S)[ \t]+(?=[？！])|(?<=[？！])[ \t]+(?=\S)")
+FULL_WIDTH_MARKS = str.maketrans("?!", "？！")
+
+
 def _colons(text: str) -> str:
     text = COLON_AFTER_JA.sub(r"\1：", text)
     text = COLON_BEFORE_JA.sub(r"\1：", text)
     return SPACE_AROUND_COLON.sub("", text)
 
 
-def _squeeze(text: str) -> str:
+def _marks(text: str, convert: bool = True) -> str:
+    if convert:
+        text = MARK_AFTER_JA.sub(lambda m: (m.group(1) or "") + m.group(2).translate(FULL_WIDTH_MARKS), text)
+        text = QUESTION_BEFORE_JA.sub(r"\1？", text)
+    return SPACE_AROUND_MARK.sub("", text)
+
+
+def _squeeze(text: str, marks: bool = True) -> str:
     text = _colons(text)
+    text = _marks(text, marks)
     text = SPACE_AFTER_JA.sub("", text)
     text = SPACE_AFTER_PATH.sub("", text)
     return SPACE_BEFORE_JA.sub("", text)
@@ -213,7 +247,8 @@ def fix_markdown(text: str) -> str:
         body = _protect(body, LINK_DEST, saved, NEUTRAL)
         body = _protect(body, URL, saved, NEUTRAL)
         # Japanese prose, not just a quoted Japanese label in an English line.
-        if re.search(JA, re.sub(r"「[^」\n]*」", "", body)):
+        ja_prose = bool(re.search(JA, re.sub(r"「[^」\n]*」", "", body)))
+        if ja_prose:
             body = MD_LABEL.sub(r"\1：", body)
         body = BOLD_COLON.sub(r"**\1**：", body)
         body = BOLD_BRACKET.sub(r"「**\1**」", body)
@@ -221,7 +256,7 @@ def fix_markdown(text: str) -> str:
         body = SPACE_AFTER_BRACKET_BOLD.sub("", body)
         body = BOLD_THEN_JA.sub(r"\1", body)
         body = JA_THEN_BOLD.sub(r"\1", body)
-        out.append(prefix + _restore(_squeeze(_tags(body)), saved))
+        out.append(prefix + _restore(_squeeze(_tags(body), ja_prose), saved))
     return "\n".join(out)
 
 
@@ -375,7 +410,8 @@ def main(argv: list[str]) -> int:
         for k, (a, b) in enumerate(zip(before.split("\n"), after.split("\n")), 1):
             if a != b:
                 bad += 1
-                print(f"{rel}:{k}: space between Japanese and Latin text, or a half-width colon: {a.strip()[:120]}")
+                print(f"{rel}:{k}: space between Japanese and Latin text, or a half-width colon, "
+                      f"question mark or exclamation mark: {a.strip()[:120]}")
     if bad:
         print(f"\n{bad} problem(s). Run: python3 .github/scripts/ja_spacing.py --fix "
               "(line breaks inside a paragraph are joined by hand)")
