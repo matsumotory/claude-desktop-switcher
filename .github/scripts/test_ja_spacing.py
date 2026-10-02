@@ -87,6 +87,52 @@ class Colons(unittest.TestCase):
         text = "---\nname: x\ndescription: 日本語の説明\n---\n\n例: 本文"
         self.assertEqual(md(text), "---\nname: x\ndescription: 日本語の説明\n---\n\n例：本文")
 
+    def test_colon_after_paren_and_plain_labels(self):
+        self.assertEqual(md("CSWで確定したJPスケール(参考):"), "CSWで確定したJPスケール(参考)：")
+        self.assertEqual(md("- MDN: `line-break`、Safari"), "- MDN：`line-break`、Safari")
+        self.assertEqual(md("- MDN: see `line-break`"), "- MDN: see `line-break`")
+        for text in ["f(): x", "(12:30)"]:
+            self.assertEqual(md(text), text)
+
+    def test_bold_label_with_the_colon_inside(self):
+        self.assertEqual(md("- **共有:** 既存のClaudeと同じ"), "- **共有**：既存のClaudeと同じ")
+        self.assertEqual(md("**注意：** 設定は環境ごと"), "**注意**：設定は環境ごと")
+
+    def test_english_line_quoting_a_japanese_label(self):
+        self.assertIn("**Launch**: Select",
+                      md("3. **Launch**: Select an environment and press「この環境を起動」."))
+        self.assertEqual(md("Press the button: 「この環境を起動」."), "Press the button: 「この環境を起動」.")
+        self.assertEqual(md("- **ボタン**: 「複製」を押す"), "- **ボタン**：「複製」を押す")
+
+    def test_guards_next_to_japanese(self):
+        self.assertEqual(md("Rustの::演算子"), "Rustの::演算子")
+        self.assertEqual(md("演算子:/で"), "演算子:/で")
+        self.assertEqual(js("'https://ja.wikipedia.org/wiki/Help:目次'"),
+                         "'https://ja.wikipedia.org/wiki/Help:目次'")
+        self.assertEqual(rs('format!("{}: 利用中", x)'), 'format!("{}：利用中", x)')
+
+    def test_url_ends_at_japanese_punctuation(self):
+        kept = ["公式ドキュメント（https://code.claude.com/docs）の`statusline`を使う",
+                "URLはhttps://example.com<!-- 注 -->です"]
+        for text in kept:
+            self.assertEqual(md(text), text)
+        self.assertEqual(html("<p>公式（https://example.com）の<code>csw</code>を使う</p>"),
+                         "<p>公式（https://example.com）の<code>csw</code>を使う</p>")
+        self.assertEqual(md("（https://example.com）を参照。手順: 実行"),
+                         "（https://example.com）を参照。手順：実行")
+
+    def test_code_and_link_targets_stay(self):
+        for text in ["~~~yaml\ndescription: 日本語の説明\n~~~", "[ドキュメント](#見出し:1)を参照"]:
+            self.assertEqual(md(text), text)
+        for text in ['<a href="#sec:日本語">目次</a>', '<span style="font-family: ヒラギノ角ゴシック">x</span>']:
+            self.assertEqual(html(text), text)
+        literal = "const h = `<style>p { font-family: ヒラギノ角ゴシック; }</style>`;"
+        self.assertEqual(js(literal), literal)
+
+    def test_front_matter_value_is_prose(self):
+        self.assertEqual(md("---\nname: x\ndescription: 日本語の Claude を使う\n---\n本文"),
+                         "---\nname: x\ndescription: 日本語のClaudeを使う\n---\n本文")
+
     def test_ignore_marker(self):
         line = 'assert_eq!(f("仕事"), "● 仕事: In use"); // ja-spacing: ignore'
         self.assertEqual(rs(line), line)
