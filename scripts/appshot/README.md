@@ -16,6 +16,18 @@ node scripts/appshot/gen-screenshots.mjs
 - 必要: Google Chrome、Node 21 以降 (global `WebSocket` / `fetch`)。
 - 出力 (日英 8 枚): 日本語は `ja_screen_onboarding.png` / `ja_screen_overview.png` / `ja_screen_create.png` / `ja_hero.png`、英語は `screen_onboarding.png` / `screen_overview.png` / `screen_create.png` / `hero.png`。すべて `website/assets/` に書き出す。
 
+## 出荷する画像はmacOSランナーで撮る
+
+`website/assets/`に入れる画像は、`.github/workflows/appshot.yml`を使い、GitHub ActionsのmacOSランナーで撮る。PRのブランチをpushしてから、次のコマンドでワークフローを起動する。
+
+```bash
+gh workflow run appshot.yml -f branch=<PRのブランチ>
+```
+
+ワークフローは8枚を撮り直し、差分があればbotのコミットとしてそのブランチへpushする。botがpushすると、PRのCIのrunは承認待ちで止まる。その後に空のコミットをpushして、必須チェックを走らせる。
+
+手元のMacで撮った画像は、出荷する画像に使わない。2026年10月に手元のMacのChrome 154で撮ると、ChromeはコードをOsaka-Monoで描いた。UIはコードの書体に4つの候補を指定している。このChromeは、`ui-monospace`と`SF Mono`と`JetBrains Mono`を解決できず、最後の総称の`monospace`に落ちた。そのため手元の画像では、ランナーの画像よりコードの字が小さく見え、字の形も違う。手元で撮るのは、変更が画面にどう写るかを下見するときだけにする。
+
 ## 撮影レシピ (出荷アセットと同じ)
 
 - 幅 760 CSS、`deviceScaleFactor` 2 (= 1520px 幅)、ダークテーマ。
