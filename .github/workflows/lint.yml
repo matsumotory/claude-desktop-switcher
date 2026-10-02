@@ -28,3 +28,10 @@ jobs:
 
       - name: Clippy (deny warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
+
+      # Japanese copy puts no space between Japanese and Latin text or code
+      # (japanese-typography-qa §5). Runs even when an earlier step failed, so
+      # one push reports both the Rust lint and the spacing.
+      - name: Check spacing between Japanese and Latin text
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/ja_spacing.py --check

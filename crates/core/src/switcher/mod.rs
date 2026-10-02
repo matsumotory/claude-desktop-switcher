@@ -1,5 +1,6 @@
 pub mod desktop;
 pub mod shell;
+pub mod takeover;
 
 use std::path::Path;
 use std::sync::Arc;
