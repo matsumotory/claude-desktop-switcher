@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.5](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.4...v0.24.5) (2026-10-02)
+
+
+### Bug Fixes
+
+* **desktop:** 和文のコロンを全角「：」にそろえ、前後の空白をなくす ([#217](https://github.com/matsumotory/claude-desktop-switcher/issues/217)) ([c9fc41e](https://github.com/matsumotory/claude-desktop-switcher/commit/c9fc41e5fea03205f459688e9c3ae2e0062bcc26))
+
 ## [0.24.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.3...v0.24.4) (2026-10-02)
 
 
