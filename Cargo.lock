@@ -572,6 +572,7 @@ dependencies = [
  "clap",
  "colored",
  "csw-core",
+ "libc",
  "serde_json",
 ]
 
