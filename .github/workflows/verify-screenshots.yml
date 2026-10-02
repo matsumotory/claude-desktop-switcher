@@ -4,7 +4,8 @@ name: Verify screenshots
 # were not regenerated (v0.23.0: button labels changed in crates/desktop/ui without
 # refreshing website/assets, caught only when the user asked). A non-blocking hook
 # reminder was not enough. When a PR touches the captured WebView UI, it must also
-# update website/assets/*.png (regenerate with `node scripts/appshot/gen-screenshots.mjs`).
+# update website/assets/*.png (regenerate them on the macOS runner with
+# `gh workflow run appshot.yml -f branch=<PR branch>`; see scripts/appshot/README.md).
 # Escape hatch for a genuinely non-visual UI edit: add a `Skip-appshot: <reason>` line
 # to the latest commit message. All inputs come from git, never from the event payload.
 on:
@@ -46,7 +47,7 @@ jobs:
             echo "A 'Skip-appshot:' trailer is present; treating this UI change as non-visual."
             exit 0
           fi
-          echo "::error::The app UI (crates/desktop/ui) changed but no website/assets/*.png were updated. Regenerate the screenshots with 'node scripts/appshot/gen-screenshots.mjs' and commit them, or add a 'Skip-appshot: <reason>' line to the commit message if this UI change is genuinely non-visual."
+          echo "::error::The app UI (crates/desktop/ui) changed but no website/assets/*.png were updated. Regenerate the screenshots on the macOS runner with 'gh workflow run appshot.yml -f branch=<PR branch>' (see scripts/appshot/README.md), or add a 'Skip-appshot: <reason>' line to the commit message if this UI change is genuinely non-visual."
           echo "Changed UI files:"
           printf '%s\n' "$ui_changed"
           exit 1
