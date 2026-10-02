@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.4](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.3...v0.24.4) (2026-10-02)
+
+
+### Bug Fixes
+
+* **cli:** 出力の受け手が先に閉じても csw が panic しないようにする ([#214](https://github.com/matsumotory/claude-desktop-switcher/issues/214)) ([189257a](https://github.com/matsumotory/claude-desktop-switcher/commit/189257ad05b4b99deb81ef8a827b5007ecfc2dc8))
+
 ## [0.24.3](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.2...v0.24.3) (2026-10-01)
 
 
