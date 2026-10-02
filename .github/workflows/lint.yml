@@ -37,6 +37,6 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/test_ja_spacing.py
 
-      - name: Check spacing and colons in Japanese text
+      - name: Check spacing, colons, question marks and exclamation marks in Japanese text
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/ja_spacing.py --check
