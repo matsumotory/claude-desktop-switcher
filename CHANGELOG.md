@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.6](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.5...v0.24.6) (2026-10-02)
+
+
+### Bug Fixes
+
+* **desktop:** 和文の疑問符と感嘆符を全角「？」「！」にそろえる ([#219](https://github.com/matsumotory/claude-desktop-switcher/issues/219)) ([b651e4a](https://github.com/matsumotory/claude-desktop-switcher/commit/b651e4abc6347b1a2e435d116bfcc6f55c7b77b8))
+
 ## [0.24.5](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.4...v0.24.5) (2026-10-02)
 
 
