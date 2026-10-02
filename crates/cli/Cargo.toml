@@ -15,5 +15,9 @@ clap = { workspace = true }
 anyhow = { workspace = true }
 colored = { workspace = true }
 
+# Restores the default SIGPIPE action at startup (see restore_default_sigpipe).
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [dev-dependencies]
 serde_json = { workspace = true }

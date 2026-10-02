@@ -124,7 +124,24 @@ enum ProfileAction {
     },
 }
 
+/// Rust programs start with SIGPIPE ignored, so writing to a pipe whose reader
+/// has closed (`csw profile list | head -1`) made `println!` panic with
+/// "failed printing to stdout: Broken pipe". Restore the default action so csw
+/// ends quietly by SIGPIPE, like other Unix commands (SPECIFICATION.md §5.B).
+#[cfg(unix)]
+fn restore_default_sigpipe() {
+    // SAFETY: runs first in main, before any other thread starts, and SIG_DFL
+    // is a valid disposition for SIGPIPE.
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+}
+
+#[cfg(not(unix))]
+fn restore_default_sigpipe() {}
+
 fn main() -> anyhow::Result<()> {
+    restore_default_sigpipe();
     let cli = Cli::parse();
 
     // Create platform provider
