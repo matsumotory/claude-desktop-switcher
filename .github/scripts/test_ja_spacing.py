@@ -138,9 +138,73 @@ class Colons(unittest.TestCase):
         self.assertEqual(rs(line), line)
 
     def test_idempotent(self):
-        for text in ["- **共有**: 既存のClaude", "最終起動: 3時間前", "例: `Work`"]:
+        for text in ["- **共有**: 既存のClaude", "最終起動: 3時間前", "例: `Work`",
+                     "**どう分けますか? 3つのモードから選びます**", "本当に削除しますか?! 戻せません"]:
             once = md(text)
             self.assertEqual(md(once), once)
+
+
+class Marks(unittest.TestCase):
+    def test_after_japanese(self):
+        self.assertEqual(md("4. **どう分けますか? 3つのモードから選びます**"),
+                         "4. **どう分けますか？3つのモードから選びます**")
+        self.assertEqual(html('<span class="field-label">既存のClaudeから、どう分けますか?</span>'),
+                         '<span class="field-label">既存のClaudeから、どう分けますか？</span>')
+        self.assertEqual(md("警告! 戻せません"), "警告！戻せません")
+        self.assertEqual(md("本当に削除しますか?!"), "本当に削除しますか？！")
+        self.assertEqual(md("**本当**? 次へ"), "**本当**？次へ")
+        self.assertEqual(md("どう分けますか?Claude Codeの場合"), "どう分けますか？Claude Codeの場合")
+        self.assertEqual(rs('let s = "本当?";'), 'let s = "本当？";')
+
+    def test_dictionary_key_only(self):
+        line = ("  '既存のClaudeから、どう分けますか?': "
+                "'How do you want to separate this from your existing Claude?',")
+        self.assertEqual(js(line), line.replace("か?'", "か？'"))
+
+    def test_question_between_latin_and_japanese(self):
+        self.assertEqual(md("対象はClaude Code? 次は環境です"), "対象はClaude Code？次は環境です")
+
+    def test_spaces_around_fullwidth_marks(self):
+        self.assertEqual(md("分けますか ？ 3つ"), "分けますか？3つ")
+        self.assertEqual(md("秘密とは？ この本で"), "秘密とは？この本で")
+        self.assertEqual(md("完了！ 次へ"), "完了！次へ")
+        self.assertEqual(md("**本当？** 次へ"), "**本当？** 次へ")
+
+    def test_marks_that_stay(self):
+        kept = [
+            "Is this your existing Claude?",
+            "Ready? Go!",
+            "Did you press「この環境を起動」?",
+            "設定は?lang=jaで切り替える",
+            "画像は?v=0.24.5で更新する",
+            "CSSの!importantを使わない",
+            "Rustのformat!マクロ",
+            "次の図![画面](a.png)を見る",
+            "[LP](https://example.com/?lang=ja)を見る",
+            "公式（https://example.com/?lang=ja）を見る",
+            "`csw doctor?`を実行",
+            "演算子!=で比べる",
+        ]
+        for text in kept:
+            self.assertEqual(md(text), text, text)
+        self.assertEqual(html('<a href="?lang=en">English</a>'), '<a href="?lang=en">English</a>')
+        self.assertEqual(html('<img src="assets/作成.png?v=0.24.5">'), '<img src="assets/作成.png?v=0.24.5">')
+        self.assertEqual(html("<style>p { color: red !important; }</style>"),
+                         "<style>p { color: red !important; }</style>")
+        self.assertEqual(html("<code>本当?</code>"), "<code>本当?</code>")
+        self.assertEqual(html("<p>Ready? Go!</p>"), "<p>Ready? Go!</p>")
+        for code in ['println!("完了");', 'let s = format!("{}件", n)?;',
+                     'if !ok { return Err("失敗".into()); }']:
+            self.assertEqual(rs(code), code, code)
+        for code in ["const a = ok ? 'はい' : 'いいえ';",
+                     "const t = `${ok ? 'はい' : 'いいえ'}`;",
+                     "const u = `${base}?lang=${lang}`;",
+                     "if (!a && b?.c) { f('完了'); }"]:
+            self.assertEqual(js(code), code, code)
+
+    def test_ignore_marker(self):
+        line = "例: どう分けますか? ja-spacing: ignore"
+        self.assertEqual(md(line), line)
 
 
 if __name__ == "__main__":

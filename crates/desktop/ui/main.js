@@ -206,7 +206,7 @@ const EN = {
   'メモ（任意）': 'Note (optional)', 'この環境のメモ': 'Note for this environment',
   '編集': 'Edit', '保存': 'Save', 'メモを書く': 'Add a note',
   '例：仕事用。会社のGoogleアカウントでサインイン': 'e.g. Work. Signs in with the company Google account',
-  '既存のClaudeから、どう分けますか?': 'How do you want to separate this from your existing Claude?',
+  '既存のClaudeから、どう分けますか？': 'How do you want to separate this from your existing Claude?',
   'どのモードでも、サインインするアカウントは環境ごとに分かれます。課金や利用量はそのアカウントにひも付きます。違いは、会話・メモリ・設定をどこまで引き継ぐかです。':
     'In every mode the signed-in account is separate per environment, and billing and usage follow that account. What differs is how much of your conversations, memory, and settings carry over.',
   'アカウントだけ分ける': 'Separate the account only',

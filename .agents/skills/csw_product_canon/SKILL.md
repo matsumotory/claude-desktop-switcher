@@ -64,6 +64,7 @@ description: CSWのユーザー向けUI・コピーの正典。ユーザー向�
 
 - **和文と英数字・コードのあいだに空白を入れない(2026-09-30 matsumotory指摘)**。「既存のClaude」「Claude Codeの」「v0.24.2以降」と詰めて書く。残してよい空白、GUIの平文でコマンドや環境名を「」で囲む書き方は`japanese-typography-qa`§5に従う。機械の検査は`.github/scripts/ja_spacing.py`で、CIのLintでも落ちる。
 - **和文のコロンは全角「：」で、前後に空白を置かない(2026-10-02 matsumotory決定)**。「最終起動：3時間前」「● 既存のClaude：利用中」と書く。半角の`:`を残す範囲は`japanese-typography-qa`§5に従う。検査は同じ`.github/scripts/ja_spacing.py`。
+- **和文の疑問符と感嘆符は全角の「？」「！」で、前後に空白を置かない(2026-10-02 matsumotory決定)**。「既存のClaudeから、どう分けますか？」と書く。GUIの英語表示の文字列(`How do you want to separate this from your existing Claude?`)は半角のまま。半角の`?` `!`を残す範囲は`japanese-typography-qa`§5に従う。検査は同じ`.github/scripts/ja_spacing.py`。
 
 ## 9. データ可視化（ゲージ・バー）の原則
 将来ゲージやバーを出すときの一般原則。CSWの利用量表示はv0.17で一度実装し撤去したが（経緯は[docs/proposals/usage-display-removal.md](../../../docs/proposals/usage-display-removal.md)）、そのときに確定した判読性の教訓は残す。
@@ -82,4 +83,5 @@ description: CSWのユーザー向けUI・コピーの正典。ユーザー向�
 - [ ] 「（」をgrepし、全カッコが許可3用途（識別子 / 略語導入 / フォームの必須任意マーク）のどれかであることを1件ずつ判定した。「名詞（補足）」形のUIラベル・括弧の入れ子・「何の」が曖昧な名詞が無い
 - [ ] 和文と英数字・コードのあいだに空白が無い(`python3 .github/scripts/ja_spacing.py --check`)
 - [ ] 和文のコロンは全角「：」で、前後に空白が無い(同じ検査)
+- [ ] 和文の疑問符と感嘆符は全角「？」「！」で、前後に空白が無い(同じ検査)
 - [ ] 用語を変えたら全サーフェスへ伝播（`propagate-changes-to-all-surfaces`）
