@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.24.7](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.6...v0.24.7) (2026-10-16)
+
+
+### Bug Fixes
+
+* **core:** 完全分離環境の起動中も既存のClaudeを開き直す ([84662a9](https://github.com/matsumotory/claude-desktop-switcher/commit/84662a9fed73b8a7b87531033acbb71753818d80))
+* **core:** 既存のClaudeの再起動判定を厳密化 ([514f89e](https://github.com/matsumotory/claude-desktop-switcher/commit/514f89e45d599f37f988ce5b6e141fdbadacc73e))
+* **core:** 起動中の環境の削除を拒否する ([#225](https://github.com/matsumotory/claude-desktop-switcher/issues/225)) ([67d7c10](https://github.com/matsumotory/claude-desktop-switcher/commit/67d7c10fe89c339f653217641cc4bd26750c59e0)), closes [#223](https://github.com/matsumotory/claude-desktop-switcher/issues/223)
+* 既存のClaudeの復帰判定を厳密化（[#226](https://github.com/matsumotory/claude-desktop-switcher/issues/226)を継承） ([b2a756e](https://github.com/matsumotory/claude-desktop-switcher/commit/b2a756ec3229372ae9f767e86e270584de6b6cc0))
+
 ## [0.24.6](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.5...v0.24.6) (2026-10-02)
 
 
