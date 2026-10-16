@@ -36,6 +36,15 @@ cargo fmt --all                    # フォーマット
 
 GUI の実機確認は `cargo tauri dev` (要 `cargo install tauri-cli`)。デスクトップ署名/公証/DMG は GitHub Actions の `Release Please` ワークフローが担う。リリースの実施手順 (release-please の release PR を `--admin` を使わずマージし、署名・公証つき DMG と `csw` の公開まで監視する正規手順) は [.agents/skills/core_pr_merge_checklist/SKILL.md](.agents/skills/core_pr_merge_checklist/SKILL.md) の「リリース PR (release-please) のマージ」節を参照する。リリースは同節の「リリース前の正しさ検証」を通した上で、確認を取らず自律的に行う。
 
+### リリース完了の確認
+
+リリースに着手する前に、上記チェックリストの「リリース PR (release-please) のマージ」節を最後まで読み、公開後の確認も作業計画に含めます。CI成功や配布物の公開だけで完了とは報告しません。
+
+- **英語の変更内容は担当エージェントが追記します。** `release.yml`の全ジョブが完了してから、対象版の変更を英語でまとめ、`gh workflow run release-notes.yml --ref main -f tag=vX.Y.Z -f english_changes="$(cat changes-en.md)"`を実行します。自動生成される配布物説明の`## English`は、変更内容の`## Changes (English)`の代わりにはなりません。
+- **公開された本文を読み直します。** 追記したrunの成功を確認し、`gh release view vX.Y.Z`で日本語の変更内容・`## Changes (English)`・添付ファイルの説明がそろい、対象版の変更と一致することを確認します。
+- **配布物の検証は既存チェックリストどおり行います。** CI内の署名・公証検証ログと、公開済みDMG・`csw`をダウンロードしてMacで行う独立した検証を区別して記録します。CIログだけで実機検証済みとは報告しません。
+- **実行できない工程は未完として残します。** 必要なツール・権限・実行環境が足りない場合は、完了した工程、未実施の工程、具体的な阻害要因を報告します。利用可能な承認済みの経路を確認し、ユーザーへの作業の引き渡しを既定の対応にはしません。再開できたら、承認済みの同じ対象・範囲の工程は許可を聞き直さず進めます。新たな権限や操作範囲が必要なら、その部分だけ確認します。
+
 LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launch.json` の `lp` を起動する (preview_start で `website/` を `python3 -m http.server` 配信、EN は `/`、日本語は `/ja/`)。`website/` をルートに配信しないと相対パス (`../style.css` 等) が解決しないので、単体 HTML を file:// で開くのではなくこの設定で見る。
 
 **LP (GitHub Pages) の公開は恒久許可済み**: `website/` の変更が `main` に入ったら、公開の確認を取らずに公開してよい。`pages.yml` は `workflow_dispatch` のみで push では自動反映されないため、マージ後に `gh workflow run pages.yml` を実行し、run が success になるまで監視する。公開後はライブサイト (`curl` 等) で反映を実地確認する (GitHub Pages / ブラウザキャッシュがあるため「デプロイ成功」だけで済ませない)。この恒久許可は CSW の LP に限る。
@@ -50,7 +59,7 @@ LP (`website/`) のプレビューは Claude の launch 機能で `.claude/launc
 | 新規実装・大幅修正の着手前、セッション開始/終了時 (Plan を `docs/proposals/` でバトンパス) | `core_session_handoff` |
 | 日本語 UI / LP / ドキュメントのコピー・フォントサイズ・折り返し・行間・見出しスケールに触れるとき | `japanese-typography-qa` |
 | 「完了/PASS」と報告する前・PR 提出前・リファクタ/名称変更後 (検証順序とエビデンス強制) | `core_qa_process` |
-| PR をマージする / マージ可否を判断するとき | `core_pr_merge_checklist` |
+| PRをマージする / マージ可否を判断するとき / リリースに着手・再開・完了報告するとき | `core_pr_merge_checklist` |
 | CI (GitHub Actions) が 10 分以上ハングしている疑いのとき | `core_ci_hang_recovery` |
 | 複数 crate / 複数ファイルにまたがる作業を役割分担で進めるとき | `core_agent_roles` |
 | 多段の調査・実装・検証を並列化したいとき (Workflow / サブエージェント) | `core_ai_workflow` |
