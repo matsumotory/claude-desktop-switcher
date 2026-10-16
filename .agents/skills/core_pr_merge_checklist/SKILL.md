@@ -151,7 +151,7 @@ PR の一部だけが有用な場合:
 
 ## リリース PR (release-please) のマージ
 
-`fix:` / `feat:` / 破壊的変更が main に入ると、release-please が `chore(main): release X.Y.Z` という PR を自動起票する。これは版更新 (`Cargo.toml` / `crates/desktop/tauri.conf.json` / `.release-please-manifest.json`) と `CHANGELOG.md` だけで、**コードは含まない** (機能は各 `feat`/`fix` PR で CI 済み)。
+`fix:` / `feat:` / 破壊的変更が main に入ると、release-please が `chore(main): release X.Y.Z` という PR を自動起票する。これは版更新 (`Cargo.toml` / `crates/desktop/tauri.conf.json` / `.release-please-manifest.json`) と`CHANGELOG.md`を生成する。担当エージェントが対象版の英語ファイルを追加し、**アプリのコードは含めない** (機能は各 `feat`/`fix` PR で CI 済み)。
 
 > [!IMPORTANT]
 > **リリースも確認を取らず自律的に行う。** ただし公開・巻き戻し困難な操作なので、実行前に必ず正しさを検証する (下記「リリース前の正しさ検証」)。検証を飛ばして機械的に進めることはしない。
@@ -175,8 +175,7 @@ release PR をマージする前に以下を必ず検証する。「ジョブが
 `main` の branch protection は `enforce_admins:false` なので `--admin` で押し込むことは可能だが、**使わない** (standing rule、auto モードの classifier もブロックする)。代わりに必須チェックを実際に走らせてから通常マージする:
 
 1. `git fetch origin release-please--branches--main`
-2. worktree を切り、release ブランチ (`release-please--branches--main`) に **空コミットを 1 つ** push する:
-   `git commit --allow-empty -m "chore: 必須チェックを発火させる"` → `git push origin HEAD:release-please--branches--main`
+2. worktreeを切り、releaseブランチ (`release-please--branches--main`) に対象版の英語ファイルを追加してpushする。下の「リリースノートの日英併記」の形式を守り、manifestとCHANGELOGの版に合わせる。この実ユーザーのpushで必須チェックも発火する。
    (CI ワークフローは `on: pull_request` で paths フィルタが無いため、実ユーザーの push が `synchronize` で必須チェックを発火させる。取りこぼした CHANGELOG エントリがあればこの commit で追記してもよい。)
 3. `gh pr checks <PR番号>` で 4 チェックが全 green・`mergeStateStatus` が `CLEAN` になるのを待つ。
 4. `gh pr merge <PR番号> --squash` (**`--admin` なし**、`--subject "chore(main): release X.Y.Z"` でメッセージを明示)。
@@ -193,12 +192,15 @@ release PR をマージする前に以下を必ず検証する。「ジョブが
 
 ### リリースノートの日英併記 (ユーザー向け面・必須)
 
-GitHub Release 本文の「変更内容 (What's changed)」はダウンロード時に利用者が読むユーザー向け面なので日英併記にする。コミットと `CHANGELOG.md` は開発者向けなので日本語のまま (線引きは [CLAUDE.md](../../../CLAUDE.md) §コーディング規約 1「日英対応の線引き」)。release-please が生成する本文は CHANGELOG 由来で日本語だけなので、公開後に英語の変更内容を足す。
+GitHub Release本文は利用者が読むため、日本語の変更内容・英語の変更内容・添付ファイルの説明をそろえる。コミットと`CHANGELOG.md`は開発者向けなので日本語のままとする。
 
-- [ ] **release.yml の run が完了してから**リリースノートを日英にする。本文は run の最後の `release-notes` ジョブ (`.github/workflows/release-notes.yml`、実体は `.github/scripts/release_notes.py`) が 1 回だけ書く (日本語の変更内容 + 配布物説明)。run の途中で本文を手編集すると競合するので待つ。run 完了後、英語の変更内容 (機械翻訳の丸写しでなく、その版で実際に変わったことを英語で書く。見出し `## Changes (English)` は省略可) を `english_changes` 入力に渡して同じワークフローを `workflow_dispatch` する: `gh workflow run release-notes.yml -f tag=vX.Y.Z -f english_changes="$(cat changes-en.md)"` (REST API なら `POST /repos/.../actions/workflows/release-notes.yml/dispatches` に `{"ref":"main","inputs":{"tag":..,"english_changes":..}}`)。この専用見出しは、配布物説明 (`RELEASE-README`) が持つ `## English` と取り違えないための固定マーカー。スクリプトは本文が空なら `CHANGELOG.md` の該当節から日本語の変更内容を組み立て直すので、本文が消えた版もこのワークフローで復旧できる。run が緑になったら本文が空でないこと・3 節 (日本語の変更内容 / `## Changes (English)` / 添付ファイルの説明) がそろっていることを `gh release view` で実確認する。
-  - **Claude Code on the web のセッションは Release を編集できない** (`PATCH /releases/{id}` が "Creating, editing, or deleting releases is not permitted for this session type" で拒否される。MCP にも編集ツールは無い)。上のワークフロー経由が唯一の経路なので、セッション内で `gh release edit` や REST の PATCH を試みて時間を溶かさない。
-  - **本文が消える真因は tauri-action だった** (v0.23.0 / v0.24.0 / v0.24.1 で再発)。`build-mac-dmg` の tauri-action に `tagName` を渡すと、既存の公開済みリリースを見つけて「Updating name and body of existing release」を実行し、`releaseBody` 入力 (未指定 = 空) で本文を上書きする。以前の推定 (sbom ジョブの read-modify-write が空本文を書き戻した) は誤りで、空本文ガードでは防げなかった。対策として tauri-action は `tagName` なしのビルド専用にし (DMG は公証ステップの `gh release upload --clobber` で添付)、本文はリリースに触る全ジョブの後で書く。`tagName` を戻さない。
-- [ ] `Verify release notes` ワークフロー (`.github/workflows/verify-release-notes.yml`、`on: release [published, edited]`) は、人や PAT による Release の作成・編集でだけ発火する (GITHUB_TOKEN による作成・編集は GitHub のループ防止で発火しない)。そのため release-please が作った直後や `release-notes` ワークフローの編集後には走らず、`release-notes` ワークフロー自身の「Verify the written body」ステップが同じ判定 (3 節の有無。`english_changes` を渡した dispatch では英語節を必須) を行う。人が本文を手編集したときはこのガードが走るので、赤なら英語節の欠落を疑う (ガード自体を外して回避しない)。
+- [ ] **リリースPRのマージ前に英語を保存する。** `.github/release-notes/vX.Y.Z.en.md`の先頭を`# vX.Y.Z`とし、空行のあとに`## Changes (English)`と対象版の変更説明を書く。担当エージェントが実際の変更を確認して英語で要約する。CIで翻訳を生成したり、外部AIや新しい秘密情報を使ったりしない。
+- [ ] `python3 .github/scripts/release_notes.py --validate-current`を実行する。manifestの版と一致するファイル、空でない英語節、対象版のCHANGELOGが必要になる。`Test release notes`がPRでも検査し、`release.yml`はrelease-pleaseによるタグ作成・公開の前に同じ検査を行う。版が変わったら英語ファイルもその版に合わせる。
+- [ ] **通常のリリースでは追加のdispatchをしない。** `release.yml`の最後の`release-notes`ジョブが、全アセットジョブの後で日本語の変更内容・保存済み英語・配布物説明を書き、本文を読み直して一致を確認する。GITHUB_TOKENによる公開でも、同じrun内のworkflow_callなので実行される。
+- [ ] **公開済みの版の補完・訂正は英語ファイルのPRで行う。** mainへ入った変更ファイルの版だけを対象に、既存リリース本文を更新する。リリースがまだ無ければ作成せずスキップする。タグ・バイナリ・添付ファイルには触れない。過去の版を一括で書き換えない。復旧用の手動起動は`gh workflow run release-notes.yml --ref main -f tag=vX.Y.Z`で、同じ保存済みファイルを使う。
+- [ ] run成功後に`gh release view vX.Y.Z`で3節と対象版の変更を確認する。本文が空なら`CHANGELOG.md`の該当節から復元する。既存の日本語節は保持し、英語節は保存済みファイルで更新するため、再実行しても重複しない。
+- [ ] `Verify release notes`は人やPATによる公開・編集時の追加ガードとして残す。GITHUB_TOKENによる編集で発火しなくても、本文を更新するジョブ自身が空でない英語節と書き戻した本文の一致を必須にする。
+- **tauri-actionにtagNameを戻さない。** 既存リリース本文を空で上書きした過去の原因である。ビルドとアセット添付を本文更新から分離し、本文は最後に書く。
 
 技術背景 (squash とメッセージのパース注意) は個人メモリ `release-please-squash-parse-pitfall` / `autonomous-merge-after-ci` も参照。
 
@@ -234,3 +236,4 @@ GitHub Actions の macOS runner は、分単価が Linux runner の約 10 倍で
   - ビルドキャッシュ (`Swatinem/rust-cache` 等) を効かせ、依存の再ビルドを避ける。
   - 重い macOS ジョブは `on: pull_request` のみに限定し、push ごとの二重実行を避ける。
   - branch protection の "Require branches to be up to date before merging" (strict) は基本 `false` にする。strict を `true` にして多数の PR を逐次マージすると、rebase のたびに全チェックが再実行され、macOS の分を焼き続ける。逐次マージが必要な事情がない限り strict にしない。
+

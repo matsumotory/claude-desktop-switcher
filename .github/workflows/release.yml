@@ -16,6 +16,13 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Check before release-please can create a tag or publish a release. The
+      # release PR bumps the manifest, so its matching English source is required.
+      - name: Require reviewed English release notes before publishing
+        run: python3 .github/scripts/release_notes.py --validate-current
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
         with:
@@ -157,12 +164,14 @@ jobs:
   # Write the release body once, after every job that touches the release, so
   # nothing overwrites it afterwards (tauri-action's release update wiped the
   # body on earlier releases). Runs even when a build job failed: the notes are
-  # for the user, and the failed job is retried on its own. The English changes
-  # are added afterwards by dispatching the same workflow with english_changes
-  # (see core_pr_merge_checklist).
+  # for the user, and the failed job is retried on its own. English changes are
+  # loaded from the reviewed version-keyed file; no follow-up dispatch is needed.
   release-notes:
     needs: [release-please, build-mac-dmg, publish-csw, sbom]
     if: ${{ !cancelled() && needs.release-please.outputs.release_created }}
     uses: ./.github/workflows/release-notes.yml
+    permissions:
+      contents: write
     with:
       tag: ${{ needs.release-please.outputs.tag_name }}
+
