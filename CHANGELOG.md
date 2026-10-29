@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.8](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.7...v0.24.8) (2026-10-29)
+
+
+### Bug Fixes
+
+* **core:** 「アカウントだけ分ける」でCodeタブの会話一覧も共有する ([b88019d](https://github.com/matsumotory/claude-desktop-switcher/commit/b88019d1cbb18222eedaefc3e7420e0005c61e29))
+
 ## [0.24.7](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.6...v0.24.7) (2026-10-16)
 
 
