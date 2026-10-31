@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.25.0](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.8...v0.25.0) (2026-10-31)
+
+
+### Features
+
+* **core:** デスクトップアプリのSSH接続を共通の設定と一緒にコピーする ([fba2b16](https://github.com/matsumotory/claude-desktop-switcher/commit/fba2b16be2fbb3f949a4d4e7ae55f924f374e2c7))
+
+
+### Bug Fixes
+
+* **core:** Codeタブの会話一覧を共有せず、v0.24.8のリンクを元に戻す ([ba2db93](https://github.com/matsumotory/claude-desktop-switcher/commit/ba2db93e7f29841bea6e78ceb899487de6e48191))
+
 ## [0.24.8](https://github.com/matsumotory/claude-desktop-switcher/compare/v0.24.7...v0.24.8) (2026-10-29)
 
 
