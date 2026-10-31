@@ -106,6 +106,26 @@ pub const LINK_ITEMS: &[LinkItem] = &[
         is_directory: false,
         fixed_mode: None,
     },
+    // The Desktop app's SSH connections (issue #239): the connection list and
+    // the remote folder per host, both under `desktop_ssh_connections`. The
+    // app does not write through links in its data folder, so the setup
+    // presets copy them. Remembered passwords and per-host tokens
+    // (ssh-remembered-passwords.json, ssh-remote-server-state.json) are never
+    // link items: like config.json, they stay with their environment.
+    LinkItem {
+        key: "desktop_ssh_connections",
+        dir: ItemDir::Desktop,
+        rel_path: "ssh_configs.json",
+        is_directory: false,
+        fixed_mode: None,
+    },
+    LinkItem {
+        key: "desktop_ssh_locations",
+        dir: ItemDir::Desktop,
+        rel_path: "ssh_worktree_locations.json",
+        is_directory: false,
+        fixed_mode: None,
+    },
     // ant-did — ALWAYS isolated. Sharing the device id would correlate two
     // accounts as one device.
     LinkItem {
@@ -140,6 +160,9 @@ pub fn item_mode(profile: &Profile, item: &LinkItem) -> SharingMode {
         "cli_skills" => profile.sharing.cli_skills.clone(),
         "cli_history" => profile.sharing.cli_history.clone(),
         "desktop_worktrees" => profile.sharing.desktop_worktrees.clone(),
+        "desktop_ssh_connections" | "desktop_ssh_locations" => {
+            profile.sharing.desktop_ssh_connections.clone()
+        }
         _ => SharingMode::Isolate,
     }
 }

@@ -133,6 +133,7 @@ mod tests {
                 cli_skills: SharingMode::Share,
                 cli_history: SharingMode::Share,
                 desktop_worktrees: SharingMode::Share,
+                desktop_ssh_connections: SharingMode::Copy,
                 source: SharingSource {
                     profile: "default".to_string(),
                 },
@@ -207,6 +208,17 @@ profile = "default"
         // environment must not present an empty directory as a finished copy.
         let copied = load_toml_string("copied", &profile_toml_without_cli_rules("copy"));
         assert_eq!(copied.sharing.cli_rules, SharingMode::Isolate);
+    }
+
+    /// A profile.toml written before `desktop_ssh_connections` existed (issue
+    /// #239) reads it as Isolate: nothing was ever copied into it.
+    #[test]
+    fn load_profile_without_ssh_connections_reads_isolate() {
+        let profile = load_toml_string("old", &profile_toml_without_cli_rules("share"));
+        assert_eq!(
+            profile.sharing.desktop_ssh_connections,
+            SharingMode::Isolate
+        );
     }
 
     #[test]

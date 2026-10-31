@@ -300,6 +300,10 @@ fn main() -> anyhow::Result<()> {
                         println!("    CLI Input History: {:?}", p.sharing.cli_history);
                         println!("    Desktop Worktrees: {:?}", p.sharing.desktop_worktrees);
                         println!(
+                            "    Desktop SSH Connections: {:?}",
+                            p.sharing.desktop_ssh_connections
+                        );
+                        println!(
                             "    Always isolated: config.json, claude_desktop_config.json, sessions/, device id"
                         );
                     }
@@ -560,6 +564,8 @@ fn doctor_label(key: &str) -> &'static str {
         "cli_sessions" => "Session state (sessions/)",
         "cli_history" => "Input history (history.jsonl)",
         "desktop_worktrees" => "Worktrees (git-worktrees.json)",
+        "desktop_ssh_connections" => "SSH connections (ssh_configs.json)",
+        "desktop_ssh_locations" => "SSH remote folders (ssh_worktree_locations.json)",
         "desktop_device_id" => "Device ID (ant-did)",
         "desktop_app_config" => "Account sign-in (config.json)",
         "desktop_config" => "Connectors & app settings (claude_desktop_config.json)",

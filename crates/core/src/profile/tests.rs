@@ -217,6 +217,9 @@ fn share_settings_preset_shares_rules_copies_settings_isolates_conversations() {
     // point (a single file that the CLI may rewrite, so copy rather than symlink).
     assert_eq!(p.cli_settings, SharingMode::Copy);
     assert_eq!(p.desktop_worktrees, SharingMode::Copy);
+    // The Desktop app's SSH connection list, copied like the worktree list
+    // (issue #239); remembered passwords and tokens are never link items.
+    assert_eq!(p.desktop_ssh_connections, SharingMode::Copy);
     // Conversations stay separate in this mode.
     assert_eq!(p.cli_project_memory, SharingMode::Isolate);
     assert_eq!(p.cli_history, SharingMode::Isolate);
@@ -235,6 +238,7 @@ fn share_workspace_preset_also_shares_conversations_but_never_auth() {
     assert_eq!(p.cli_skills, SharingMode::Share);
     assert_eq!(p.cli_settings, SharingMode::Copy);
     assert_eq!(p.desktop_worktrees, SharingMode::Copy);
+    assert_eq!(p.desktop_ssh_connections, SharingMode::Copy);
     // Plus the per-project conversation history, auto-memory and prompt history.
     assert_eq!(p.cli_project_memory, SharingMode::Share);
     assert_eq!(p.cli_history, SharingMode::Share);
@@ -258,6 +262,7 @@ fn default_sharing_isolates_all_configurable_components() {
         d.cli_skills,
         d.cli_history,
         d.desktop_worktrees,
+        d.desktop_ssh_connections,
     ] {
         assert_eq!(mode, SharingMode::Isolate);
     }
@@ -588,7 +593,7 @@ fn doctor_reports_healthy_share_profile() {
 
     assert_eq!(
         report.items.len(),
-        13,
+        linker::LINK_ITEMS.len() + 1,
         "every linker-managed link point and the Code-tab list are checked"
     );
     assert_eq!(
@@ -1255,6 +1260,7 @@ fn clone_copies_isolated_and_copied_items_and_relinks_shares_to_the_declared_sou
         cli_project_memory: SharingMode::Isolate,
         cli_history: SharingMode::Isolate,
         desktop_worktrees: SharingMode::Isolate,
+        desktop_ssh_connections: SharingMode::Isolate,
         ..SharingConfig::default()
     };
     let orig = manager.create_profile("orig", sharing, None).unwrap();
@@ -2388,4 +2394,85 @@ fn clone_skips_nested_symlinks_instead_of_failing() {
         "outside",
         "the link target is untouched"
     );
+}
+
+// --- SSH connections (SPECIFICATION.md §3, issue #239) ---
+
+/// The Desktop app's SSH files in `desktop`: the two that describe the
+/// connections, plus the remembered passwords and the per-host tokens.
+fn ssh_files(desktop: &std::path::Path) {
+    std::fs::write(
+        desktop.join("ssh_configs.json"),
+        r#"{"configs":[{"id":"c1","name":"Lab","sshHost":"me@lab"}],"trustedHosts":["me@lab"]}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        desktop.join("ssh_worktree_locations.json"),
+        r#"{"ssh:me@lab:22":"/home/me"}"#,
+    )
+    .unwrap();
+    std::fs::write(desktop.join("ssh-remembered-passwords.json"), "secret").unwrap();
+    std::fs::write(desktop.join("ssh-remote-server-state.json"), "tokens").unwrap();
+}
+
+#[test]
+fn ssh_connections_are_copied_by_the_setup_modes_and_never_their_secrets() {
+    let (provider, manager, _tmp) = setup_test_manager();
+    let default_desktop = provider.claude_desktop_default_dir();
+    ssh_files(&default_desktop);
+
+    for (name, sharing, copied) in [
+        ("workspace", SharingConfig::share_workspace_preset(), true),
+        ("settings", SharingConfig::share_settings_preset(), true),
+        ("isolated", SharingConfig::default(), false),
+    ] {
+        let profile = manager.create_profile(name, sharing, None).unwrap();
+        let desktop = &profile.isolation.desktop_user_data_dir;
+        for file in ["ssh_configs.json", "ssh_worktree_locations.json"] {
+            let path = desktop.join(file);
+            if copied {
+                assert!(!provider.is_symlink(&path), "{name}: {file} is a copy");
+                assert_eq!(
+                    std::fs::read(&path).unwrap(),
+                    std::fs::read(default_desktop.join(file)).unwrap(),
+                    "{name}: {file}"
+                );
+            } else {
+                assert!(std::fs::symlink_metadata(&path).is_err(), "{name}: {file}");
+            }
+        }
+        for secret in [
+            "ssh-remembered-passwords.json",
+            "ssh-remote-server-state.json",
+        ] {
+            assert!(
+                std::fs::symlink_metadata(desktop.join(secret)).is_err(),
+                "{name}: {secret} must never be carried over"
+            );
+        }
+        let report = manager.inspect_profile_isolation(name).unwrap();
+        assert_eq!(report.issue_count, 0, "{name}: {:?}", report.items);
+    }
+
+    // Copied once: a later change on either side stays on that side.
+    std::fs::write(default_desktop.join("ssh_configs.json"), "{}").unwrap();
+    let settings = manager.get_profile("settings").unwrap();
+    assert_ne!(
+        std::fs::read_to_string(
+            settings
+                .isolation
+                .desktop_user_data_dir
+                .join("ssh_configs.json")
+        )
+        .unwrap(),
+        "{}"
+    );
+}
+
+#[test]
+fn ssh_connections_make_an_environment_not_fully_isolated() {
+    let mut sharing = SharingConfig::default();
+    assert!(sharing.is_fully_isolated());
+    sharing.desktop_ssh_connections = SharingMode::Copy;
+    assert!(!sharing.is_fully_isolated());
 }

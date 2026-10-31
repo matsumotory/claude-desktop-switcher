@@ -69,6 +69,8 @@ const EN = {
   '「共有」は既存のClaudeと中身を共通にすること、「コピー」は作成時に一度だけ写して以後は別々、「分離」はこの環境だけで持つことです。':
     '"Shared" keeps the contents in common with your existing Claude; "Copied" duplicates once at creation and they diverge after; "Isolated" means this environment keeps its own.',
   'ワークツリー一覧': 'Worktrees', 'Gitワークツリーとrepoの対応': 'Mapping of Git worktrees to repos',
+  'SSH接続': 'SSH connections', 'Codeタブで追加したSSHの接続先': 'SSH hosts added in the Code tab',
+  'SSHの作業フォルダ': 'SSH remote folders',
   'Codeタブの会話一覧': 'Code tab conversation list',
   '共通ルール': 'Global rules', 'CLAUDE.mdに書いた常時ルール': 'Always-on rules in CLAUDE.md',
   'ルールファイル': 'Rule files', 'rules/に分けて置いた常時ルール': 'Always-on rules kept as files in rules/',
@@ -294,6 +296,7 @@ const SHARE_GROUPS = [
     label: 'Claudeデスクトップアプリ',
     items: [
       { key: 'desktop_worktrees', name: 'ワークツリー一覧', desc: 'Gitワークツリーとrepoの対応' },
+      { key: 'desktop_ssh_connections', name: 'SSH接続', desc: 'Codeタブで追加したSSHの接続先' },
     ],
   },
   {
@@ -321,6 +324,8 @@ const DOCTOR_LABELS = {
   cli_sessions: 'セッション状態',
   desktop_app_config: 'アカウントのサインイン情報',
   desktop_config: 'コネクタ・アプリ設定',
+  // The second file of desktop_ssh_connections (the remote folder per host).
+  desktop_ssh_locations: 'SSHの作業フォルダ',
   // Not a share-UI choice: always isolated (SPECIFICATION.md §3
   // 「Codeタブの会話一覧」), so it only appears in the check.
   desktop_code_sessions: 'Codeタブの会話一覧',
@@ -340,6 +345,7 @@ const PRESETS = {
     cli_skills: 'share',
     cli_settings: 'copy',
     desktop_worktrees: 'copy',
+    desktop_ssh_connections: 'copy',
     cli_project_memory: 'isolate',
     cli_history: 'isolate',
     desktop_device_id: 'isolate',
@@ -352,6 +358,7 @@ const PRESETS = {
     cli_skills: 'share',
     cli_settings: 'copy',
     desktop_worktrees: 'copy',
+    desktop_ssh_connections: 'copy',
     cli_project_memory: 'share',
     cli_history: 'share',
     desktop_device_id: 'isolate',
@@ -1994,6 +2001,8 @@ function devInvoke(cmd, args) {
         { key: 'cli_sessions', mode: 'isolate', link_target: null, size_bytes: 12288, modified_epoch: t, exists: true },
         { key: 'cli_history', mode: 'isolate', link_target: null, size_bytes: null, modified_epoch: null, exists: false },
         { key: 'desktop_worktrees', mode: 'copy', link_target: null, size_bytes: 1024, modified_epoch: t, exists: true },
+        { key: 'desktop_ssh_connections', mode: 'copy', link_target: null, size_bytes: 512, modified_epoch: t, exists: true },
+        { key: 'desktop_ssh_locations', mode: 'copy', link_target: null, size_bytes: 64, modified_epoch: t, exists: true },
         { key: 'desktop_device_id', mode: 'isolate', link_target: null, size_bytes: 64, modified_epoch: t, exists: true },
         { key: 'desktop_app_config', mode: 'isolate', link_target: null, size_bytes: null, modified_epoch: null, exists: true },
       ];
@@ -2036,10 +2045,11 @@ function devInvoke(cmd, args) {
       // Healthy sample report for browser QA / screenshots, shaped exactly like
       // the Rust inspector's serde output: lowercase SharingMode values and the
       // LINK_ITEMS order, then the Code-tab conversation list (share_settings-style environment).
-      const modes = { ...PRESETS.share_settings, cli_sessions: 'isolate', desktop_app_config: 'isolate', desktop_config: 'isolate', desktop_code_sessions: 'isolate' };
+      const modes = { ...PRESETS.share_settings, desktop_ssh_locations: PRESETS.share_settings.desktop_ssh_connections,
+        cli_sessions: 'isolate', desktop_app_config: 'isolate', desktop_config: 'isolate', desktop_code_sessions: 'isolate' };
       const order = ['desktop_config', 'cli_settings', 'cli_claude_md', 'cli_rules', 'cli_project_memory', 'cli_plugins',
-        'cli_skills', 'cli_sessions', 'cli_history', 'desktop_worktrees', 'desktop_device_id', 'desktop_app_config',
-        'desktop_code_sessions'];
+        'cli_skills', 'cli_sessions', 'cli_history', 'desktop_worktrees', 'desktop_ssh_connections', 'desktop_ssh_locations',
+        'desktop_device_id', 'desktop_app_config', 'desktop_code_sessions'];
       const items = order.map((key) => (modes[key] === 'share'
         ? { key, mode: 'share', health: { state: 'shared_ok', target: '~/.claude/' + key }, is_issue: false }
         : { key, mode: modes[key], health: { state: 'isolated_ok' }, is_issue: false }));

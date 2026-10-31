@@ -157,6 +157,14 @@ pub struct SharingConfig {
     #[serde(default)]
     pub desktop_worktrees: SharingMode,
 
+    /// The Desktop app's SSH connections: ssh_configs.json (the connection list
+    /// and trusted hosts) and ssh_worktree_locations.json (the remote folder per
+    /// host). Remembered passwords and per-host tokens are never link items. A
+    /// profile.toml written before this field existed reads Isolate: nothing
+    /// was ever copied into it (issue #239).
+    #[serde(default)]
+    pub desktop_ssh_connections: SharingMode,
+
     /// Source profile for shared components (default: "default")
     #[serde(default)]
     pub source: SharingSource,
@@ -194,6 +202,7 @@ impl Default for SharingConfig {
             cli_skills: SharingMode::Isolate,
             cli_history: SharingMode::Isolate,
             desktop_worktrees: SharingMode::Isolate,
+            desktop_ssh_connections: SharingMode::Isolate,
             source: SharingSource::default(),
         }
     }
@@ -219,8 +228,8 @@ impl SharingConfig {
     /// reuse the common setup. The CLI global rules (`CLAUDE.md` and `rules/`),
     /// `plugins/` and `skills/` are shared by symlink (the app only reads them and
     /// the user is their single writer, so a bidirectional write never breaks the
-    /// link). The permission/hook `settings.json` and the worktree list are copied
-    /// once at creation. Conversation history, project memory and command history
+    /// link). The permission/hook `settings.json`, the worktree list and the
+    /// Desktop app's SSH connections are copied once at creation. Conversation history, project memory and command history
     /// stay isolated. Use case: split by purpose while keeping one rule set.
     pub fn share_settings_preset() -> Self {
         Self {
@@ -230,6 +239,7 @@ impl SharingConfig {
             cli_skills: SharingMode::Share,
             cli_settings: SharingMode::Copy,
             desktop_worktrees: SharingMode::Copy,
+            desktop_ssh_connections: SharingMode::Copy,
             ..Self::default()
         }
     }
@@ -272,6 +282,7 @@ impl SharingConfig {
             && self.cli_skills == SharingMode::Isolate
             && self.cli_history == SharingMode::Isolate
             && self.desktop_worktrees == SharingMode::Isolate
+            && self.desktop_ssh_connections == SharingMode::Isolate
     }
 }
 
@@ -370,6 +381,7 @@ impl ProfileManager {
                     cli_skills: SharingMode::Share,
                     cli_history: SharingMode::Share,
                     desktop_worktrees: SharingMode::Share,
+                    desktop_ssh_connections: SharingMode::Share,
                     source: SharingSource {
                         profile: "default".to_string(),
                     },

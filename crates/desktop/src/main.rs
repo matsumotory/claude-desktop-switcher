@@ -100,7 +100,8 @@ async fn get_profile_details(
             "cli_plugins": format!("{:?}", p.sharing.cli_plugins).to_lowercase(),
             "cli_skills": format!("{:?}", p.sharing.cli_skills).to_lowercase(),
             "cli_history": format!("{:?}", p.sharing.cli_history).to_lowercase(),
-            "desktop_worktrees": format!("{:?}", p.sharing.desktop_worktrees).to_lowercase()
+            "desktop_worktrees": format!("{:?}", p.sharing.desktop_worktrees).to_lowercase(),
+            "desktop_ssh_connections": format!("{:?}", p.sharing.desktop_ssh_connections).to_lowercase()
         }
     });
 
@@ -159,6 +160,7 @@ fn build_sharing_config(mode: &str, overrides: Option<HashMap<String, String>>) 
                 "cli_skills" => sharing.cli_skills = m,
                 "cli_history" => sharing.cli_history = m,
                 "desktop_worktrees" => sharing.desktop_worktrees = m,
+                "desktop_ssh_connections" => sharing.desktop_ssh_connections = m,
                 _ => {}
             }
         }

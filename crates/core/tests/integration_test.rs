@@ -143,6 +143,7 @@ fn test_profile_sharing_and_isolation_matrix() {
         cli_skills: SharingMode::Copy,      // Skills -> Copied (physical copy)
         cli_history: SharingMode::Isolate,  // History -> Isolated (none)
         desktop_worktrees: SharingMode::Copy, // Worktrees -> Copied
+        desktop_ssh_connections: SharingMode::Isolate,
         source: SharingSource::default(),
     };
 
