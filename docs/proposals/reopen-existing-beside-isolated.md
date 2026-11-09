@@ -1,8 +1,9 @@
 ---
 title: 完全分離環境を終了せず既存のClaudeを開き直す
 created: 2026-10-15
-status: in-progress
+status: completed
 pr: 226
+related_prs: [228]
 ---
 
 # 完全分離環境を終了せず既存のClaudeを開き直す
