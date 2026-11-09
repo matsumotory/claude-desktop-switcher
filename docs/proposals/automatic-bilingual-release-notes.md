@@ -2,8 +2,8 @@
 title: 保存済み英語リリースノートの自動反映
 
 created: 2026-10-16
-status: in-progress
-related_prs: [229]
+status: completed
+related_prs: [229, 230]
 ---
 
 ## 背景とゴール
@@ -32,8 +32,8 @@ related_prs: [229]
 - [x] 新しい挙動のテストが実装前に失敗することを確認する。
 - [x] 版不一致、英語欠落、空の本文の復元、重複防止、既存英語の訂正、日本語保持を検査する。
 - [x] 既存リリースだけを更新し、PATCHがbody以外を送らないことを検査する。
-- [ ] 独立レビューとPRのTest・Build・Lint・Security・英語ノート検査を通す。
-- [ ] mainへのマージ後、v0.24.7本文に日英の変更説明と配布物説明があることを確認する。
-- [ ] 公開済みアセットのID・digestとタグが変更されていないことを確認する。
+- [x] 独立レビューとPRのTest・Build・Lint・Security・英語ノート検査を通す。
+- [x] mainへのマージ後、v0.24.7本文に日英の変更説明と配布物説明があることを確認する。
+- [x] 公開済みアセットのID・digestとタグが変更されていないことを確認する。
 
 Pythonの検証は`python3 -m unittest discover -s .github/scripts -p 'test_*release_notes.py' -v`と`python3 .github/scripts/release_notes.py --validate-current`で行う。アプリのRust検証は既存CIを確認する。今回の環境ではMac上の実機検証は行わない。
